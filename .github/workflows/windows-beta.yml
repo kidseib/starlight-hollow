@@ -2,6 +2,15 @@ name: Windows beta
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag that receives the ZIP
+        required: true
+        default: v0.1.2-beta.1
+      version:
+        description: App version baked into this build
+        required: true
+        default: 0.1.2-beta.1
 
 permissions:
   contents: write
@@ -17,14 +26,26 @@ jobs:
           $parts = Get-ChildItem .github/lock-parts/*.txt | Sort-Object Name
           $encoded = ($parts | ForEach-Object { (Get-Content $_.FullName -Raw).Trim() }) -join ''
           [IO.File]::WriteAllBytes('package-lock.json', [Convert]::FromBase64String($encoded))
+      - name: Align the lockfile with this release version
+        shell: bash
+        run: |
+          node -e '
+          const fs = require("fs");
+          const v = process.argv[1];
+          for (const f of ["package.json", "package-lock.json"]) {
+            const p = JSON.parse(fs.readFileSync(f, "utf8"));
+            p.version = v;
+            if (p.packages && p.packages[""]) p.packages[""].version = v;
+            fs.writeFileSync(f, JSON.stringify(p, null, 2) + "\n");
+          }' "${{ inputs.version }}"
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
       - name: Install locked dependencies
         run: npm ci
-      - name: Run save regression tests
-        run: node --test tests/save.test.js
+      - name: Run save and sign regression tests
+        run: node --test tests/save.test.js tests/station-recovery.test.js
       - name: Build portable game, installer, and ZIP
         run: npm run build:windows
       - name: Verify ZIP contents and integrity
@@ -46,7 +67,7 @@ jobs:
             }
           } finally { $archive.Dispose() }
           Get-FileHash $zip -Algorithm SHA256 | Format-List
-      - name: Attach ZIP to existing beta draft
+      - name: Attach ZIP to the release draft
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload v0.1.1-beta.1 artifacts/Starlight-Hollow-Windows-x64.zip --clobber
+        run: gh release upload "${{ inputs.tag }}" artifacts/Starlight-Hollow-Windows-x64.zip --clobber

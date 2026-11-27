@@ -1,4 +1,4 @@
-Starlight Hollow 0.1.1-beta.1 - Windows x64 playtest
+Starlight Hollow 0.1.2-beta.1 - Windows x64 playtest
 
 Extract this ZIP before running either file. Choose one:
 - Starlight-Hollow-Portable.exe starts the game without installation.
@@ -11,8 +11,14 @@ speech voice. Subtitles are available if speech is unavailable.
 
 This preview is unsigned. Windows may show an unknown-publisher warning.
 
-REPLAY PLAYTEST
+GENTLER SIGN PLAYTEST
 - Walk with WASD or arrow keys, look with the mouse, and click to zap.
+- At a sign with three or more choices, answer wrongly twice. One wrong
+  choice should fade to grey so two choices remain, with "Easier now!" on
+  screen and a hint spoken a moment later. The right answer never fades.
+- Walk away and come back: all choices should be bright again.
+- Solve an island and take its Starberry. Its arch in the meadow should
+  show a small star and a fainter beam.
 - At an unsolved sign, press R to repeat its prompt without losing mouse look.
 - In drag-to-look mode, click the circular repeat button and check that it
   repeats the same prompt. Walk away: only that sign's prompt should disappear.
