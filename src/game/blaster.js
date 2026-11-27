@@ -14,6 +14,8 @@ export class Blaster {
     this.cooldown = 0;
     this.recoil = 0;
     this.bobPhase = 0;
+    this.rainbow = false;
+    this.hue = 0;
     this.projectiles = [];
     this.onHit = null;
     this.groundFn = () => 0;
@@ -87,10 +89,27 @@ export class Blaster {
     this.group.add(this.muzzle);
   }
 
+  /** Momo's Rainbow Blaster: every zap gets the next colour of the rainbow. */
+  setRainbow(on) {
+    this.rainbow = !!on;
+    if (!this.rainbow) {
+      this.boltMat.color.set(0xfff2b0);
+      this.gemGlow.material.color.set(0xffd166);
+    }
+  }
+
   fire(targetPosition = null, targetRef = null) {
     if (this.cooldown > 0) return false;
     this.cooldown = 0.24;
     this.recoil = 1;
+    if (this.rainbow) {
+      this.hue = (this.hue + 0.11) % 1;
+      // Set the hue in sRGB so the bolts read as a real rainbow instead of a
+      // washed-out pastel after the renderer's tone mapping.
+      const color = new THREE.Color().setHSL(this.hue, 0.92, 0.55, THREE.SRGBColorSpace);
+      this.boltMat.color.copy(color);
+      this.gemGlow.material.color.copy(color);
+    }
     this.audio?.zap();
 
     const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
