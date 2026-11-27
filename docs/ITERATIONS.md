@@ -4,6 +4,22 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 9 — Gentler second chances
+
+- Picture and pattern signs now shrink the question after two misses: one wrong pad dims to a quiet grey (no glow, no aim assist, no shake), `Easier now!` appears, and the existing hint is still spoken a moment later. Each further miss removes one more, never below two choices and never the answer. `sequence` and `memory` signs keep every pad, because their order is the puzzle.
+- Leaving a sign at 18 m still clears only its prompt; returning restores every pad and resets the attempts counter, so a fresh approach is never pre-simplified.
+- Arches carry a small star above the portal icon once that island's Starberry is safe, and their beacon fades to 0.04 opacity, so a child can read from the meadow which paths are finished.
+- `tests/station-recovery.test.js` (5 cases) covers the thresholds, the answer pad, wide four-pad signs, two-choice signs and the exempt sequence/memory types. `node --test tests/save.test.js tests/station-recovery.test.js` → 9/9 pass; `npm run build` → exit 0.
+- Browser runtime (cloud Chrome, software renderer): two wrong hits on `meadow-shape` left pads `['active','dim','active']` with 2 aim choices and `Easier now!`; `deactivate()` put all pads to sleep; `activate()` restored all three and reset `mistakes` to 0; no page errors. `_collectStarberry('peaks')` made the Peaks arch badge visible (world y 6.0) and dropped its beam to 0.04. Screenshots: `artifacts/r9-easier-choices.png`, `artifacts/r9-arch-star.png`.
+- Not verified: audible narration, real pointer-lock zapping, the Windows executables, or a child playtest. The narrowing is a per-sign scaffold, not per-subject adaptive practice.
+
+## Windows beta release — v0.1.1-beta.1
+
+- Synced the current game and desktop packaging source to the public GitHub repository and added a Windows Actions workflow. The workflow reconstructs the pinned npm lockfile, runs save regression tests, builds the portable EXE and installer, checks the ZIP, and attaches it to the release.
+- The first Windows runner exposed a custom NSIS path issue. Replaced that script with electron-builder's standard per-user installer; the second run passed.
+- Published the prerelease at `https://github.com/kidseib/starlight-hollow/releases/tag/v0.1.1-beta.1`. An unauthenticated download returned HTTP 200; its 223,058,188-byte ZIP matched SHA-256 `f988975385f7d09151a43b5d30957dfae1ba0d0d04e3a46a7317d655d6f73dcb` and all three entries passed ZIP integrity checks.
+- Windows gameplay, narration, shortcut, save/relaunch, and uninstall still need a human Windows playtest. The build is unsigned.
+
 ## Iteration 8 — Ask Pip to show it again
 
 - Press **R** during play to hear the nearest active sign again, even if its subtitle has timed out. The repeat button uses the same action. The shortcut is inactive while paused or traveling.
