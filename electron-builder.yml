@@ -16,7 +16,9 @@ win:
 nsis:
   installerLanguages: [en_US]
   artifactName: Starlight-Hollow-Setup.exe
-  script: desktop/installer.nsi
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
   differentialPackage: false
 portable:
   artifactName: Starlight-Hollow-Portable.exe
