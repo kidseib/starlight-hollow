@@ -7,6 +7,7 @@ export const PAD_STATE_COLORS = {
   active: 0xffc94b,
   correct: 0x8dffd0,
   wrong: 0xff8fa3,
+  dim: 0x9aa3c4,
 };
 
 /**
@@ -79,7 +80,7 @@ export class GlyphPad {
     const color = PAD_STATE_COLORS[this.state] ?? PAD_STATE_COLORS.sleep;
     this.ringMat.emissive.setHex(color);
     this.glow.material.color.setHex(color);
-    this.faceMat.opacity = this.state === 'sleep' ? 0.8 : 1;
+    this.faceMat.opacity = this.state === 'dim' ? 0.22 : this.state === 'sleep' ? 0.8 : 1;
   }
 
   setHighlight(on) {
@@ -104,6 +105,7 @@ export class GlyphPad {
 
     const alive = this.state === 'active' || this.state === 'correct';
     let target = alive ? 1.02 : 0.96;
+    if (this.state === 'dim') target = 0.8;
     if (this.highlighted && this.state === 'active') target = 1.16;
     if (this.state === 'correct') target += 0.08;
     target += this.pop * 0.22;
@@ -117,12 +119,21 @@ export class GlyphPad {
     if (this.state === 'active') glow = 0.18 + pulse * 0.16;
     if (this.state === 'correct') glow = 0.5 + pulse * 0.12;
     if (this.state === 'wrong') glow = 0.4;
+    if (this.state === 'dim') glow = 0;
     if (this.highlighted && this.state === 'active') glow += 0.22;
     this.glow.material.opacity = damp(this.glow.material.opacity, glow, 9, dt);
     this.glow.scale.setScalar(2.9 + (this.highlighted ? 0.5 : 0) + pulse * 0.12);
 
     const targetEmissive =
-      this.state === 'active' ? 0.85 + pulse * 0.35 : this.state === 'correct' ? 1.5 : this.state === 'wrong' ? 1.2 : 0.4;
+      this.state === 'active'
+        ? 0.85 + pulse * 0.35
+        : this.state === 'correct'
+          ? 1.5
+          : this.state === 'wrong'
+            ? 1.2
+            : this.state === 'dim'
+              ? 0.12
+              : 0.4;
     this.ringMat.emissiveIntensity = damp(this.ringMat.emissiveIntensity, targetEmissive, 10, dt);
   }
 
