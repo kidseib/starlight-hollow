@@ -1,0 +1,156 @@
+# Iteration History
+
+A running record so future sessions do not repeat work. Newest first.
+
+---
+
+## Iteration 8 — Ask Pip to show it again
+
+- Press **R** during play to hear the nearest active sign again, even if its subtitle has timed out. The repeat button uses the same action. The shortcut is inactive while paused or traveling.
+- Memory signs replay the actual lights and start a fresh copy round. Answers wait until the demo finishes; repeated presses do not queue overlapping demos. Other signs keep any answer progress.
+- Focused logic checks exercised nearest-sign selection, pause, speech fallback, and the memory replay cycle. The Vite production build passed. Pointer-lock input and audible playback were not tested in-browser. The existing Windows ZIP predates these changes.
+
+## Iteration 7 — Resume an island adventure
+
+- A return visit starts at the last island’s safe landing spot with its own Pip greeting, not back at the first arch. Pausing or leaving the page flushes pending sparkle rewards.
+- Kept the v1 save key, added a previous-checkpoint backup, sanitized malformed fields, and retained dirty progress for retry after write failure. Restored the completed ending flag for five-berry saves. Meadow practice signs no longer spawn a sixth berry.
+- Browser runtime: clicked Play, invoked travel to Peaks and awarded three sparkles through the game API, then immediately reloaded. Peaks, three sparkles and both visited islands were restored. This was a scripted runtime check, not child playtesting.
+- Regression command: `node --test tests/save.test.js`. Next: finish the pattern interaction evidence, then make repeat-prompt accessible without releasing pointer lock. Physical Android and Windows testing remains outstanding.
+
+## Iteration 6 — Pattern Peaks sequence plinths
+
+- Both sequences now use animated picture rows, a pulsing mystery slot and a sequence sign. A wrong answer replays the highlight; solving or restoring a sign fills the slot. Shared station rewards and Pip reactions are retained.
+- Earlier station-data audit covered all 29 stations; before image: `artifacts/r6-pattern-before.png`. The full wrong/right input capture and after image were not completed in that pass.
+
+## Iteration 5 — A visible companion + project documentation
+
+**Goal:** make Pip a real character in the world (he was only a voice) and start the persistent
+documentation the project needs.
+
+**Changed**
+
+- `src/game/companion.js` (new): procedural firefly-bird — cream body, gold wings with pivots,
+  oversized eyes, crest, star tail, two glow sprites. Follows the camera with damped offsets,
+  trails further when running, flaps faster when moving, spins + sparks on celebration, squints and
+  dips on a wrong answer, and drifts toward a sign when pointing.
+- `src/game/game.js`: creates Pip, snaps him beside the player on zone entry, celebrates on
+  `onStationSolved`, and adds `_updateCompanionHint()` — after 9 s of standing still with no active
+  sign, Pip floats to the nearest unsolved sign, says "Over there! A sign is waiting for you."
+  (voiced + hint strip), 30 s cooldown.
+- `src/game/station.js`: `ctx.onWrong` hook fired from `_wrong()` and `_sequenceReset()`.
+- `docs/GAME_DESIGN.md`, `docs/ITERATIONS.md` (new).
+
+**Verified (cloud browser, software renderer, real input)**
+
+- `npx vite build` → 0; boot clean, no console/runtime errors.
+- Pip exists, is visible, and sits at 23–26 % of screen width about 2.4 m from the camera —
+  beside the blaster, never over the crosshair.
+- Follows while walking (5.6 m/s): keeps a steady 2.3–2.4 m, no rubber-banding, stays on screen.
+- Wrong pad at the meadow sign → `companion.sad` 1.05 with "Try again!" (wings drop, eyes squint,
+  body dips, plus the existing pad flash/hint).
+- Correct pad → `companion.cheer` 1.30 with "Perfect!", sparkle burst, solved plinth.
+- Idle 9 s with no active sign → hint strip "Pip: over there — a sign is waiting!" plus the voiced
+  line, and `pointAt` targets the nearest unsolved sign (30 s cooldown so it never nags).
+- Fixed during testing: Pip originally flew straight at the sign and left the frame; he now swings to
+  that side of the view but stays clamped to ±0.3 rad / 2.85 m, so he is always visible while
+  pointing.
+
+**Testing note:** synthetic mouse events left large `movementX/Y` deltas in the input queue, which
+made the test camera drift at the sky. Zeroing `input.dx/dy` and re-setting `player.pitch` before a
+screenshot fixed the harness (the game's look code was correct).
+
+**Known issues / next**
+
+- Parent dashboard and adaptive difficulty are still missing.
+- Pattern Peaks `peaks-ab` / `peaks-aab` still show the default "?" marker plate.
+
+---
+
+## Iteration 4 — Pattern Peaks memory sign plates
+
+**Goal:** close the last non-reader gap — the two memory signs had no sign plate and fell back to a
+"?" marker.
+
+**Changed**
+
+- `src/content.js`: `peaks-memory3` / `peaks-memory4` gained `sign: { kind: 'icon', text: '👀' }`,
+  matching the memory signs in Storysong Glade and Pebblecount Cove; the second prompt was written
+  as a full spoken sentence.
+
+**Verified**
+
+- Walked to both signs with W: plates at the standard 2.1 scale / 5.4 height, centred and readable,
+  prompts voiced, four pads spaced 21 %–79 % of the screen.
+- Solved sign 1 with real mouse presses: wrong pad → "Start again!", flashing pad, repeated prompt;
+  ⭐→🌸→🌙 → "You did it!", solved plinth, "1 of 5 signs solved".
+- Reload restored the solved sign plus all five zones' stars, sockets, berries and friend.
+- 5/5 ending fired with correct stats and returned to play with the HUD.
+
+**Discovered**
+
+- Playwright's `mouse.click()` moves the cursor first; under pointer lock that jump swings the
+  camera off target, which made some click tests silently miss. Firing with `mouse.down()/up()`
+  after aiming fixed the harness (game input was never at fault).
+
+---
+
+## Iteration 3 — Pebblecount Cove (fifth zone, mathematics)
+
+**Changed**
+
+- `src/content.js`: new `cove` zone (origin x 2100, sand/turquoise palette), 6 math stations,
+  3 puffkins + 2 grumps, 26 sparkles, return portal, fifth meadow arch at (−40, 14).
+- `src/world/textures.js`: new plate kinds `group`, `sum`, `take`; vector `+`/`−` operators; number
+  pads rebuilt as big numeral + compact dot row; letter pads gained an optional picture `marker` card.
+- `src/content.js`: picture markers on every grove/words letter pad (⚽ for B, 🐶 for D, …).
+- Five-berry wiring: `ZONE_STAR_ORDER` + `SOCKET_COUNT` 5, altar widened, fifth HUD star, all
+  totals derived from the list.
+- `src/game/game.js`: cove greeting/music, zone entry cancels leftover narration, totals de-hardcoded.
+
+**Verified**
+
+- 6 islands, 5 arches, 5 sockets, 5 star slots, no console errors.
+- Walked through the fifth arch (banner, greeting, music), solved two cove signs by real clicks with
+  wrong-then-right paths, solved a grove picture-card sign by real clicks.
+- Full five-berry run → ending 5/5 · 27 signs · 1 friend, "Keep exploring" → play.
+- Reload restored cove 6/6 signs, its berry (not respawned), the friend, and all sockets.
+- Frame rate unchanged with the sixth island (4.0 fps meadow / 3.3 fps grove in this VM).
+
+---
+
+## Iteration 2 — Storysong Glade (fourth zone, reading)
+
+**Changed**
+
+- `src/content.js`: `words` zone with 6 stations (beginning sounds, rhyme, CAT/DOG word building,
+  syllables, picture memory), fourth meadow arch, `ZONE_STAR_ORDER` growth.
+- Fourth HUD star slot, fourth Wish Tree socket built from a loop, `ZONE_GREETINGS.words`, `cove`
+  music entry later; all "four" strings derived.
+- `src/world/props.js`: sockets built in a `SOCKET_COUNT` loop.
+- Performance: distance culling of islands, stations, creatures and sparkles (`setVisible`,
+  `_updateVisibility`).
+- Emoji pads gained a warm picture-plate backing; station prompts cancel scripted narration.
+
+**Verified**
+
+- Arch walk-in, two signs solved by real clicks (retry + praise), full four-berry run, ending 4/4,
+  reload restore of the zone's signs, berry and befriended Song Puff.
+
+---
+
+## Iteration 1 — Vertical slice
+
+**Built**
+
+- Three.js + Vite project, first-person player (coyote time, jump buffer, soft island edge, head
+  bob), canvas-glyph blaster with homing bolts, station system (pick/sequence/memory), sparkles,
+  puffkins and grumbleweeds, portals with plaques and veils, Wish Tree with glowing sockets, HUD,
+  speech bubble + Web Speech voice, synthesised music and SFX, localStorage save.
+- Hub (Sunbeam Meadow) + Letterleaf Grove, Tallybrook Falls, Pattern Peaks; shapes/colours tutorial;
+  letters, numbers, patterns and memory activities; ending sequence and "Keep exploring".
+
+**Fixed during iteration 1**
+
+- Stations/creatures were double-offset (island group + world position) — moved to world space.
+- Terrain now flattens under stations and portals so pads are never buried.
+- Ending panel scheduling moved to delta-time so it cannot stall.
