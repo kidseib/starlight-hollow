@@ -9,7 +9,7 @@
   --pink: #ff9ec4;
   --violet: #b9a5ff;
   --shadow: 0 10px 26px rgba(38, 49, 79, 0.24);
-  --font: 'Fredoka', 'Baloo 2', 'Trebuchet MS', system-ui, -apple-system, sans-serif;
+  --font: 'Fredoka Variable', 'Baloo 2', 'Trebuchet MS', system-ui, -apple-system, sans-serif;
 }
 
 * {
@@ -259,6 +259,11 @@ canvas#game {
   cursor: pointer;
   transition: transform 0.12s ease, background 0.12s ease;
   box-shadow: inset 0 -3px 0 rgba(38, 49, 79, 0.12);
+}
+
+.round-btn kbd {
+  display: block;
+  font: 600 12px/1 var(--font);
 }
 
 .round-btn:hover {

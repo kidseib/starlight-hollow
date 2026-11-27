@@ -9,7 +9,7 @@ export class HUD {
     this.bubbleText = document.getElementById('bubble-text');
     this.bubbleFace = document.getElementById('bubble-face');
     this.repeatBtn = document.getElementById('repeat-btn');
-    this.repeatAction = null;
+    this.bubbleOwner = null;
     this.feedback = document.getElementById('feedback');
     this.hint = document.getElementById('hint');
     this.bannerEl = document.getElementById('banner');
@@ -29,30 +29,38 @@ export class HUD {
     this._feedbackTimer = null;
     this._bannerTimer = null;
     this._hintTimer = null;
+  }
 
-    this.repeatBtn?.addEventListener('click', () => {
-      this.audio?.ui();
-      if (this.repeatAction) this.repeatAction();
-      else this.voice?.repeat();
-    });
+  replayBubble() {
+    // Game handles sign replay; only ordinary dialogue can fall back to the bubble.
+    if (this.bubbleOwner || !this.bubble || this.bubble.classList.contains('hidden')) return;
+    const text = this.bubbleText.textContent;
+    this.showBubble(text, this.bubbleFace.textContent);
+    this.voice?.say(text);
   }
 
   setVisible(on) {
     this.ui.classList.toggle('hidden', !on);
   }
 
-  showBubble(text, face = '✨', repeatAction = null) {
+  showBubble(text, face = '✨', owner = null) {
     if (!this.bubble) return;
     this.bubbleText.textContent = text;
     this.bubbleFace.textContent = face;
-    this.repeatAction = repeatAction;
+    this.bubbleOwner = owner;
     this.bubble.classList.remove('hidden');
+    this.bubble.inert = false;
     clearTimeout(this._bubbleTimer);
     this._bubbleTimer = setTimeout(() => this.hideBubble(), 14000);
   }
 
-  hideBubble() {
-    this.bubble?.classList.add('hidden');
+  hideBubble(owner) {
+    if (owner !== undefined && owner !== this.bubbleOwner) return;
+    this.bubbleOwner = null;
+    if (this.bubble) {
+      this.bubble.classList.add('hidden');
+      this.bubble.inert = true;
+    }
     clearTimeout(this._bubbleTimer);
   }
 

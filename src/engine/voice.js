@@ -31,13 +31,13 @@ export class Voice {
     if (!this.supported) return;
     const voices = window.speechSynthesis.getVoices() || [];
     if (!voices.length) return;
-    const english = voices.filter((v) => /^en[-_]?/i.test(v.lang) || /english/i.test(v.name));
+    const english = voices.filter((v) => v.localService && (/^en[-_]?/i.test(v.lang) || /english/i.test(v.name)));
     let best = null;
     for (const key of NICE_VOICES) {
       best = english.find((v) => v.name.toLowerCase().includes(key));
       if (best) break;
     }
-    if (!best) best = english.find((v) => v.localService) || english[0] || voices[0];
+    if (!best) best = english.find((v) => v.localService) || english[0];
     this.voice = best || null;
   }
 

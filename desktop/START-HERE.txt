@@ -1,0 +1,26 @@
+Starlight Hollow 0.1.1-beta.1 - Windows x64 playtest
+
+Extract this ZIP before running either file. Choose one:
+- Starlight-Hollow-Portable.exe starts the game without installation.
+- Starlight-Hollow-Setup.exe installs the game for your Windows user.
+
+Windows 10/11 (64-bit) and a WebGL-capable graphics driver are required.
+The game runtime and assets are included; no separate browser or Node.js
+installation is needed. Spoken prompts depend on a local Windows English
+speech voice. Subtitles are available if speech is unavailable.
+
+This preview is unsigned. Windows may show an unknown-publisher warning.
+
+REPLAY PLAYTEST
+- Walk with WASD or arrow keys, look with the mouse, and click to zap.
+- At an unsolved sign, press R to repeat its prompt without losing mouse look.
+- In drag-to-look mode, click the circular repeat button and check that it
+  repeats the same prompt. Walk away: only that sign's prompt should disappear.
+- In Pattern Peaks, try a memory sign. Wait for its demo, begin copying, then
+  press R. The lights should replay once in order and allow a fresh attempt.
+  Repeated presses during the demo should not add another round.
+- Also check launch in both editions, offline voice, save/reopen, and uninstall.
+
+Send feedback to https://github.com/kidseib/starlight-hollow/issues.
+Include your Windows version, portable or installer, steps, and what happened.
+Please leave out names or other personal information about children.

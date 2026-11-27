@@ -4,6 +4,19 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Windows beta release — v0.1.1-beta.1
+
+- Synced the current game and desktop packaging source to the public GitHub repository and added a Windows Actions workflow. The workflow reconstructs the pinned npm lockfile, runs save regression tests, builds the portable EXE and installer, checks the ZIP, and attaches it to the release.
+- The first Windows runner exposed a custom NSIS path issue. Replaced that script with electron-builder's standard per-user installer; the second run passed.
+- Published the prerelease at `https://github.com/kidseib/starlight-hollow/releases/tag/v0.1.1-beta.1`. An unauthenticated download returned HTTP 200; its 223,058,188-byte ZIP matched SHA-256 `f988975385f7d09151a43b5d30957dfae1ba0d0d04e3a46a7317d655d6f73dcb` and all three entries passed ZIP integrity checks.
+- Windows gameplay, narration, shortcut, save/relaunch, and uninstall still need a human Windows playtest. The build is unsigned.
+
+## Iteration 8 — Ask Pip to show it again
+
+- Press **R** during play to hear the nearest active sign again, even if its subtitle has timed out. The repeat button uses the same action. The shortcut is inactive while paused or traveling.
+- Memory signs replay the actual lights and start a fresh copy round. Answers wait until the demo finishes; repeated presses do not queue overlapping demos. Other signs keep any answer progress.
+- Focused logic checks exercised nearest-sign selection, pause, speech fallback, and the memory replay cycle. The Vite production build passed. Pointer-lock input and audible playback were not tested in-browser. The existing Windows ZIP predates these changes.
+
 ## Iteration 7 — Resume an island adventure
 
 - A return visit starts at the last island’s safe landing spot with its own Pip greeting, not back at the first arch. Pausing or leaving the page flushes pending sparkle rewards.

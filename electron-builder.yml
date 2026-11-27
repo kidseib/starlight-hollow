@@ -1,0 +1,25 @@
+appId: com.starlighthollow.game
+productName: Starlight Hollow
+directories:
+  output: windows-build
+files:
+  - dist/**
+  - desktop/main.cjs
+  - package.json
+extraResources:
+  - from: node_modules/three/LICENSE
+    to: LICENSE-three.txt
+  - from: node_modules/@fontsource-variable/fredoka/LICENSE
+    to: LICENSE-fredoka.txt
+win:
+  signAndEditExecutable: false
+nsis:
+  installerLanguages: [en_US]
+  artifactName: Starlight-Hollow-Setup.exe
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  differentialPackage: false
+portable:
+  artifactName: Starlight-Hollow-Portable.exe
+  # Both Windows targets embed the runtime; no web installer is generated.

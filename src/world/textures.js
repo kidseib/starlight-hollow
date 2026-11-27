@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const FONT = "'Fredoka', 'Baloo 2', 'Trebuchet MS', system-ui, sans-serif";
+const FONT = "'Fredoka Variable', 'Baloo 2', 'Trebuchet MS', system-ui, sans-serif";
 const INK = '#26314f';
 const CREAM = '#fffaf0';
 

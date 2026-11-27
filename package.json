@@ -1,18 +1,25 @@
 {
   "name": "starlight-hollow",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1-beta.1",
   "type": "module",
   "description": "Starlight Hollow - a first-person educational adventure for young explorers.",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3000",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0 --port 3001"
+    "preview": "vite preview --host 0.0.0.0 --port 3001",
+    "build:windows": "npm run build && electron-builder --win nsis portable --x64 --publish never && node desktop/bundle.mjs"
   },
   "dependencies": {
+    "@fontsource-variable/fredoka": "5.2.8",
     "three": "^0.169.0"
   },
   "devDependencies": {
-    "vite": "^5.4.10"
-  }
+    "electron": "45.5.0",
+    "electron-builder": "26.18.0",
+    "vite": "^5.4.10",
+    "yazl": "3.3.1"
+  },
+  "main": "desktop/main.cjs",
+  "author": "Starlight Hollow"
 }

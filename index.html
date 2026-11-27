@@ -6,9 +6,6 @@
     <title>Starlight Hollow — A First-Person Adventure for Little Explorers</title>
     <meta name="description" content="An original first-person adventure game for ages 5-7: explore glowing islands, befriend puffkins, and wake the Star Tree with letters, numbers and patterns." />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
@@ -31,12 +28,12 @@
 
       <div id="crosshair" class="is-soft"><span class="dot"></span><span class="ring"></span></div>
 
-      <div id="bubble" class="hidden">
+      <div id="bubble" class="hidden" inert>
         <div class="bubble-face" id="bubble-face">🐣</div>
         <div class="bubble-body">
           <p id="bubble-text">Hello!</p>
           <div class="bubble-actions">
-            <button id="repeat-btn" class="round-btn" title="Say it again">🔁</button>
+            <button id="repeat-btn" type="button" class="round-btn" title="Say it again (R)" aria-label="Say it again" aria-keyshortcuts="R">🔁 <kbd>R</kbd></button>
           </div>
         </div>
       </div>
@@ -68,6 +65,7 @@
           <div><b>Look around</b><span>Move the mouse</span></div>
           <div><b>Jump</b><span>Space</span></div>
           <div><b>Zap a glowing sign</b><span>Click</span></div>
+          <div><b>Hear it again</b><span>R</span></div>
         </div>
         <p class="grown-up">For explorers aged 5–7 · Everyone talks out loud, so turn your sound on 🔊</p>
       </div>

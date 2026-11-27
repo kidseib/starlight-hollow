@@ -1,3 +1,4 @@
+import "@fontsource-variable/fredoka";
 import * as THREE from 'three';
 import { Input } from './engine/input.js';
 import { GameAudio } from './engine/audio.js';
@@ -71,7 +72,13 @@ muteBtn?.addEventListener('click', () => {
   setMuted(!muted);
 });
 
+const repeatInstruction = () => game.repeatInstruction();
+hud.repeatBtn?.addEventListener('click', repeatInstruction);
+
 window.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyR' && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    repeatInstruction();
+  }
   if (e.code === 'Escape') {
     if (game.state === 'play') game.pause();
     else if (game.state === 'paused') game.resume();

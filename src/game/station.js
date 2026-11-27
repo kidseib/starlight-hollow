@@ -194,11 +194,7 @@ export class Station {
     }
     for (const pad of this.pads) pad.setState('active');
     this.ctx.audio?.unlock();
-    this.ctx.hud?.showBubble(this.def.prompt, this.def.sign?.text ?? '✨', () => this.repeatPrompt());
-    this.ctx.voice?.say(this.def.prompt);
-    if (this.def.type === 'memory') {
-      this._schedule(1.2, () => this._playMemory());
-    }
+    this.repeatPrompt();
   }
 
   /** Restore a station that was already solved in a previous session. */
@@ -213,6 +209,7 @@ export class Station {
 
   deactivate() {
     if (!this.active) return;
+    this.ctx.hud?.hideBubble(this);
     this.active = false;
     this.watching = false;
     this.progress = 0;
@@ -223,7 +220,15 @@ export class Station {
   }
 
   repeatPrompt() {
-    this.ctx.voice?.say(this.def.prompt, { interrupt: true });
+    if (!this.active || this.solved || this.watching) return;
+    this.ctx.hud?.showBubble(this.def.prompt, this.def.sign?.text ?? '✨', this);
+    this.ctx.voice?.say(this.def.prompt);
+    if (this.def.type === 'memory') {
+      // Replace pending demos and retry narration. A replay starts a fresh copy round.
+      this.timers.length = 0;
+      this.watching = true;
+      this._schedule(1.2, () => this._playMemory());
+    }
   }
 
   _schedule(delay, fn) {
@@ -299,8 +304,7 @@ export class Station {
     if (this.def.type === 'pattern') this._schedule(1.3, () => this._playPatternLoop());
     this._schedule(2.7, () => {
       if (this.solved || !this.active) return;
-      this.ctx.hud?.showBubble(this.def.hint ?? this.def.prompt, this.def.sign?.text ?? '💡', () => this.repeatPrompt());
-      this.ctx.voice?.say(this.def.hint ?? this.def.prompt, { pitch: 1.12 });
+      this._showRetryHint();
     });
   }
 
@@ -322,15 +326,17 @@ export class Station {
     });
     this._schedule(2.9, () => {
       if (this.solved || !this.active) return;
-      const hint = this.def.hint ?? this.def.prompt;
-      this.ctx.hud?.showBubble(hint, this.def.sign?.text ?? '💡', () => this.repeatPrompt());
-      this.ctx.voice?.say(hint, { pitch: 1.12 });
+      this._showRetryHint();
     });
   }
 
+  _showRetryHint() {
+    const hint = this.def.hint ?? this.def.prompt;
+    this.ctx.hud?.showBubble(hint, this.def.sign?.text ?? '💡', this);
+    this.ctx.voice?.say(hint, { pitch: 1.12 });
+  }
+
   _playMemory() {
-    if (!this.active || this.solved) return;
-    this.watching = true;
     this.progress = 0;
     for (const pad of this.pads) pad.setState('active');
     const step = 0.72;
@@ -360,6 +366,7 @@ export class Station {
     for (const pad of this.pads) pad.setState('correct');
     this.base.setSolved();
     this._fillPatternBlank();
+    this.ctx.hud?.hideBubble(this);
     this.ctx.audio?.correct();
     this._schedule(0.35, () => this.ctx.audio?.star());
     const praise = PRAISE_LINES[Math.floor(Math.random() * PRAISE_LINES.length)];

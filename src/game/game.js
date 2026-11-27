@@ -217,6 +217,26 @@ export class Game {
     this.input.requestLock();
   }
 
+  repeatInstruction() {
+    if (this.state !== 'play' || this.transitioning) return;
+    let nearest = null;
+    let distance = Infinity;
+    for (const station of this.currentData?.stations ?? []) {
+      if (!station.active || station.solved) continue;
+      const candidate = station.distanceTo(this.player.position);
+      if (candidate < distance) {
+        nearest = station;
+        distance = candidate;
+      }
+    }
+    if (nearest) {
+      this._cancelSayChain();
+      nearest.repeatPrompt();
+    } else {
+      this.hud.replayBubble();
+    }
+  }
+
   starCount() {
     return ZONE_STAR_ORDER.filter((z) => this.stars[z]).length;
   }
@@ -228,7 +248,7 @@ export class Game {
   _sayThen(lines, index = 0, token = ++this._chainToken) {
     if (index >= lines.length || token !== this._chainToken) return;
     const line = lines[index];
-    this.hud.showBubble(line.text, line.face ?? '🐣', () => this.voice.say(line.text));
+    this.hud.showBubble(line.text, line.face ?? '🐣');
     if (!this.voice.supported) {
       this.schedule(4.2, () => this._sayThen(lines, index + 1, token));
       return;
@@ -276,7 +296,7 @@ export class Game {
       this.hud.showBanner(zone.name, zone.subtitle, 4200);
       this.audio.unlock();
       const greeting = ZONE_GREETINGS[zoneId] ?? zone.name;
-      this.hud.showBubble(greeting, zone.kind === 'hub' ? '🌻' : '✨', () => this.voice.say(greeting));
+      this.hud.showBubble(greeting, zone.kind === 'hub' ? '🌻' : '✨');
       this.voice.say(greeting);
       this.visited.add(zoneId);
     }
@@ -357,7 +377,7 @@ export class Game {
     this.audio.star();
     this.hud.showBanner('A Starberry appeared!', 'Follow the beam of light ✨', 4600);
     const line = 'You solved every sign here! A Starberry is waiting in the middle of the island. Follow the beam of light!';
-    this.hud.showBubble(line, '💖', () => this.voice.say(line));
+    this.hud.showBubble(line, '💖');
     this.voice.say(line);
     this.fx?.fountain(pos, 0xffc0d8, 40);
   }
@@ -374,10 +394,10 @@ export class Game {
     let line = `You found the ${zone.name} Starberry! Wonderful!`;
     if (this.starCount() === ZONE_STAR_ORDER.length) {
       line = `All ${ZONE_STAR_ORDER.length} Starberries! Bring them to the Star Tree in the meadow. Hurry, hurry!`;
-      this.hud.showBubble(line, '🌟', () => this.voice.say(line));
+      this.hud.showBubble(line, '🌟');
     } else {
       line += ` ${ZONE_STAR_ORDER.length - this.starCount()} more to find.`;
-      this.hud.showBubble(line, '💖', () => this.voice.say(line));
+      this.hud.showBubble(line, '💖');
     }
     this.voice.say(line);
     this._updateGoal();
@@ -501,7 +521,7 @@ export class Game {
       creature.scanned = true;
       this.scannedCreatures.add(key);
       const line = `This is a ${creature.name}. ${creature.fact}`;
-      this.hud.showBubble(line, '🐣', () => this.voice.say(line));
+      this.hud.showBubble(line, '🐣');
       this.voice.say(line);
       this.hud.toast(`New friend: ${creature.name}`, '💚');
       this.addSparkles(4, true);

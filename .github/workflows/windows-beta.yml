@@ -1,0 +1,52 @@
+name: Windows beta
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore pinned dependency lockfile
+        shell: pwsh
+        run: |
+          $parts = Get-ChildItem .github/lock-parts/*.txt | Sort-Object Name
+          $encoded = ($parts | ForEach-Object { (Get-Content $_.FullName -Raw).Trim() }) -join ''
+          [IO.File]::WriteAllBytes('package-lock.json', [Convert]::FromBase64String($encoded))
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run save regression tests
+        run: node --test tests/save.test.js
+      - name: Build portable game, installer, and ZIP
+        run: npm run build:windows
+      - name: Verify ZIP contents and integrity
+        shell: pwsh
+        run: |
+          $zip = 'artifacts/Starlight-Hollow-Windows-x64.zip'
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $archive = [IO.Compression.ZipFile]::OpenRead((Resolve-Path $zip))
+          try {
+            $actual = @($archive.Entries | ForEach-Object FullName | Sort-Object)
+            $expected = @('START-HERE.txt', 'Starlight-Hollow-Portable.exe', 'Starlight-Hollow-Setup.exe')
+            if (Compare-Object $actual $expected) { throw "Unexpected ZIP entries: $actual" }
+            foreach ($entry in $archive.Entries) {
+              $stream = $entry.Open()
+              try {
+                $buffer = New-Object byte[] 1048576
+                while ($stream.Read($buffer, 0, $buffer.Length) -gt 0) {}
+              } finally { $stream.Dispose() }
+            }
+          } finally { $archive.Dispose() }
+          Get-FileHash $zip -Algorithm SHA256 | Format-List
+      - name: Attach ZIP to existing beta draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload v0.1.1-beta.1 artifacts/Starlight-Hollow-Windows-x64.zip --clobber
