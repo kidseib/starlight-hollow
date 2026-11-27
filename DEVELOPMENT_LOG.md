@@ -40,14 +40,18 @@ twice: the prompt repeated, the hint arrived, but the question itself stayed exa
 
 **Open**
 
+- Windows beta `0.1.2-beta.1` shipped: Actions run #4 passed, the ZIP was attached and the prerelease
+  published; a signed-out download returned HTTP 200 with SHA-256
+  `ae6e5f7716df87a8bc55a696d9b9c8d491784c75be594872b9fc3929612e6020` and three intact entries.
 - Audible speech, real pointer-lock zapping and the packaged Windows builds were not exercised.
 - The two pattern signs still lack the full wrong/correct capture promised in iteration 6.
-- Windows beta 0.1.2-beta.1 must finish its Actions build and be published before testers have it.
+- A human Windows playtest is still needed: both editions, R and the button, the faded choice, an
+  arch star, offline narration, save and reopen, the installer shortcut, and uninstall.
 
 **Next actions**
 
-1. Confirm the Windows workflow attached and published the ZIP; download it signed-out and compare
-   the SHA-256 with GitHub's asset digest.
+1. Confirm the Windows workflow's next dispatch only passes `tag`; the extra `version` input silently
+   aborts the dispatch.
 2. Add a grown-up progress corner to the pause screen (letters, numbers, patterns, memory counts).
 3. Finish the pattern-sign wrong/right evidence, including the filled blank after a reload.
 

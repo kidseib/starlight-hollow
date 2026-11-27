@@ -4,6 +4,13 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Windows beta release — v0.1.2-beta.1
+
+- Shipped the gentler-second-chance build: GitHub Actions run #4 (`windows-beta.yml`, tag input `v0.1.2-beta.1`) passed on `windows-latest` and attached the ZIP to the draft release, which was then published as a public prerelease at `https://github.com/kidseib/starlight-hollow/releases/tag/v0.1.2-beta.1`.
+- Note for future dispatches: the workflow only declares a `tag` input. Passing an extra `version` input makes the dispatch API reject the request, and the integration reports an empty result rather than an error, so no run appears — dispatch with `tag` alone.
+- Verified signed-out: HTTP 200, 223,052,950 bytes, SHA-256 `ae6e5f7716df87a8bc55a696d9b9c8d491784c75be594872b9fc3929612e6020` (matches GitHub's asset digest), and all three entries (`Starlight-Hollow-Portable.exe`, `Starlight-Hollow-Setup.exe`, `START-HERE.txt`) pass ZIP integrity checks.
+- Windows gameplay, narration, the installer shortcut, save/relaunch and uninstall still need a human Windows playtest; the build is unsigned.
+
 ## Iteration 9 — Gentler second chances
 
 - Picture and pattern signs now shrink the question after two misses: one wrong pad dims to a quiet grey (no glow, no aim assist, no shake), `Easier now!` appears, and the existing hint is still spoken a moment later. Each further miss removes one more, never below two choices and never the answer. `sequence` and `memory` signs keep every pad, because their order is the puzzle.
