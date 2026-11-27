@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Starlight Hollow — A First-Person Adventure for Little Explorers</title>
+    <meta name="description" content="An original first-person adventure game for ages 5-7: explore glowing islands, befriend puffkins, and wake the Star Tree with letters, numbers and patterns." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+
+    <div id="ui">
+      <div class="hud-top">
+        <div class="chip" id="chip-stars" title="Starberries">
+          <span class="chip-label">Starberries</span>
+          <span class="stars" id="star-slots"><i>☆</i><i>☆</i><i>☆</i><i>☆</i><i>☆</i></span>
+        </div>
+        <div class="chip" id="chip-sparkles">
+          <span class="ico">✨</span><span id="sparkle-count">0</span>
+        </div>
+        <div class="chip chip-zone" id="chip-zone">Sunbeam Meadow</div>
+        <div class="chip chip-goal" id="chip-goal">
+          <span class="ico">🔮</span><span id="goal-text">Follow Pip</span>
+        </div>
+      </div>
+
+      <div id="crosshair" class="is-soft"><span class="dot"></span><span class="ring"></span></div>
+
+      <div id="bubble" class="hidden" inert>
+        <div class="bubble-face" id="bubble-face">🐣</div>
+        <div class="bubble-body">
+          <p id="bubble-text">Hello!</p>
+          <div class="bubble-actions">
+            <button id="repeat-btn" type="button" class="round-btn" title="Say it again (R)" aria-label="Say it again" aria-keyshortcuts="R">🔁 <kbd>R</kbd></button>
+          </div>
+        </div>
+      </div>
+
+      <div id="feedback" class="hidden"></div>
+      <div id="hint" class="hidden"></div>
+
+      <div id="banner" class="hidden">
+        <div class="banner-inner">
+          <span id="banner-title"></span>
+          <span id="banner-sub"></span>
+        </div>
+      </div>
+
+      <div id="toast-stack"></div>
+    </div>
+
+    <div id="fader"></div>
+
+    <div id="title-screen">
+      <div class="title-glow"></div>
+      <div class="title-inner">
+        <div class="logo-mark">✨</div>
+        <h1>Starlight Hollow</h1>
+        <p class="tagline">Wake the sleeping Star Tree with letters, numbers and wonder.</p>
+        <button id="play-btn" class="big-btn">Play</button>
+        <div class="controls-card">
+          <div><b>Walk</b><span>W A S D or arrow keys</span></div>
+          <div><b>Look around</b><span>Move the mouse</span></div>
+          <div><b>Jump</b><span>Space</span></div>
+          <div><b>Zap a glowing sign</b><span>Click</span></div>
+          <div><b>Hear it again</b><span>R</span></div>
+        </div>
+        <p class="grown-up">For explorers aged 5–7 · Everyone talks out loud, so turn your sound on 🔊</p>
+      </div>
+    </div>
+
+    <div id="pause-screen" class="hidden">
+      <div class="panel">
+        <h2>Taking a breather</h2>
+        <p>Press Esc or click Continue to keep exploring.</p>
+        <button id="resume-btn" class="big-btn">Continue</button>
+        <button id="mute-btn" class="ghost-btn">Sound: on</button>
+        <p class="tiny" id="pause-progress"></p>
+      </div>
+    </div>
+
+    <div id="ending" class="hidden">
+      <div class="panel ending-panel">
+        <div class="ending-star">🌟</div>
+        <h2>The Star Tree is awake!</h2>
+        <p id="ending-text">Every light in the hollow is singing.</p>
+        <div class="ending-stats" id="ending-stats"></div>
+        <button id="ending-btn" class="big-btn">Keep exploring</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
