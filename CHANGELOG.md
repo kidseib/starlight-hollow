@@ -3,6 +3,31 @@
 Every public Windows beta, newest first. Player-facing changes only; the development detail lives in
 `DEVELOPMENT_LOG.md` and `docs/ITERATIONS.md`.
 
+## 0.1.3-beta.1 - 2026-11-27
+
+**Momo's Wisp Market.** Sparkles finally have somewhere to go. Momo, a mossy
+lantern-snail with a glowing spiral shell, keeps a striped stall beside the path
+to the Star Tree in Sunbeam Meadow. Zap Momo to open the market.
+
+- Three permanent gifts: **Star Magnet** (40 sparkles) pulls loose sparkles from
+  much further away, **Pip's Bell** (70) makes Pip point out the next sign after
+  four seconds instead of nine, and **Rainbow Blaster** (110) gives every zap the
+  next colour of the rainbow.
+- Cards show a picture, a price and Momo's spoken description, so a child who
+  cannot read can shop by icon alone. Trying to buy with too few sparkles shakes
+  the card and Momo says how many more are needed; nothing is ever lost.
+- Bought gifts appear as gold badges under the sparkle counter and as stars in
+  the stall jars, and they are saved with the rest of the adventure.
+- Art pass: new Momo character (body, eyestalks, glowing shell, scarf), the
+  striped-awning stall with glass jars and hanging lanterns, hand-drawn market
+  and jar icons, and the hub altar rebuilt with moss, a gold band and five rune
+  lights.
+
+Verified with 17 tests (8 new for the market), a clean production build, and the
+whole loop played in the cloud browser: walk up, zap Momo, be refused kindly,
+buy all three gifts, feel the magnet pull, save and reload. A Windows playtest
+is still outstanding.
+
 ## 0.1.2-beta.1 — 2026-11-27
 
 **Smaller questions, clearer paths.**
