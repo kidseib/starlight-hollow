@@ -40,7 +40,7 @@ The beta targets **Windows 10/11 x64** with a WebGL-capable graphics driver. Bot
 
 **Beta playtest focus:** Answer a sign wrongly twice and check that a wrong choice fades to grey, leaving two choices and the message "Easier now!", while the right answer stays bright. Walk away and back to confirm every choice returns. Finish an island, take its Starberry, and check that its meadow arch now carries a small star. Also try R with mouse look locked and the repeat button in drag-to-look mode, check offline voice, save and reopen, the installer shortcut, and uninstall. [Send findings through GitHub Issues](https://github.com/kidseib/starlight-hollow/issues/new); please omit children's personal information.
 
-The SHA-256 of each ZIP is published with its release on the [releases page](https://github.com/kidseib/starlight-hollow/releases).
+The 0.1.2 beta ZIP's SHA-256 is `ae6e5f7716df87a8bc55a696d9b9c8d491784c75be594872b9fc3929612e6020`. Every release on the [releases page](https://github.com/kidseib/starlight-hollow/releases) also shows its ZIP's checksum.
 
 ## What the project is building toward
 
