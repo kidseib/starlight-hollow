@@ -92,7 +92,7 @@ friendships and any finished-but-uncollected island berry. New checkpoints resum
 ## 6. Controls & accessibility
 
 WASD/arrows to walk, mouse to look (pointer lock, with drag fallback), Space to jump, click to zap,
-Esc to pause, M to mute. Movement is forgiving: coyote time, jump buffering, a soft magical edge
+R or the repeat button to hear the nearby sign again, Esc to pause, M to mute. Movement is forgiving: coyote time, jump buffering, a soft magical edge
 instead of falling off, and aim assist that snaps to the pad nearest the reticle.
 
 Accessibility in place: all instructions voiced and repeatable, picture-first pads, forgiving
@@ -101,10 +101,11 @@ interaction ranges, colour-independent pad states (ring shape/scale + flash), re
 
 ## 7. Technology
 
-Three.js r160+ with Vite 5, vanilla ES modules, no framework. Deterministic procedural world
-generation (seeded `mulberry32`), so the game is a few hundred KB of code and no binary assets.
-Runs fully offline; the only network request is the Google Fonts stylesheet (falls back to system
-fonts offline).
+Three.js with Vite 5, vanilla ES modules, no UI framework. The Windows release uses Electron and
+electron-builder. Deterministic procedural world generation (seeded `mulberry32`) keeps the game
+small. The Fredoka font is bundled; the Windows app blocks HTTP(S) requests during play. Spoken
+instructions use the operating system's Web Speech service and require a local English voice for
+offline narration.
 
 Performance approach: one island visible at a time by distance culling (`_updateVisibility`),
 frustum culling, sprite-based glows, shared geometries within a station, `pixelRatio` capped at 2.
@@ -112,7 +113,7 @@ frustum culling, sprite-based glows, shared geometries within a station, `pixelR
 ## 8. Assets & licensing
 
 - **Three.js** — MIT.
-- **Fredoka** font — SIL Open Font License, served by Google Fonts.
+- **Fredoka** font — SIL Open Font License, bundled through `@fontsource-variable/fredoka`.
 - All geometry, textures, glyph plates, particle effects, music and sound effects are generated at
   runtime by this project's own code. No third-party art, audio or characters are used.
 - The design is inspired by the *feel* of family adventure games (exploration, collecting, friendly
