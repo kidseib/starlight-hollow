@@ -382,13 +382,73 @@ export function buildWishTree(pal) {
   }
   group.add(canopy);
 
-  // a little stone altar in front of the tree holds the Starberry sockets
-  const altar = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.8, 0.7, 10), mat(0xc9bcd8));
+  // A carved star altar in front of the tree holds the Starberry sockets. It is
+  // the first thing every explorer walks up to, so it gets real stonework: a
+  // mossy footing, a chiselled drum, a gold band and five rune lights.
+  const altarStone = new THREE.Mesh(
+    new THREE.CylinderGeometry(3.9, 4.05, 0.26, 14),
+    mat(0x9aa98c, { roughness: 0.92, flatShading: true })
+  );
+  altarStone.position.set(0, 0.13, 3.4);
+  group.add(altarStone);
+
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2 + 0.3;
+    const moss = new THREE.Mesh(
+      new THREE.SphereGeometry(0.3 + (i % 3) * 0.07, 7, 5),
+      mat(0x6fbf72, { roughness: 0.9, flatShading: true })
+    );
+    moss.scale.set(1.2, 0.42, 1.2);
+    moss.position.set(Math.cos(a) * 3.5, 0.24, 3.4 + Math.sin(a) * 3.5);
+    group.add(moss);
+  }
+
+  const altar = new THREE.Mesh(
+    new THREE.CylinderGeometry(3.5, 3.8, 0.7, 12),
+    mat(0xe3d9f2, { roughness: 0.72, flatShading: true })
+  );
   altar.position.set(0, 0.35, 3.4);
   group.add(altar);
-  const altarTop = new THREE.Mesh(new THREE.CylinderGeometry(3.1, 3.1, 0.14, 10), mat(0x9d8fbd));
+
+  const altarBand = new THREE.Mesh(
+    new THREE.TorusGeometry(3.62, 0.09, 6, 30),
+    mat(0xffd166, { roughness: 0.32, metalness: 0.45, emissive: 0xffab33, emissiveIntensity: 0.35 })
+  );
+  altarBand.rotation.x = Math.PI / 2;
+  altarBand.position.set(0, 0.62, 3.4);
+  group.add(altarBand);
+
+  const altarTop = new THREE.Mesh(
+    new THREE.CylinderGeometry(3.1, 3.1, 0.14, 12),
+    mat(0x9d8fbd, { roughness: 0.55, flatShading: true })
+  );
   altarTop.position.set(0, 0.76, 3.4);
   group.add(altarTop);
+
+  const altarCore = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.15, 1.35, 0.2, 10),
+    mat(0xfff1c9, { roughness: 0.4, emissive: 0xffc94b, emissiveIntensity: 0.3 })
+  );
+  altarCore.position.set(0, 0.82, 3.4);
+  group.add(altarCore);
+
+  // Five rune lights around the rim, one for each Starberry socket.
+  const runeMat = new THREE.MeshStandardMaterial({
+    color: 0xfff1c9,
+    emissive: 0xffc94b,
+    emissiveIntensity: 0.9,
+    roughness: 0.3,
+  });
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 + Math.PI / 2;
+    const rune = new THREE.Mesh(new THREE.OctahedronGeometry(0.15, 0), runeMat);
+    rune.position.set(Math.cos(a) * 2.55, 0.9, 3.4 + Math.sin(a) * 2.55);
+    rune.rotation.y = a;
+    group.add(rune);
+    const runeGlow = makeSprite(0xffe9a8, 0.85, 0.35);
+    runeGlow.position.copy(rune.position);
+    group.add(runeGlow);
+  }
 
   const sockets = [];
   const SOCKET_COUNT = 5;
