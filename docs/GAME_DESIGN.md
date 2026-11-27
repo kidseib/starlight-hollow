@@ -56,6 +56,12 @@ bubble, wrong answers flash the pad + "Try again!" + repeat + hint after ~2.7 s,
 solve the plinth (⭐ marker), burst sparkles and award 6 sparkles. Pads use a yaw-only billboard so
 they are always readable.
 
+Gentle second chances: after two misses on a `pick` or `pattern` sign, one wrong choice dims to a
+quiet grey (`pad.state === 'dim'`, no aim assist, no glow) and "Easier now!" appears; each further
+miss removes one more, never below two choices and never the answer. `sequence` and `memory` signs
+keep every pad because their order is the puzzle. Leaving the sign (18 m) and returning restores
+all choices and the attempts counter.
+
 ### Content format (`src/content.js`)
 Zones, portals, stations, pads, creatures and all spoken text are data. Pad kinds: `letter`
 (optional `marker` picture card), `number` (numeral + dot row), `word`, `dots`, `shape`, `icon`
@@ -121,8 +127,10 @@ frustum culling, sprite-based glows, shared geometries within a station, `pixelR
 
 ## 9. Known gaps (next priorities)
 
-1. Parent dashboard (per-subject stats, difficulty overrides, profile settings).
-2. Adaptive difficulty per subject (currently fixed difficulty with escalating hints).
-3. Telling-time curriculum (no clock activity yet).
-4. Touch controls for Android; split-screen/local co-op; sandbox mode.
+1. Parent dashboard and a grown-up progress corner (per-subject stats, profile settings).
+2. Telling-time curriculum (no clock activity yet).
+3. Touch controls for Android; split-screen/local co-op; sandbox mode.
+4. Per-subject adaptive practice beyond the per-sign choice narrowing introduced in iteration 9.
 5. Finish the two-pattern wrong/correct input capture; verify the filled blank after reloading.
+6. A human Windows playtest of the current beta (both editions, narration offline, save/reopen,
+   installer shortcut, uninstall).

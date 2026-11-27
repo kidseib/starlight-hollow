@@ -2,6 +2,11 @@ name: Windows beta
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag that receives the ZIP
+        required: true
+        default: v0.1.2-beta.1
 
 permissions:
   contents: write
@@ -23,8 +28,8 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci
-      - name: Run save regression tests
-        run: node --test tests/save.test.js
+      - name: Run save and sign regression tests
+        run: node --test tests/save.test.js tests/station-recovery.test.js
       - name: Build portable game, installer, and ZIP
         run: npm run build:windows
       - name: Verify ZIP contents and integrity
@@ -49,4 +54,4 @@ jobs:
       - name: Attach ZIP to existing beta draft
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload v0.1.1-beta.1 artifacts/Starlight-Hollow-Windows-x64.zip --clobber
+        run: gh release upload "${{ inputs.tag }}" artifacts/Starlight-Hollow-Windows-x64.zip --clobber

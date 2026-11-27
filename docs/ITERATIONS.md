@@ -4,6 +4,15 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 9 — Gentler second chances
+
+- Picture and pattern signs now shrink the question after two misses: one wrong pad dims to a quiet grey (no glow, no aim assist, no shake), `Easier now!` appears, and the existing hint is still spoken a moment later. Each further miss removes one more, never below two choices and never the answer. `sequence` and `memory` signs keep every pad, because their order is the puzzle.
+- Leaving a sign at 18 m still clears only its prompt; returning restores every pad and resets the attempts counter, so a fresh approach is never pre-simplified.
+- Arches carry a small star above the portal icon once that island's Starberry is safe, and their beacon fades to 0.04 opacity, so a child can read from the meadow which paths are finished.
+- `tests/station-recovery.test.js` (5 cases) covers the thresholds, the answer pad, wide four-pad signs, two-choice signs and the exempt sequence/memory types. `node --test tests/save.test.js tests/station-recovery.test.js` → 9/9 pass; `npm run build` → exit 0.
+- Browser runtime (cloud Chrome, software renderer): two wrong hits on `meadow-shape` left pads `['active','dim','active']` with 2 aim choices and `Easier now!`; `deactivate()` put all pads to sleep; `activate()` restored all three and reset `mistakes` to 0; no page errors. `_collectStarberry('peaks')` made the Peaks arch badge visible (world y 6.0) and dropped its beam to 0.04. Screenshots: `artifacts/r9-easier-choices.png`, `artifacts/r9-arch-star.png`.
+- Not verified: audible narration, real pointer-lock zapping, the Windows executables, or a child playtest. The narrowing is a per-sign scaffold, not per-subject adaptive practice.
+
 ## Windows beta release — v0.1.1-beta.1
 
 - Synced the current game and desktop packaging source to the public GitHub repository and added a Windows Actions workflow. The workflow reconstructs the pinned npm lockfile, runs save regression tests, builds the portable EXE and installer, checks the ZIP, and attaches it to the release.

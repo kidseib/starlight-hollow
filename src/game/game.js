@@ -109,6 +109,19 @@ export class Game {
       const portals = [];
       for (const def of zone.portals) {
         const portal = buildPortal(def);
+        // A little star appears above an arch once that island is finished.
+        const badge = new THREE.Sprite(
+          new THREE.SpriteMaterial({
+            map: glyphTexture({ kind: 'icon', text: '⭐' }),
+            transparent: true,
+            depthWrite: false,
+          })
+        );
+        badge.scale.setScalar(1.4);
+        badge.position.set(0, 7.05, 0.5);
+        badge.visible = false;
+        portal.group.add(badge);
+        portal.badge = badge;
         const y = island.heightAtLocal(def.x, def.z);
         portal.group.position.set(def.x, y, def.z);
         portal.group.rotation.y = Math.atan2(-def.x, -def.z);
@@ -400,8 +413,21 @@ export class Game {
       this.hud.showBubble(line, '💖');
     }
     this.voice.say(line);
+    this._refreshPortalBadges();
     this._updateGoal();
     this._save();
+  }
+
+  /** Mark every arch whose island's Starberry is already safe. */
+  _refreshPortalBadges() {
+    for (const data of this.islands.values()) {
+      for (const portal of data.portals) {
+        if (!portal.badge) continue;
+        const done = !!this.stars[portal.def.to];
+        portal.badge.visible = done;
+        portal.beam.material.opacity = done ? 0.04 : 0.1;
+      }
+    }
   }
 
   _fillWishSocket(zoneId) {
@@ -726,6 +752,7 @@ export class Game {
     }
     this.hud.setStars(this.starCount(), ZONE_STAR_ORDER.length);
     this.hud.setSparkles(this.sparkleCount);
+    this._refreshPortalBadges();
   }
 
   // ----------------------------------------------------------------- update --
