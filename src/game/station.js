@@ -38,6 +38,7 @@ export class Station {
     this.time = 0;
     this.feedbackCooldown = 0;
     this.encourageIndex = 0;
+    this.mistakes = 0;
 
     const palette = island.zone.palette;
     const localX = def.x;
@@ -187,6 +188,7 @@ export class Station {
     if (this.active || this.solved) return;
     this.active = true;
     this.progress = 0;
+    this.mistakes = 0;
     this.ctx.onPrompt?.();
     if (this.def.type === 'pattern') {
       this.patternReveal = 0;
@@ -293,19 +295,48 @@ export class Station {
     for (const pad of list) pad.setState('wrong');
     this.ctx.audio?.wrong();
     this.ctx.onWrong?.(this);
+    this.mistakes += 1;
     const line = ENCOURAGE_LINES[this.encourageIndex % ENCOURAGE_LINES.length];
     this.encourageIndex += 1;
     this.feedbackCooldown = 1.7;
     this.ctx.hud?.showFeedback('Try again!', 'again');
     this.ctx.voice?.say(line, { pitch: 1.18 });
     this._schedule(0.75, () => {
-      for (const pad of list) if (!this.solved) pad.setState('active');
+      for (const pad of list) if (!this.solved && pad.state === 'wrong') pad.setState('active');
+      if (!this.solved && this.active) this._narrowChoices();
     });
     if (this.def.type === 'pattern') this._schedule(1.3, () => this._playPatternLoop());
     this._schedule(2.7, () => {
       if (this.solved || !this.active) return;
       this._showRetryHint();
     });
+  }
+
+  /**
+   * Some children need a smaller question, not the same one again. After a
+   * couple of misses, quietly dim one wrong choice per miss (never the answer)
+   * until only two are left. The pads stay visible so the plinth still reads
+   * as a set of choices, and a new approach restores all of them. Order and
+   * memory signs keep every pad, because their order is the puzzle.
+   */
+  _narrowChoices() {
+    if (this.def.type !== 'pick' && this.def.type !== 'pattern') return;
+    if (this.mistakes < 2) return;
+    const keep = Math.max(2, this.pads.length - (this.mistakes - 1));
+    let hide = this.pads.filter((p) => p.state === 'active' && p.key !== this.def.answerKey).length - (keep - 1);
+    if (hide <= 0) return;
+    let hidden = 0;
+    for (const pad of this.pads) {
+      if (hide <= 0) break;
+      if (pad.key === this.def.answerKey || pad.state !== 'active') continue;
+      pad.setState('dim');
+      hide -= 1;
+      hidden += 1;
+      this.ctx.fx?.burst(pad.group.position, { color: 0xbfa3d8, count: 8, speed: 1.6, life: 0.5, size: 0.35 });
+    }
+    if (!hidden) return;
+    this.ctx.audio?.pop();
+    this.ctx.hud?.showFeedback('Easier now!', 'good');
   }
 
   _sequenceReset(pad) {
