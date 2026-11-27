@@ -9,23 +9,25 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
    blank after reload, before/after screenshots. Carried over from iteration 6.
 2. **A grown-up corner on the pause screen** — what has been learned (letters, numbers, patterns,
    memory), so a parent can see progress without a dashboard.
-3. **A real Windows playtest of the current beta** — both editions, narration with the network off,
+3. **A second sparkle sink: decorate the Star Tree** - the market gives sparkles
+   three uses; a small decoration shop keeps saving worthwhile afterwards.
+4. **A real Windows playtest of the current beta** — both editions, narration with the network off,
    save and reopen, installer shortcut, uninstall.
 
 ## Next
 
-4. **Telling-time activity** for a sixth island: an analogue clock face with a spoken time.
-5. **Touch controls** (drag to look, on-screen stick) so the same build works on Android tablets.
-6. **Per-subject adaptive practice**: the per-sign choice narrowing now exists; extend the idea to
+5. **Telling-time activity** for a sixth island: an analogue clock face with a spoken time.
+6. **Touch controls** (drag to look, on-screen stick) so the same build works on Android tablets.
+7. **Per-subject adaptive practice**: the per-sign choice narrowing now exists; extend the idea to
    choosing which signs a child meets first based on earlier misses.
-7. **More free play** — a small sandbox corner in the meadow where sparkles can be spent on
-   decorations for the Star Tree.
+8. **A care loop for Momo** — a small daily errand for the marketkeeper, so the stall feels
+   alive between purchases.
 
 ## Later
 
-8. Local split-screen co-op.
-9. Parent profile settings and difficulty overrides.
-10. Accessibility pass: caption size, colour-blind-safe pad palettes, reduced motion.
+9. Local split-screen co-op.
+10. Parent profile settings and difficulty overrides.
+11. Accessibility pass: caption size, colour-blind-safe pad palettes, reduced motion.
 
 ## Known issues
 

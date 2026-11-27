@@ -22,6 +22,22 @@ export class HUD {
     this.goalText = document.getElementById('goal-text');
     this.crosshair = document.getElementById('crosshair');
     this.toastStack = document.getElementById('toast-stack');
+    this.upgradeRow = document.getElementById('upgrade-row');
+    this.shop = document.getElementById('shop');
+    this.shopItems = document.getElementById('shop-items');
+    this.shopPurse = document.getElementById('shop-purse');
+    this.shopLine = document.getElementById('shop-line');
+    this.shopClose = document.getElementById('shop-close');
+    this.shopHandlers = {};
+    this.shopClose?.addEventListener('click', () => this.shopHandlers.onClose?.());
+    this.shopItems?.addEventListener('click', (e) => {
+      const card = e.target.closest('.shop-card');
+      if (card) this.shopHandlers.onBuy?.(card.dataset.id);
+    });
+    this.shopItems?.addEventListener('pointerenter', (e) => {
+      const card = e.target.closest?.('.shop-card');
+      if (card) this.shopHandlers.onSpeak?.(card.dataset.id);
+    }, true);
     this.fader = document.getElementById('fader');
     this.ui = document.getElementById('ui');
 
@@ -180,6 +196,83 @@ export class HUD {
 
   hideEnding() {
     document.getElementById('ending')?.classList.add('hidden');
+  }
+
+  /** Small picture badges under the sparkle counter: what has been bought. */
+  setUpgrades(items = []) {
+    if (!this.upgradeRow) return;
+    this.upgradeRow.innerHTML = '';
+    for (const item of items) {
+      const el = document.createElement('span');
+      el.className = 'upgrade-chip';
+      el.title = item.name;
+      el.textContent = item.icon;
+      this.upgradeRow.appendChild(el);
+    }
+    this.upgradeRow.classList.toggle('hidden', items.length === 0);
+  }
+
+  /**
+   * The market panel. Cards stay clickable even when the child cannot afford
+   * them, so Momo can answer with a friendly voice instead of a dead button.
+   */
+  showShop({ items = [], sparkles = 0, line = '', handlers = {} } = {}) {
+    this.shopHandlers = handlers;
+    this._renderShop(items, sparkles, line);
+    this.shop?.classList.remove('hidden');
+    this.shop?.setAttribute('aria-hidden', 'false');
+  }
+
+  refreshShop({ items = [], sparkles = 0 } = {}) {
+    if (!this.shopItems) return;
+    this._renderShop(items, sparkles, null);
+  }
+
+  _renderShop(items, sparkles, line) {
+    if (!this.shopItems) return;
+    if (line !== null && this.shopLine) this.shopLine.textContent = line;
+    if (this.shopPurse) this.shopPurse.textContent = String(sparkles);
+    this.shopItems.innerHTML = '';
+    for (const item of items) {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = `shop-card ${item.status}`;
+      card.dataset.id = item.id;
+      card.setAttribute('aria-label', `${item.name}, ${item.owned ? 'yours already' : `${item.price} sparkles`}`);
+
+      const ico = document.createElement('span');
+      ico.className = 'shop-ico';
+      ico.textContent = item.owned ? '⭐' : item.icon;
+
+      const name = document.createElement('span');
+      name.className = 'shop-name';
+      name.textContent = item.name;
+
+      const blurb = document.createElement('span');
+      blurb.className = 'shop-blurb';
+      blurb.textContent = item.owned ? 'Yours!' : item.blurb;
+
+      const price = document.createElement('span');
+      price.className = 'shop-price';
+      price.textContent = item.owned ? '⭐' : `✨ ${item.price}`;
+
+      card.append(ico, name, blurb, price);
+      this.shopItems.appendChild(card);
+    }
+  }
+
+  hideShop() {
+    this.shop?.classList.add('hidden');
+    this.shop?.setAttribute('aria-hidden', 'true');
+    this.shopHandlers = {};
+  }
+
+  shakeShop(id) {
+    const card = this.shopItems?.querySelector(`.shop-card[data-id="${id}"]`);
+    if (!card) return;
+    card.classList.remove('shake');
+    void card.offsetWidth;
+    card.classList.add('shake');
   }
 
   showPause(show, progressText = '') {

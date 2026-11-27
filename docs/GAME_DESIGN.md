@@ -62,6 +62,29 @@ miss removes one more, never below two choices and never the answer. `sequence` 
 keep every pad because their order is the puzzle. Leaving the sign (18 m) and returning restores
 all choices and the attempts counter.
 
+### Momo's Wisp Market
+`src/game/shop.js`. A striped stall at (11, 10) in Sunbeam Meadow, facing the path
+to the Star Tree, run by **Momo** — a mossy lantern-snail with a glowing spiral
+shell, blinking eyestalks and a coral scarf. It is the only place sparkles are
+spent, which gives collecting a point beyond the counter.
+
+Zapping Momo (he is an aim target like a pad, at a 26 m range) opens the market
+panel and pauses the world (`state === 'shop'`; Esc or "All done" returns to
+play). Three permanent gifts:
+
+| Gift | Price | Effect |
+|---|---|---|
+| Star Magnet | 40 | `SparkleManager.magnetRange` 4.6 → 9.5 m, pull 2.5 → 3.6 |
+| Pip's Bell | 70 | Pip's idle nudge arrives after 3.5 s instead of 9 s |
+| Rainbow Blaster | 110 | every zap takes the next sRGB rainbow hue |
+
+Cards carry a picture, a price and Momo's spoken description, and remain
+clickable when unaffordable: the card shakes and Momo says how many more
+sparkles are needed. Owned gifts turn the card gold, put a badge under the
+sparkle counter and swap the stall jar's icon for a star. `purchase()` and
+`shopStatus()` are pure functions, so the rules are unit tested without a
+browser.
+
 ### Content format (`src/content.js`)
 Zones, portals, stations, pads, creatures and all spoken text are data. Pad kinds: `letter`
 (optional `marker` picture card), `number` (numeral + dot row), `word`, `dots`, `shape`, `icon`
@@ -80,7 +103,7 @@ soft glow sprites. Follows at a damped offset, flaps faster while moving, spins 
 
 ### Save
 `src/engine/save.js`, key `starlight-hollow-save-v1`: sparkles, stars, solved station ids, scanned
-creature keys, visited zones, ended flag. Restores solved stations, socket lights, creature
+creature keys, visited zones, owned market gifts (`upgrades`), ended flag. Restores solved stations, socket lights, creature
 friendships and any finished-but-uncollected island berry. New checkpoints resume at the current island’s safe spawn. Legacy saves without a zone start in the meadow. A previous local checkpoint backs up unreadable JSON; malformed fields are normalized. Pending pickups flush on pause or page exit when the browser allows it.
 
 ## 5. Presentation
@@ -127,10 +150,12 @@ frustum culling, sprite-based glows, shared geometries within a station, `pixelR
 
 ## 9. Known gaps (next priorities)
 
-1. Parent dashboard and a grown-up progress corner (per-subject stats, profile settings).
-2. Telling-time curriculum (no clock activity yet).
-3. Touch controls for Android; split-screen/local co-op; sandbox mode.
-4. Per-subject adaptive practice beyond the per-sign choice narrowing introduced in iteration 9.
-5. Finish the two-pattern wrong/correct input capture; verify the filled blank after reloading.
-6. A human Windows playtest of the current beta (both editions, narration offline, save/reopen,
+1. A second sparkle sink (decorating the Star Tree) and a care loop for Momo, so saving
+   continues after all three gifts are bought.
+2. Parent dashboard and a grown-up progress corner (per-subject stats, profile settings).
+3. Telling-time curriculum (no clock activity yet).
+4. Touch controls for Android; split-screen/local co-op; sandbox mode.
+5. Per-subject adaptive practice beyond the per-sign choice narrowing introduced in iteration 9.
+6. Finish the two-pattern wrong/correct input capture; verify the filled blank after reloading.
+7. A human Windows playtest of the current beta (both editions, narration offline, save/reopen,
    installer shortcut, uninstall).

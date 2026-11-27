@@ -20,6 +20,7 @@
         <div class="chip" id="chip-sparkles">
           <span class="ico">✨</span><span id="sparkle-count">0</span>
         </div>
+        <div class="upgrade-row hidden" id="upgrade-row" aria-label="Gifts from Momo"></div>
         <div class="chip chip-zone" id="chip-zone">Sunbeam Meadow</div>
         <div class="chip chip-goal" id="chip-goal">
           <span class="ico">🔮</span><span id="goal-text">Follow Pip</span>
@@ -49,6 +50,19 @@
       </div>
 
       <div id="toast-stack"></div>
+    </div>
+
+    <div id="shop" class="hidden" aria-hidden="true" role="dialog" aria-label="Momo's Wisp Market">
+      <div class="shop-panel">
+        <div class="shop-head">
+          <span class="shop-badge">🛍</span>
+          <h2>Momo's Wisp Market</h2>
+          <span class="shop-purse-chip">✨ <b id="shop-purse">0</b></span>
+        </div>
+        <p class="shop-line" id="shop-line">Spend your sparkles on something lovely.</p>
+        <div class="shop-items" id="shop-items"></div>
+        <button id="shop-close" class="big-btn shop-done" type="button">All done</button>
+      </div>
     </div>
 
     <div id="fader"></div>

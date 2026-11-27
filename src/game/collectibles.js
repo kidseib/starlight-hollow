@@ -10,6 +10,10 @@ export class SparkleManager {
     this.audio = audio;
     this.items = [];
     this.onCollect = null;
+    // Momo's Star Magnet widens and strengthens this pull; the defaults are the
+    // gentle radius every child starts with.
+    this.magnetRange = 4.6;
+    this.magnetPull = 2.5;
     this.geo = new THREE.OctahedronGeometry(0.19, 0);
     this.mat = new THREE.MeshStandardMaterial({
       color: 0xfff4c2,
@@ -84,8 +88,8 @@ export class SparkleManager {
 
       const dist = it.group.position.distanceTo(playerPos);
       it.group.visible = dist < 160;
-      if (dist < 160 && dist < 4.6) {
-        it.magnet = Math.min(1, it.magnet + dt * 2.5);
+      if (dist < 160 && dist < this.magnetRange) {
+        it.magnet = Math.min(1, it.magnet + dt * this.magnetPull);
         const pull = 1 - Math.exp(-7 * dt * it.magnet);
         it.group.position.lerp(playerPos, clamp(pull, 0, 0.5));
         it.home.copy(it.group.position);

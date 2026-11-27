@@ -4,6 +4,16 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 10 - Momo's Wisp Market
+
+- Sparkles were the one collectible with no use, so the hub gained a merchant: Momo, a lantern-snail with a striped stall at (11, 10) in Sunbeam Meadow. Zapping him opens a market that pauses the world; Esc or "All done" closes it.
+- Three permanent gifts cost sparkles and change play rather than numbers: Star Magnet (40) widens the sparkle pull from 4.6 m to 9.5 m and strengthens it, Pip's Bell (70) cuts the companion nudge from 9 s to 3.5 s, Rainbow Blaster (110) steps every zap through sRGB rainbow hues.
+- Cards are picture-first and stay clickable when unaffordable: the card shakes and Momo says how many more sparkles are needed. Owned gifts turn the card gold, add a badge under the sparkle counter, and swap the stall jar's icon for a star. `purchase()`/`shopStatus()` are pure and unit tested.
+- `save.upgrades` stores owned gift ids; older saves load with an empty list, so the v1 key is untouched. Art pass: new Momo (body, eyestalks, glowing spiral shell, scarf), the stall with awning, jars, lanterns, hand-drawn sign and jar icons, and the Star Tree altar rebuilt with moss, a gold band and five rune lights.
+- `tests/shop.test.js` adds 8 cases; `node --test tests/*.test.js` -> 17 pass. `npm run build` -> exit 0.
+- Cloud browser, real render loop: crosshair went hot at the stall, a queued zap opened the market (`state === 'shop'`, purse 9, three saving cards), an unaffordable click shook the card and charged nothing, then all three gifts were bought for 40 + 70 + 110. A sparkle parked 8.09 m away drifted to 4.27 m, the next zap changed colour, and after a reload `upgrades` still held all three with magnet range 9.5 and jars marked sold. Screenshots: `artifacts/r10-market-{approach,stall,panel,owned,after-reload}.png`, `artifacts/r10-altar.png`.
+- Not verified: audible narration, real pointer-lock clicking, both Windows executables, or a child playtest. Three gifts is the whole stock, so a child who buys them all has nothing left to save for.
+
 ## Windows beta release — v0.1.2-beta.1
 
 - Shipped the gentler-second-chance build: GitHub Actions run #4 (`windows-beta.yml`, tag input `v0.1.2-beta.1`) passed on `windows-latest` and attached the ZIP to the draft release, which was then published as a public prerelease at `https://github.com/kidseib/starlight-hollow/releases/tag/v0.1.2-beta.1`.

@@ -31,6 +31,10 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
 - Use the existing station, audio, voice and save systems instead of parallel ones.
 - Content lives in `src/content.js`. A new sign is data, not code.
 - Do not break the v1 save key (`starlight-hollow-save-v1`); older saves must keep loading.
+- Market gifts are data in `src/game/shop.js` (`SHOP_ITEMS`); their ids are what
+  `save.upgrades` stores, so renaming one would take a purchased gift away. New
+  gifts need a price, an icon, a spoken line and a real effect wired into the
+  system they change.
 - Verify with `node --test tests/*.test.js` and `npm run build`, then look at the change in the
   browser (`window.__starlight` exposes game, camera, scene, audio, voice and HUD).
 - Record every iteration in `docs/ITERATIONS.md` and `DEVELOPMENT_LOG.md`, and keep `CHANGELOG.md`

@@ -82,6 +82,7 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'Escape') {
     if (game.state === 'play') game.pause();
     else if (game.state === 'paused') game.resume();
+    else if (game.state === 'shop') game.closeShop();
   }
   if (e.code === 'KeyM') setMuted(!muted);
 });

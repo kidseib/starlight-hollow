@@ -674,3 +674,225 @@ canvas#game {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- Momo's Wisp Market ---------- */
+
+.upgrade-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  pointer-events: none;
+}
+
+.upgrade-row.hidden {
+  display: none;
+}
+
+.upgrade-chip {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+  background: radial-gradient(circle at 35% 30%, #fff8e2, #ffe6a8 70%);
+  border: 2px solid #fff;
+  box-shadow: 0 4px 12px rgba(38, 49, 79, 0.24);
+  animation: chip-pop 0.45s ease both;
+}
+
+@keyframes chip-pop {
+  from { transform: scale(0.2) rotate(-25deg); opacity: 0; }
+  to { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+#shop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: radial-gradient(circle at 50% 40%, rgba(38, 49, 79, 0.28), rgba(20, 28, 48, 0.62));
+  backdrop-filter: blur(3px);
+  z-index: 40;
+  animation: shop-in 0.25s ease both;
+}
+
+#shop.hidden {
+  display: none;
+}
+
+@keyframes shop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.shop-panel {
+  width: min(720px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+  padding: 22px 24px 20px;
+  border-radius: 28px;
+  background: linear-gradient(170deg, #fffaf0 0%, #fff3e0 55%, #ffe9d6 100%);
+  border: 3px solid #fff;
+  box-shadow: 0 26px 60px rgba(24, 32, 56, 0.45);
+  text-align: center;
+  animation: panel-pop 0.3s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+@keyframes panel-pop {
+  from { transform: scale(0.92) translateY(12px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.shop-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.shop-badge {
+  font-size: 34px;
+  filter: drop-shadow(0 4px 8px rgba(244, 165, 28, 0.35));
+}
+
+.shop-panel h2 {
+  margin: 0;
+  font-size: clamp(22px, 3.4vw, 32px);
+  color: var(--ink);
+  letter-spacing: 0.3px;
+}
+
+.shop-purse-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid var(--gold);
+  color: var(--ink);
+  font-size: 18px;
+  box-shadow: 0 4px 10px rgba(244, 165, 28, 0.18);
+}
+
+.shop-line {
+  margin: 10px auto 16px;
+  max-width: 44ch;
+  font-size: 17px;
+  color: var(--ink-soft);
+  line-height: 1.35;
+}
+
+.shop-items {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 620px) {
+  .shop-items { grid-template-columns: 1fr; }
+}
+
+.shop-card {
+  appearance: none;
+  border: 3px solid #fff;
+  border-radius: 22px;
+  padding: 14px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-family: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  background: linear-gradient(160deg, #ffffff, #eef6ff 70%, #e2f0ff);
+  box-shadow: 0 10px 20px rgba(38, 49, 79, 0.16);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.shop-card:hover,
+.shop-card:focus-visible {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 16px 28px rgba(38, 49, 79, 0.24);
+  border-color: var(--gold);
+  outline: none;
+}
+
+.shop-card:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+.shop-ico {
+  font-size: 42px;
+  line-height: 1;
+  filter: drop-shadow(0 5px 8px rgba(38, 49, 79, 0.18));
+}
+
+.shop-name {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.shop-blurb {
+  font-size: 13px;
+  color: var(--ink-soft);
+  min-height: 16px;
+}
+
+.shop-price {
+  margin-top: 4px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #5b3a06;
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+}
+
+.shop-card.saving .shop-price {
+  background: #e6ebf5;
+  color: #6b7794;
+}
+
+.shop-card.saving {
+  opacity: 0.9;
+}
+
+.shop-card.owned {
+  background: linear-gradient(160deg, #fffdf3, #fff2c9 70%, #ffe6a8);
+  border-color: var(--gold);
+}
+
+.shop-card.owned .shop-ico {
+  animation: owned-bob 2.4s ease-in-out infinite;
+}
+
+.shop-card.owned .shop-price {
+  background: #fff;
+  color: #a8760e;
+  box-shadow: inset 0 0 0 2px var(--gold);
+}
+
+@keyframes owned-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.shop-card.shake {
+  animation: card-shake 0.45s ease;
+}
+
+@keyframes card-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px) rotate(-1.5deg); }
+  45% { transform: translateX(6px) rotate(1.5deg); }
+  70% { transform: translateX(-4px); }
+}
+
+.shop-done {
+  margin-top: 16px;
+}

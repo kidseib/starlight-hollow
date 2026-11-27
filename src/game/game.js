@@ -11,8 +11,13 @@ import { SparkleManager, Starberry } from './collectibles.js';
 import { Player } from './player.js';
 import { Blaster } from './blaster.js';
 import { Companion } from './companion.js';
+import { MarketStall, SHOP_ITEMS, itemById, purchase, shopStatus } from './shop.js';
 import { loadSave, writeSave } from '../engine/save.js';
 import { clamp, damp, mulberry32 } from '../engine/utils.js';
+
+// Momo's Wisp Market: one stall in the hub, on the path between the landing
+// spot and the Star Tree, so nobody can miss it.
+const MARKET = { zone: 'meadow', x: 11, z: 10, faceTo: { x: 0, z: 18 } };
 
 const ZONE_GREETINGS = {
   grove: 'Letterleaf Grove! The letters here sing when you zap them.',
@@ -44,6 +49,12 @@ export class Game {
     this.scannedCreatures = new Set();
     this.sparkleCount = 0;
     this.stars = {};
+    this.upgrades = new Set();
+    this.market = null;
+    this.marketZoneId = null;
+    this.shopOpen = false;
+    this._marketHinted = false;
+    this.aimShop = null;
     this.transitioning = false;
     this.portalCooldown = 0;
     this.scanTimer = 0;
@@ -83,6 +94,7 @@ export class Game {
 
     this._buildWorld();
     this._load();
+    this._applyUpgrades();
     this._enterZone(this.currentZoneId, true);
   }
 
@@ -101,6 +113,7 @@ export class Game {
       for (const p of zone.portals) blockers.push({ x: p.x, z: p.z, r: 5 });
       for (const s of zone.stations) blockers.push({ x: s.x, z: s.z, r: 6 });
       if (zone.kind === 'hub') blockers.push({ x: 0, z: 4, r: 8 });
+      if (zone.id === MARKET.zone) blockers.push({ x: MARKET.x, z: MARKET.z, r: 4.6 });
 
       buildScatter(island, blockers);
       const skyDecor = buildSkyIslands(this.scene, zone);
@@ -167,6 +180,23 @@ export class Game {
       this.creatures.buildZone(zone, (x, z) => island.groundAt(x, z));
       for (const c of this.creatures.creatures) {
         if (c.zoneId === zone.id) c.key = `${zone.id}:${c.name ?? 'grump'}:${Math.round(c.home.x)}:${Math.round(c.home.z)}`;
+      }
+
+      // Momo's market: one stall, in the open between the arches and the tree.
+      if (zone.id === MARKET.zone) {
+        const m = MARKET;
+        this.market = new MarketStall({
+          scene: this.scene,
+          position: new THREE.Vector3(
+            zone.origin.x + m.x,
+            island.heightAtLocal(m.x, m.z),
+            zone.origin.z + m.z
+          ),
+          yaw: Math.atan2(m.faceTo.x - m.x, m.faceTo.z - m.z),
+          owned: [...this.upgrades],
+        });
+        this.market.zoneId = zone.id;
+        this.marketZoneId = zone.id;
       }
 
       this.islands.set(zone.id, { zone, island, portals, stations, sky: skyDecor });
@@ -254,6 +284,112 @@ export class Game {
     return ZONE_STAR_ORDER.filter((z) => this.stars[z]).length;
   }
 
+  // ------------------------------------------------------------- wisp market --
+
+  hasUpgrade(id) {
+    return this.upgrades.has(id);
+  }
+
+  /** Zapping Momo opens the market; the world waits politely behind the panel. */
+  openShop() {
+    if (!this.market || this.shopOpen || this.state !== 'play') return;
+    this.shopOpen = true;
+    this.state = 'shop';
+    this.input.enabled = false;
+    this.input.releaseLock();
+    this.voice.stop();
+    this._cancelSayChain();
+    this.hud.hideBubble();
+    this.hud.hideHint();
+    this.market.greet();
+    this.audio.ui?.();
+    const line = 'Welcome to my market! Your sparkles can buy my lovely gifts.';
+    this.hud.showShop({
+      items: shopStatus({ owned: [...this.upgrades], sparkles: this.sparkleCount }),
+      sparkles: this.sparkleCount,
+      line,
+      handlers: {
+        onBuy: (id) => this.buyItem(id),
+        onSpeak: (id) => {
+          const item = itemById(id);
+          if (!item) return;
+          this.voice.say(this.hasUpgrade(id) ? `${item.name} is already yours!` : `${item.name}. ${item.blurb}.`);
+        },
+        onClose: () => this.closeShop(),
+      },
+    });
+    this.voice.say(line);
+    this._saveDirty = true;
+  }
+
+  closeShop() {
+    if (!this.shopOpen) return;
+    this.shopOpen = false;
+    this.state = 'play';
+    this.hud.hideShop();
+    this.input.enabled = true;
+    this.input.requestLock();
+    this.voice.say('Come back any time!');
+  }
+
+  buyItem(id) {
+    const result = purchase({ owned: [...this.upgrades], sparkles: this.sparkleCount }, id);
+    if (!result.ok) {
+      this.market?.reject();
+      this.hud.shakeShop(id);
+      this.audio.ui?.();
+      const line = result.reason === 'owned'
+        ? 'You already have that one! It is yours for ever.'
+        : `You need ${result.missing} more sparkles for that. Sparkles hide all over the islands!`;
+      this.voice.say(line);
+      return result;
+    }
+    this.upgrades = new Set(result.owned);
+    this.sparkleCount = result.sparkles;
+    this.hud.setSparkles(this.sparkleCount);
+    this.hud.setUpgrades(SHOP_ITEMS.filter((it) => this.upgrades.has(it.id)));
+    this.market?.setOwned(this.upgrades);
+    this.market?.greet();
+    this.audio.star?.();
+    this.fx?.fountain(this.market.momoWorld(), 0xffc46b, 30);
+    this.hud.toast(result.item.name, result.item.icon);
+    this.hud.showBanner(result.item.name, result.item.blurb, 3200);
+    this.voice.say(result.item.line);
+    this._applyUpgrades();
+    this.hud.refreshShop({
+      items: shopStatus({ owned: [...this.upgrades], sparkles: this.sparkleCount }),
+      sparkles: this.sparkleCount,
+    });
+    this._saveDirty = true;
+    this._save();
+    return result;
+  }
+
+  /** Upgrades are read by the systems themselves, so they survive a reload. */
+  _applyUpgrades() {
+    const magnet = this.hasUpgrade('magnet');
+    this.sparkles.magnetRange = magnet ? 9.5 : 4.6;
+    this.sparkles.magnetPull = magnet ? 3.6 : 2.5;
+    this.blaster.setRainbow(this.hasUpgrade('rainbow'));
+    this.hud.setUpgrades(SHOP_ITEMS.filter((it) => this.upgrades.has(it.id)));
+    this.market?.setOwned(this.upgrades);
+  }
+
+  _updateMarket(dt, time) {
+    const market = this.market;
+    if (!market) return;
+    market.update(dt, time, this.camera.position);
+    if (market.zoneId !== this.currentZoneId || this.state !== 'play') return;
+    const distance = market.distanceTo(this.player.position);
+    if (!this._marketHinted && distance < 10) {
+      this._marketHinted = true;
+      const line = "That's Momo's market. Zap it to see what your sparkles can buy!";
+      this.hud.showHint(line, 5200);
+      this.voice.say(line);
+    }
+    if (distance > 22) this._marketHinted = false;
+  }
+
   schedule(delay, fn) {
     this.timers.push({ t: delay, fn });
   }
@@ -282,6 +418,7 @@ export class Game {
     const data = this.islands.get(zoneId);
     if (!data) return;
     this.currentZoneId = zoneId;
+    this._marketHinted = false;
     this.sky.applyZone(data.zone);
     this.audio.setZone(zoneId);
     this.hud.setZone(data.zone.name);
@@ -505,14 +642,39 @@ export class Game {
 
     if (this.aimStation && this.aimStation !== bestStation) this.aimStation.highlight(null);
     if (bestStation) bestStation.highlight(bestPad);
+
+    // Momo is a zap target too, but a sign in the middle of the view still wins.
+    let shopAngle = 0.3;
+    let shopTarget = null;
+    if (this.market?.group.visible && !bestPad) {
+      const v = this.market.momoWorld().sub(camPos);
+      if (v.length() < 26) {
+        const angle = v.normalize().angleTo(dir);
+        if (angle < shopAngle) {
+          shopAngle = angle;
+          shopTarget = this.market;
+        }
+      }
+    }
+    if (shopTarget && (!bestCreature || shopAngle <= bestCreatureAngle)) {
+      bestCreature = null;
+      this.aimShop = shopTarget;
+    } else {
+      this.aimShop = null;
+    }
+
     this.aimStation = bestStation;
     this.aimPad = bestPad;
     this.aimCreature = bestPad ? null : bestCreature;
-    this.hud.setCrosshairHot(!!(bestPad || this.aimCreature));
+    this.hud.setCrosshairHot(!!(bestPad || this.aimCreature || this.aimShop));
   }
 
   _fire() {
     if (this.transitioning) return;
+    if (this.aimShop) {
+      this.blaster.fire(this.aimShop.momoWorld(), { type: 'momo' });
+      return;
+    }
     if (this.aimPad) {
       this.blaster.fire(this.aimPad.group.position.clone(), this.aimPad);
     } else if (this.aimCreature) {
@@ -525,6 +687,10 @@ export class Game {
 
   onBoltHit(ref, position) {
     this.fx.burst(position, { color: 0xfff2b0, count: 8, speed: 3, life: 0.5, size: 0.45 });
+    if (ref?.type === 'momo') {
+      this.openShop();
+      return;
+    }
     if (!ref) return;
     if (ref.station) {
       ref.station.onPadHit(ref);
@@ -595,7 +761,8 @@ export class Game {
     if (!this.companion) return;
     const moving = Math.hypot(this.player.velocity.x, this.player.velocity.z) > 0.4;
     this.idleTimer = moving || this.aimPad ? 0 : this.idleTimer + dt;
-    if (this.idleTimer < 9) return;
+    // Pip's Bell makes the nudge arrive much sooner.
+    if (this.idleTimer < (this.hasUpgrade('bell') ? 3.5 : 9)) return;
     const stations = this.currentData?.stations ?? [];
     if (stations.some((s) => s.active)) return;
     if (!this.companion.canPoint()) return;
@@ -622,6 +789,7 @@ export class Game {
       if (data.sky && data.sky.visible !== near) data.sky.visible = near;
       for (const station of data.stations) station.setVisible(near);
       this.creatures.setZoneVisible(id, near);
+      if (this.market && this.marketZoneId === id) this.market.group.visible = near;
     }
   }
 
@@ -714,6 +882,7 @@ export class Game {
       solved: [...this.solvedStations],
       scanned: [...this.scannedCreatures],
       visited: [...this.visited],
+      upgrades: [...this.upgrades],
       ended: this.endingPlayed,
     });
   }
@@ -726,6 +895,7 @@ export class Game {
     (save.solved ?? []).forEach((id) => this.solvedStations.add(id));
     (save.scanned ?? []).forEach((k) => this.scannedCreatures.add(k));
     this.visited = new Set(save.visited ?? []);
+    this.upgrades = new Set(save.upgrades ?? []);
     this.endingPlayed = save.ended && this.starCount() === ZONE_STAR_ORDER.length;
     if (this.islands.has(save.zone)) this.currentZoneId = save.zone;
 
@@ -752,6 +922,7 @@ export class Game {
     }
     this.hud.setStars(this.starCount(), ZONE_STAR_ORDER.length);
     this.hud.setSparkles(this.sparkleCount);
+    this._applyUpgrades();
     this._refreshPortalBadges();
   }
 
@@ -776,6 +947,12 @@ export class Game {
     if (this.state === 'paused' || this.state === 'title') return;
 
     this.portalCooldown = Math.max(0, this.portalCooldown - dt);
+
+    if (this.state === 'shop') {
+      this.market?.update(dt, time, this.camera.position);
+      this.audio.update(dt);
+      return;
+    }
 
     if (this.state === 'play') {
       this.player.update(dt);
@@ -811,6 +988,7 @@ export class Game {
         }
       }
 
+      this._updateMarket(dt, time);
       this._updateAim();
       if (this.input.consumeFire()) this._fire();
       this._checkEnding();

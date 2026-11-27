@@ -10,7 +10,7 @@ test('old saves keep progress and default to the meadow', () => {
 });
 test('malformed fields cannot break game initialization', () => {
   writeSave({solved:{}, scanned:'bad', visited:[1,'cove','cove'], stars:{cove:true,grove:'false'},sparkles:-1,ended:'yes'});
-  assert.deepEqual(loadSave(), {solved:[],scanned:[],visited:['cove'],stars:{cove:true},sparkles:0,ended:false,zone:'meadow'});
+  assert.deepEqual(loadSave(), {solved:[],scanned:[],visited:['cove'],stars:{cove:true},sparkles:0,upgrades:[],ended:false,zone:'meadow'});
 });
 test('truncated primary recovers previous checkpoint without rotating corruption into backup', () => {
   writeSave({sparkles:11}); writeSave({sparkles:12}); store.set(key,'{'); assert.equal(loadSave().sparkles,11);

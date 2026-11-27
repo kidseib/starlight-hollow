@@ -4,7 +4,7 @@
 
 Starlight Hollow is an **in-development beta**. The current Windows build has a complete Starberry quest and a story ending; the larger game vision is still in progress.
 
-[Download the Windows x64 beta](https://github.com/kidseib/starlight-hollow/releases/download/v0.1.2-beta.1/Starlight-Hollow-Windows-x64.zip) · [Release notes](https://github.com/kidseib/starlight-hollow/releases/tag/v0.1.2-beta.1) · [Changelog](CHANGELOG.md) · [Report feedback](https://github.com/kidseib/starlight-hollow/issues/new)
+[Download the Windows x64 beta](https://github.com/kidseib/starlight-hollow/releases/download/v0.1.3-beta.1/Starlight-Hollow-Windows-x64.zip) · [Release notes](https://github.com/kidseib/starlight-hollow/releases/tag/v0.1.3-beta.1) · [Changelog](CHANGELOG.md) · [Report feedback](https://github.com/kidseib/starlight-hollow/issues/new)
 
 ## The adventure
 
@@ -19,11 +19,11 @@ Sunbeam Meadow is home base. Its five arches lead to islands with different sigh
 | **Storysong Glade** | Beginning sounds, rhymes, syllables, and words |
 | **Pebblecount Cove** | Pictured quantities and small number puzzles |
 
-The current game has **29 short signs** across the hub and islands, plus friendly Puffkins, silly Grumbleweeds, sparkles to collect, and a Starberry for each adventure island. Signs use picture and symbol cues alongside spoken prompts; wrong answers allow unlimited retries, and after two misses the choices themselves get smaller, leaving the right answer and one friendlier option. Finished islands mark their arch in the meadow with a small star. The game saves progress locally and resumes on the last island visited.
+The current game has **29 short signs** across the hub and islands, plus friendly Puffkins, silly Grumbleweeds, sparkles to collect, and a Starberry for each adventure island. Momo's Wisp Market in the meadow trades those sparkles for three permanent gifts: a Star Magnet that pulls sparkles from further away, Pip's Bell that makes hints arrive sooner, and a Rainbow Blaster that gives every zap the next colour of the rainbow. Signs use picture and symbol cues alongside spoken prompts; wrong answers allow unlimited retries, and after two misses the choices themselves get smaller, leaving the right answer and one friendlier option. Finished islands mark their arch in the meadow with a small star. The game saves progress locally and resumes on the last island visited.
 
 ## Play the Windows beta
 
-1. [Download the ZIP](https://github.com/kidseib/starlight-hollow/releases/download/v0.1.2-beta.1/Starlight-Hollow-Windows-x64.zip) and extract it.
+1. [Download the ZIP](https://github.com/kidseib/starlight-hollow/releases/download/v0.1.3-beta.1/Starlight-Hollow-Windows-x64.zip) and extract it.
 2. Run **`Starlight-Hollow-Portable.exe`** to play without installing, or **`Starlight-Hollow-Setup.exe`** for a per-user installation.
 3. Open `START-HERE.txt` in the ZIP for the quick-start guide.
 
@@ -38,9 +38,9 @@ The beta targets **Windows 10/11 x64** with a WebGL-capable graphics driver. Bot
 | Pause | Esc |
 | Toggle sound | M |
 
-**Beta playtest focus:** Answer a sign wrongly twice and check that a wrong choice fades to grey, leaving two choices and the message "Easier now!", while the right answer stays bright. Walk away and back to confirm every choice returns. Finish an island, take its Starberry, and check that its meadow arch now carries a small star. Also try R with mouse look locked and the repeat button in drag-to-look mode, check offline voice, save and reopen, the installer shortcut, and uninstall. [Send findings through GitHub Issues](https://github.com/kidseib/starlight-hollow/issues/new); please omit children's personal information.
+**Beta playtest focus:** Find the striped stall between the meadow landing spot and the Star Tree, zap Momo, and buy or refuse each gift; bought gifts should show as gold badges beside the sparkle counter and still be yours after reopening the game. Then answer a sign wrongly twice and check that a wrong choice fades to grey, leaving two choices and the message "Easier now!", while the right answer stays bright. Walk away and back to confirm every choice returns. Finish an island, take its Starberry, and check that its meadow arch now carries a small star. Also try R with mouse look locked and the repeat button in drag-to-look mode, check offline voice, save and reopen, the installer shortcut, and uninstall. [Send findings through GitHub Issues](https://github.com/kidseib/starlight-hollow/issues/new); please omit children's personal information.
 
-The 0.1.2 beta ZIP's SHA-256 is `ae6e5f7716df87a8bc55a696d9b9c8d491784c75be594872b9fc3929612e6020`. Every release on the [releases page](https://github.com/kidseib/starlight-hollow/releases) also shows its ZIP's checksum.
+The 0.1.3 beta ZIP's SHA-256 is `96bb7bd52216604b60e37ea4d671a8861eb85a0704344e957b9f3a2e468258b4`. Every release on the [releases page](https://github.com/kidseib/starlight-hollow/releases) also shows its ZIP's checksum.
 
 ## What the project is building toward
 
@@ -57,7 +57,7 @@ The long-term goal is a polished, offline adventure where exploration and playfu
 | Font and speech | Bundled Fredoka font; speech through the OS Web Speech API |
 | Save data | Local browser/Electron storage with a previous-checkpoint fallback |
 
-The Windows app serves bundled assets through a local Electron protocol and blocks HTTP(S) requests during play. GitHub Actions runs save regression tests, builds both Windows EXEs, checks the ZIP, and attaches it to the prerelease. The project uses Three.js (MIT) and Fredoka (SIL Open Font License); their license texts are included with the Windows app. No external account or gameplay service is required.
+The Windows app serves bundled assets through a local Electron protocol and blocks HTTP(S) requests during play. GitHub Actions runs the save, market and sign regression tests, builds both Windows EXEs, checks the ZIP, and attaches it to the prerelease. The project uses Three.js (MIT) and Fredoka (SIL Open Font License); their license texts are included with the Windows app. No external account or gameplay service is required.
 
 ### Build from source
 
