@@ -5,6 +5,70 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 10 - Momo's Wisp Market (2026-11-27)
+
+**Chosen because** sparkles were the only collectible with no use: a child
+gathered hundreds and could never do anything with them. The market turns that
+number into three abilities, and gives the hub a place worth walking to.
+
+**Changed**
+
+- `src/game/shop.js` (new): gift data, `shopStatus()` and `purchase()` as pure
+  functions, plus `MarketStall` - striped stall, glass jars, lanterns, and Momo
+  the lantern-snail with blinking eyestalks, a breathing shell and a shy smile.
+- `src/ui/hud.js`, `index.html`, `src/style.css`: market panel with picture
+  cards, purse, owned/ready/saving states, a shake for "not yet", and gold
+  upgrade badges under the sparkle counter.
+- `src/game/game.js`: market spawn from a `MARKET` constant in the hub, Momo as
+  an aim and zap target, `openShop`/`closeShop`/`buyItem`, `_applyUpgrades()` and
+  `_updateMarket` (including the first nudge when a child comes within 10 m), plus
+  the state branch that lets the world wait while shopping.
+- Effects wired into the systems themselves: `SparkleManager.magnetRange` and
+  `magnetPull`, the companion-hint wait in `_updateCompanionHint`, and
+  `Blaster.setRainbow()` (sRGB hues so the bolts are not pastel).
+- `src/engine/save.js`: `upgrades` saved and sanitised; older saves load with an
+  empty list, so the v1 key is untouched.
+- `src/world/props.js`: the altar under the Star Tree rebuilt - mossy footing,
+  stone drum, gold band, lit top and five rune lights - replacing the plain
+  grey cylinder every player walks up to.
+- `tests/shop.test.js`: 8 cases for prices, affordability, duplicates, unknown
+  ids, card states and saved upgrades. The Windows workflow now runs that file
+  too.
+
+**Verified**
+
+- `node --test tests/*.test.js` -> 17 pass, 0 fail. `npm run build` -> exit 0.
+- Cloud browser, real render loop: walked to the stall, crosshair went hot,
+  a queued zap opened the market (`state === 'shop'`, purse 9, three cards
+  saving); clicking the magnet card shook it and charged nothing; after
+  collecting sparkles all three gifts were bought for 40 + 70 + 110, cards turned
+  owned, chips appeared, jars switched to stars and the banner named each gift.
+- Effects measured: a sparkle placed 8.09 m away drifted to 4.27 m (default pull
+  radius is 4.6 m, so only the magnet could have moved it); the bolt colour
+  changed on the next zap; the HUD showed all three badges.
+- Saved, reloaded: `upgrades: ['magnet','bell','rainbow']`, magnet range 9.5,
+  rainbow on, jars sold, badges redrawn. No page errors in the runs that
+  recorded them.
+- Screenshots: `artifacts/r10-market-approach.png`, `-stall.png`, `-panel.png`,
+  `-owned.png`, `-after-reload.png`, `artifacts/r10-altar.png`.
+
+**Open**
+
+- Audible narration, real pointer-lock clicking and both Windows executables
+  were not exercised here; the cloud browser renders at about 4 fps.
+- The market has exactly three gifts and no rotation; a child who buys all three
+  runs out of things to save for.
+- Speech still needs a local English Windows voice.
+
+**Next actions**
+
+1. Ship 0.1.3-beta.1 through the Windows workflow and verify the public ZIP.
+2. A second use for sparkles - decorating the Star Tree - so saving continues
+   after the three gifts.
+3. Finish the long-standing pattern-sign wrong/right evidence.
+
+---
+
 ## Iteration 9 — Gentler second chances (2026-11-27)
 
 **Chosen because** the game's weakest moment for a five-year-old was failing the same question
