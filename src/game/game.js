@@ -1,0 +1,829 @@
+import * as THREE from 'three';
+import { ZONES, ZONE_BY_ID, ZONE_STAR_ORDER, PIP_LINES } from '../content.js';
+import { Island } from '../world/terrain.js';
+import { buildScatter, buildSkyIslands, buildPortal, buildWishTree } from '../world/props.js';
+import { SkySystem } from '../world/sky.js';
+import { FX } from '../world/fx.js';
+import { glyphTexture } from '../world/textures.js';
+import { Station } from './station.js';
+import { CreatureManager } from './creatures.js';
+import { SparkleManager, Starberry } from './collectibles.js';
+import { Player } from './player.js';
+import { Blaster } from './blaster.js';
+import { Companion } from './companion.js';
+import { loadSave, writeSave } from '../engine/save.js';
+import { clamp, damp, mulberry32 } from '../engine/utils.js';
+
+const ZONE_GREETINGS = {
+  grove: 'Letterleaf Grove! The letters here sing when you zap them.',
+  falls: 'Tallybrook Falls! I can hear numbers splashing everywhere.',
+  peaks: 'Pattern Peaks! Up here, everything repeats in a lovely pattern.',
+  meadow: 'Back in the sunny meadow!',
+  words: 'Storysong Glade! The words up here sing when you say them. Listen!',
+  cove: 'Pebblecount Cove! Pebbles here stack themselves into numbers. Let us count!',
+};
+
+export class Game {
+  constructor({ scene, camera, renderer, input, audio, voice, hud }) {
+    this.scene = scene;
+    this.camera = camera;
+    this.renderer = renderer;
+    this.input = input;
+    this.audio = audio;
+    this.voice = voice;
+    this.hud = hud;
+
+    this.state = 'title';
+    this.timers = [];
+    this.islands = new Map();
+    this.stations = [];
+    this.starberries = {};
+    this.currentZoneId = 'meadow';
+    this.visited = new Set();
+    this.solvedStations = new Set();
+    this.scannedCreatures = new Set();
+    this.sparkleCount = 0;
+    this.stars = {};
+    this.transitioning = false;
+    this.portalCooldown = 0;
+    this.scanTimer = 0;
+    this.aimPad = null;
+    this.aimStation = null;
+    this.aimCreature = null;
+    this.endingPlayed = false;
+    this.endingTimer = 0;
+    this._chainToken = 0;
+    this.confettiTimer = 0;
+    this._saveDirty = false;
+    this._saveAccum = 0;
+
+    this.fx = new FX(scene, 1200);
+    this.sky = new SkySystem(scene);
+    this.sparkles = new SparkleManager(scene, this.fx, audio);
+    this.sparkles.onCollect = () => this.addSparkles(1, false);
+    this.creatures = new CreatureManager(scene, this.fx, audio);
+    this.creatures.onGift = () => this.addSparkles(1, true);
+
+    this.player = new Player(camera, input);
+    this.player.onJump = () => audio.jump();
+    this.player.onLand = () => audio.land();
+    this.player.onStep = () => audio.step();
+    this.player.onEdge = () => this.hud.showHint('✨ A soft magic breeze keeps you safe!', 2200);
+
+    this.blaster = new Blaster(camera, scene, audio, this.fx);
+    this.blaster.onHit = (ref, pos) => this.onBoltHit(ref, pos);
+    this.blaster.groundFn = (x, z) => this._groundAnywhere(x, z);
+
+    this.companion = new Companion({ scene, camera, audio, fx: this.fx });
+    this.idleTimer = 0;
+
+    this.input.onLockChange = (locked) => {
+      if (!locked && this.state === 'play' && !this.transitioning) this.pause();
+    };
+
+    this._buildWorld();
+    this._load();
+    this._enterZone(this.currentZoneId, true);
+  }
+
+  // ------------------------------------------------------------ world build --
+
+  _buildWorld() {
+    const rng = mulberry32(4242);
+    for (const zone of ZONES) {
+      const island = new Island(zone);
+      this.scene.add(island.group);
+
+      const blockers = [
+        { x: 0, z: 0, r: 6 },
+        { x: zone.spawn.x, z: zone.spawn.z, r: 5 },
+      ];
+      for (const p of zone.portals) blockers.push({ x: p.x, z: p.z, r: 5 });
+      for (const s of zone.stations) blockers.push({ x: s.x, z: s.z, r: 6 });
+      if (zone.kind === 'hub') blockers.push({ x: 0, z: 4, r: 8 });
+
+      buildScatter(island, blockers);
+      const skyDecor = buildSkyIslands(this.scene, zone);
+
+      // portals
+      const portals = [];
+      for (const def of zone.portals) {
+        const portal = buildPortal(def);
+        const y = island.heightAtLocal(def.x, def.z);
+        portal.group.position.set(def.x, y, def.z);
+        portal.group.rotation.y = Math.atan2(-def.x, -def.z);
+        island.group.add(portal.group);
+        portals.push({
+          ...portal,
+          def,
+          worldPosition: new THREE.Vector3(zone.origin.x + def.x, zone.origin.y + y + 1.6, zone.origin.z + def.z),
+        });
+      }
+
+      // stations
+      const stationCtx = {
+        scene: this.scene,
+        camera: this.camera,
+        audio: this.audio,
+        voice: this.voice,
+        hud: this.hud,
+        fx: this.fx,
+        glyphTexture,
+        onPrompt: () => this._cancelSayChain(),
+        onWrong: () => this.companion?.droop(),
+        onStationSolved: (s) => this.onStationSolved(s),
+      };
+      const stations = [];
+      for (const def of zone.stations) {
+        const station = new Station(def, island, stationCtx);
+        station.zoneId = zone.id;
+        stations.push(station);
+        this.stations.push(station);
+      }
+
+      // sparkles scattered around the island
+      this.sparkles.spawnCluster(
+        { x: zone.origin.x, y: 0, z: zone.origin.z },
+        zone.sparkles,
+        zone.radius * 0.78,
+        zone.id,
+        (x, z) => island.groundAt(x, z)
+      );
+
+      // creatures
+      this.creatures.buildZone(zone, (x, z) => island.groundAt(x, z));
+      for (const c of this.creatures.creatures) {
+        if (c.zoneId === zone.id) c.key = `${zone.id}:${c.name ?? 'grump'}:${Math.round(c.home.x)}:${Math.round(c.home.z)}`;
+      }
+
+      this.islands.set(zone.id, { zone, island, portals, stations, sky: skyDecor });
+
+      if (zone.kind === 'hub') {
+        const tree = buildWishTree(zone.palette);
+        const gy = island.heightAtLocal(0, 4);
+        tree.group.position.set(0, gy - 0.2, 4);
+        island.group.add(tree.group);
+        this.wishTree = tree;
+        this.wishTree.moteBases = tree.motes.map((m) => m.sprite.position.clone());
+        this.wishTreePosition = new THREE.Vector3(zone.origin.x, zone.origin.y + gy, zone.origin.z + 4);
+      }
+      void rng;
+    }
+  }
+
+  // -------------------------------------------------------------- lifecycle --
+
+  start() {
+    this.hud.setVisible(true);
+    this.input.enabled = true;
+    this.state = 'play';
+    this.input.requestLock();
+    this.audio.resume();
+    this.voice.warmUp();
+    this.hud.setStars(this.starCount(), ZONE_STAR_ORDER.length);
+    this.hud.setSparkles(this.sparkleCount);
+    this._updateGoal();
+    this.hud.setZone(ZONE_BY_ID[this.currentZoneId].name);
+
+    const intro = this.visited.size > 0 ? [{ text: ZONE_GREETINGS[this.currentZoneId], face: this.currentZoneId === 'meadow' ? '🌻' : '✨' }] : [
+      { text: PIP_LINES.intro, face: '🐣' },
+      { text: PIP_LINES.intro2, face: '🐣' },
+      { text: PIP_LINES.goal, face: '✨' },
+    ];
+    this._sayThen(intro);
+    this.visited.add(this.currentZoneId);
+    this._save();
+  }
+
+  pause() {
+    if (this.state !== 'play') return;
+    this.flushProgress();
+    this.state = 'paused';
+    this.input.enabled = false;
+    this.input.releaseLock();
+    this.voice.stop();
+    this.audio.musicPlaying = false;
+    this.hud.showPause(true, `✨ ${this.sparkleCount} sparkles · ★ ${this.starCount()} of ${ZONE_STAR_ORDER.length} starberries`);
+    this.hud.hideHint();
+  }
+
+  resume() {
+    if (this.state !== 'paused') return;
+    this.state = 'play';
+    this.input.enabled = true;
+    this.audio.musicPlaying = true;
+    this.audio.resume();
+    this.hud.showPause(false);
+    this.input.requestLock();
+  }
+
+  repeatInstruction() {
+    if (this.state !== 'play' || this.transitioning) return;
+    let nearest = null;
+    let distance = Infinity;
+    for (const station of this.currentData?.stations ?? []) {
+      if (!station.active || station.solved) continue;
+      const candidate = station.distanceTo(this.player.position);
+      if (candidate < distance) {
+        nearest = station;
+        distance = candidate;
+      }
+    }
+    if (nearest) {
+      this._cancelSayChain();
+      nearest.repeatPrompt();
+    } else {
+      this.hud.replayBubble();
+    }
+  }
+
+  starCount() {
+    return ZONE_STAR_ORDER.filter((z) => this.stars[z]).length;
+  }
+
+  schedule(delay, fn) {
+    this.timers.push({ t: delay, fn });
+  }
+
+  _sayThen(lines, index = 0, token = ++this._chainToken) {
+    if (index >= lines.length || token !== this._chainToken) return;
+    const line = lines[index];
+    this.hud.showBubble(line.text, line.face ?? '🐣');
+    if (!this.voice.supported) {
+      this.schedule(4.2, () => this._sayThen(lines, index + 1, token));
+      return;
+    }
+    this.voice.say(line.text, {
+      onEnd: () => this.schedule(0.7, () => this._sayThen(lines, index + 1, token)),
+    });
+  }
+
+  /** A sign the child walked up to interrupts any scripted narration. */
+  _cancelSayChain() {
+    this._chainToken += 1;
+  }
+
+  // ------------------------------------------------------------------ zones --
+
+  _enterZone(zoneId, placePlayer) {
+    const data = this.islands.get(zoneId);
+    if (!data) return;
+    this.currentZoneId = zoneId;
+    this.sky.applyZone(data.zone);
+    this.audio.setZone(zoneId);
+    this.hud.setZone(data.zone.name);
+
+    const { island, zone } = data;
+    this.player.setWorld(
+      (x, z) => island.groundAt(x, z),
+      { x: zone.origin.x, z: zone.origin.z },
+      zone.radius
+    );
+
+    if (placePlayer) {
+      const wx = zone.origin.x + zone.spawn.x;
+      const wz = zone.origin.z + zone.spawn.z;
+      const yaw = Math.atan2(zone.spawn.x, zone.spawn.z);
+      this.player.place(wx, wz, yaw);
+      this.blaster.setVisible(true);
+      this.companion?.snap();
+    }
+
+    const firstVisit = !this.visited.has(zoneId);
+    if (firstVisit && this.state === 'play') {
+      // Arriving somewhere new outranks whatever Pip was still saying.
+      this._cancelSayChain();
+      this.hud.showBanner(zone.name, zone.subtitle, 4200);
+      this.audio.unlock();
+      const greeting = ZONE_GREETINGS[zoneId] ?? zone.name;
+      this.hud.showBubble(greeting, zone.kind === 'hub' ? '🌻' : '✨');
+      this.voice.say(greeting);
+      this.visited.add(zoneId);
+    }
+    if (this.state === 'play') this._save();
+    this._updateGoal();
+  }
+
+  async travelTo(zoneId) {
+    if (this.transitioning) return;
+    this.transitioning = true;
+    this.hud.hideBubble();
+    this.audio.portal();
+    this.voice.stop();
+    await this.hud.fade(true);
+    this._enterZone(zoneId, true);
+    this.hud.setFadeImmediate(false);
+    this.portalCooldown = 2.2;
+    this.transitioning = false;
+  }
+
+  _updateZoneDetection() {
+    const p = this.player.position;
+    for (const [id, data] of this.islands) {
+      if (data.island.distanceTo(p.x, p.z) < data.zone.radius * 1.02) {
+        if (id !== this.currentZoneId) this._enterZone(id, true);
+        return;
+      }
+    }
+  }
+
+  get currentData() {
+    return this.islands.get(this.currentZoneId);
+  }
+
+  _groundAnywhere(x, z) {
+    for (const data of this.islands.values()) {
+      if (data.island.distanceTo(x, z) < data.zone.radius * 1.05) return data.island.groundAt(x, z);
+    }
+    return -120;
+  }
+
+  // -------------------------------------------------------------- progression --
+
+  addSparkles(n, burst = true) {
+    this.sparkleCount += n;
+    this.hud.setSparkles(this.sparkleCount);
+    if (burst) this.audio.collect();
+    this._saveDirty = true;
+  }
+
+  onStationSolved(station) {
+    this.companion?.celebrate();
+    this.hud.setCrosshairHot(false);
+    this.solvedStations.add(station.def.id);
+    this.addSparkles(6, false);
+    const zone = ZONE_BY_ID[station.zoneId];
+    const allSolved = zone.stations.every((s) => this.solvedStations.has(s.id));
+    if (ZONE_STAR_ORDER.includes(zone.id) && allSolved && !this.stars[zone.id] && !this.starberries[zone.id]) {
+      this._spawnStarberry(zone);
+    }
+    this._updateGoal();
+    this._save();
+  }
+
+  _spawnStarberry(zone) {
+    const silent = this.state !== 'play';
+    const data = this.islands.get(zone.id);
+    const { island } = data;
+    const pos = new THREE.Vector3(
+      zone.origin.x,
+      island.groundAt(zone.origin.x, zone.origin.z) + 1.9,
+      zone.origin.z
+    );
+    const berry = new Starberry(this.scene, this.fx, pos, zone.id);
+    berry.appear(24);
+    this.starberries[zone.id] = berry;
+    if (silent) return;
+    this.audio.star();
+    this.hud.showBanner('A Starberry appeared!', 'Follow the beam of light ✨', 4600);
+    const line = 'You solved every sign here! A Starberry is waiting in the middle of the island. Follow the beam of light!';
+    this.hud.showBubble(line, '💖');
+    this.voice.say(line);
+    this.fx?.fountain(pos, 0xffc0d8, 40);
+  }
+
+  _collectStarberry(zoneId) {
+    const zone = ZONE_BY_ID[zoneId];
+    this.stars[zoneId] = true;
+    this.hud.setStars(this.starCount(), ZONE_STAR_ORDER.length);
+    this.audio.star();
+    this._fillWishSocket(zoneId);
+    this.hud.showBanner('Starberry found!', `${this.starCount()} of ${ZONE_STAR_ORDER.length}`, 4000);
+    this.fx.fountain(this.camera.position.clone().add(new THREE.Vector3(0, -1, -3)), 0xffc0d8, 50);
+
+    let line = `You found the ${zone.name} Starberry! Wonderful!`;
+    if (this.starCount() === ZONE_STAR_ORDER.length) {
+      line = `All ${ZONE_STAR_ORDER.length} Starberries! Bring them to the Star Tree in the meadow. Hurry, hurry!`;
+      this.hud.showBubble(line, '🌟');
+    } else {
+      line += ` ${ZONE_STAR_ORDER.length - this.starCount()} more to find.`;
+      this.hud.showBubble(line, '💖');
+    }
+    this.voice.say(line);
+    this._updateGoal();
+    this._save();
+  }
+
+  _fillWishSocket(zoneId) {
+    if (!this.wishTree) return;
+    const index = ZONE_STAR_ORDER.indexOf(zoneId);
+    const socket = this.wishTree.sockets[index];
+    if (!socket) return;
+    socket.berry.visible = true;
+    socket.glow.material.opacity = 0.75;
+    socket.ring.material.emissiveIntensity = 1.4;
+    this.fx.burst(socket.berry.getWorldPosition(new THREE.Vector3()), {
+      color: 0xff9ec4,
+      count: 26,
+      speed: 4,
+      life: 1.1,
+      size: 0.6,
+    });
+  }
+
+  _updateGoal() {
+    const zone = ZONE_BY_ID[this.currentZoneId];
+    if (!zone) return;
+    let goal = '';
+    if (zone.kind === 'hub') {
+      const count = this.starCount();
+      if (this.endingPlayed) goal = '✨ Explore the hollow with Pip';
+      else if (count >= ZONE_STAR_ORDER.length) goal = '🌟 Visit the Star Tree!';
+      else if (count === 0) goal = '🍃 Choose a glowing arch';
+      else goal = `💖 ${count} of ${ZONE_STAR_ORDER.length} Starberries · keep exploring`;
+    } else if (this.stars[zone.id]) {
+      goal = '🏠 Back through the arch';
+    } else {
+      const solved = zone.stations.filter((s) => this.solvedStations.has(s.id)).length;
+      goal = solved >= zone.stations.length ? '💖 Collect your Starberry!' : `${solved} of ${zone.stations.length} signs solved`;
+    }
+    this.hud.setGoal(goal);
+  }
+
+  // ------------------------------------------------------------------- aim --
+
+  _updateAim() {
+    const camPos = this.camera.position;
+    const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
+
+    let bestPad = null;
+    let bestStation = null;
+    let bestAngle = 0.3;
+    for (const station of this.currentData?.stations ?? []) {
+      for (const pad of station.aimCandidates()) {
+        const v = pad.group.position.clone().sub(camPos);
+        const dist = v.length();
+        if (dist > 30) continue;
+        const angle = v.normalize().angleTo(dir);
+        if (angle < bestAngle) {
+          bestAngle = angle;
+          bestPad = pad;
+          bestStation = station;
+        }
+      }
+    }
+
+    let bestCreature = null;
+    let bestCreatureAngle = 0.26;
+    for (const c of this.creatures.creatures) {
+      if (c.zoneId !== this.currentZoneId || c.hidden) continue;
+      const v = c.group.position.clone().setY(c.group.position.y + 0.7).sub(camPos);
+      const dist = v.length();
+      if (dist > 24) continue;
+      const angle = v.normalize().angleTo(dir);
+      if (angle < bestCreatureAngle) {
+        bestCreatureAngle = angle;
+        bestCreature = c;
+      }
+    }
+
+    if (this.aimStation && this.aimStation !== bestStation) this.aimStation.highlight(null);
+    if (bestStation) bestStation.highlight(bestPad);
+    this.aimStation = bestStation;
+    this.aimPad = bestPad;
+    this.aimCreature = bestPad ? null : bestCreature;
+    this.hud.setCrosshairHot(!!(bestPad || this.aimCreature));
+  }
+
+  _fire() {
+    if (this.transitioning) return;
+    if (this.aimPad) {
+      this.blaster.fire(this.aimPad.group.position.clone(), this.aimPad);
+    } else if (this.aimCreature) {
+      const target = this.aimCreature.group.position.clone().setY(this.aimCreature.group.position.y + 0.7);
+      this.blaster.fire(target, this.aimCreature);
+    } else {
+      this.blaster.fire(null);
+    }
+  }
+
+  onBoltHit(ref, position) {
+    this.fx.burst(position, { color: 0xfff2b0, count: 8, speed: 3, life: 0.5, size: 0.45 });
+    if (!ref) return;
+    if (ref.station) {
+      ref.station.onPadHit(ref);
+      return;
+    }
+    if (ref.type === 'puff') {
+      this._befriend(ref, true);
+      return;
+    }
+    if (ref.type === 'grump') {
+      ref.poke();
+      this.addSparkles(2, true);
+      this.hud.toast('The Grumbleweed giggled away!', '🐛');
+    }
+  }
+
+  _befriend(creature, byZap) {
+    const key = creature.key ?? creature.name;
+    if (!creature.scanned) {
+      creature.scanned = true;
+      this.scannedCreatures.add(key);
+      const line = `This is a ${creature.name}. ${creature.fact}`;
+      this.hud.showBubble(line, '🐣');
+      this.voice.say(line);
+      this.hud.toast(`New friend: ${creature.name}`, '💚');
+      this.addSparkles(4, true);
+      this._save();
+    } else if (byZap) {
+      this.audio.giggle();
+    }
+    creature.acknowledge();
+    creature.befriended = byZap || creature.befriended;
+    const pos = creature.group.position.clone().setY(creature.group.position.y + 1);
+    this.fx.burst(pos, { color: 0xffb3d9, count: 14, speed: 3.4, life: 0.9, size: 0.5, gravity: -2 });
+  }
+
+  _updateScan(dt) {
+    const target = this.creatures.scanTarget;
+    if (target && !target.scanned) {
+      this.scanTimer += dt;
+      if (this.scanTimer > 0.7) {
+        this._befriend(target, false);
+        this.scanTimer = 0;
+      }
+    } else {
+      this.scanTimer = 0;
+    }
+  }
+
+  _checkPortals() {
+    if (this.transitioning || this.portalCooldown > 0) return;
+    const data = this.currentData;
+    if (!data) return;
+    for (const portal of data.portals) {
+      if (portal.worldPosition.distanceTo(this.camera.position) < 3.4) {
+        this.travelTo(portal.def.to);
+        return;
+      }
+    }
+  }
+
+  /**
+   * When a child stands still with nothing on screen to do, Pip drifts towards
+   * the nearest unsolved sign and says where it is. It never fires while a sign
+   * is already talking, so it cannot talk over an activity.
+   */
+  _updateCompanionHint(dt) {
+    if (!this.companion) return;
+    const moving = Math.hypot(this.player.velocity.x, this.player.velocity.z) > 0.4;
+    this.idleTimer = moving || this.aimPad ? 0 : this.idleTimer + dt;
+    if (this.idleTimer < 9) return;
+    const stations = this.currentData?.stations ?? [];
+    if (stations.some((s) => s.active)) return;
+    if (!this.companion.canPoint()) return;
+    const next = stations
+      .filter((s) => !s.solved)
+      .sort((a, b) => a.distanceTo(this.player.position) - b.distanceTo(this.player.position))[0];
+    if (!next) return;
+    if (!this.companion.pointAt(next.center)) return;
+    const line = 'Over there! A sign is waiting for you.';
+    this.hud.showHint('Pip: over there — a sign is waiting!', 3600);
+    this.voice.say(line);
+    this.idleTimer = 3;
+  }
+
+  /**
+   * Distant islands are deep inside the fog, so hiding them saves a lot of
+   * drawing without changing anything a child can see.
+   */
+  _updateVisibility() {
+    const cam = this.camera.position;
+    for (const [id, data] of this.islands) {
+      const near = data.island.distanceTo(cam.x, cam.z) < 210;
+      if (data.island.group.visible !== near) data.island.group.visible = near;
+      if (data.sky && data.sky.visible !== near) data.sky.visible = near;
+      for (const station of data.stations) station.setVisible(near);
+      this.creatures.setZoneVisible(id, near);
+    }
+  }
+
+  // ------------------------------------------------------------------ tree --
+
+  _updateWishTree(dt, time) {
+    const tree = this.wishTree;
+    if (!tree) return;
+    const count = this.starCount();
+    const targetAura = count >= ZONE_STAR_ORDER.length ? 0.16 + Math.sin(time * 0.9) * 0.04 : count * 0.025;
+    tree.aura.material.opacity = damp(tree.aura.material.opacity, targetAura, 2, dt);
+
+    tree.motes.forEach((m, i) => {
+      const base = tree.moteBases[i];
+      const a = m.a + time * 0.12 * m.speed;
+      m.sprite.position.set(Math.cos(a) * m.r, base.y + Math.sin(time * 0.8 + m.phase) * 0.5, Math.sin(a) * m.r);
+      m.sprite.material.opacity = 0.35 + Math.sin(time * 2 + m.phase) * 0.2;
+    });
+
+    if (count >= ZONE_STAR_ORDER.length) {
+      tree.canopy.children.forEach((c, i) => {
+        c.scale.setScalar(1 + Math.sin(time * 1.4 + i) * 0.03);
+      });
+    }
+    tree.sockets.forEach((s, i) => {
+      if (s.berry.visible) {
+        s.ring.scale.setScalar(1 + Math.sin(time * 2.6 + i) * 0.06);
+        s.glow.material.opacity = 0.5 + Math.sin(time * 2.2 + i) * 0.2;
+      }
+    });
+  }
+
+  _checkEnding() {
+    if (this.endingPlayed || this.currentZoneId !== 'meadow') return;
+    if (this.starCount() < ZONE_STAR_ORDER.length) return;
+    if (this.wishTreePosition.distanceTo(this.player.position) > 9) return;
+    this._playEnding();
+  }
+
+  _playEnding() {
+    this.endingPlayed = true;
+    this.state = 'ending';
+    this.endingTimer = 0;
+    this.input.enabled = false;
+    this.input.releaseLock();
+    this.audio.setZone('ending');
+    this.audio.star();
+    this.fx.fountain(this.wishTreePosition.clone().setY(this.wishTreePosition.y + 6), 0xfff2b0, 90);
+    this.hud.showBanner('The Star Tree is awake!', '✨🌟✨', 5200);
+    this.voice.stop();
+    this._sayThen([
+      { text: 'You did it! The Star Tree is awake, and every light in the hollow is singing.', face: '🌟' },
+      { text: 'Thank you, explorer. The meadow will remember you forever.', face: '🐣' },
+    ]);
+    this.schedule(9.5, () => {
+      this.hud.setVisible(false);
+      this.hud.showEnding([
+        ['Sparkles', this.sparkleCount],
+        ['Starberries', `${this.starCount()}/${ZONE_STAR_ORDER.length}`],
+        ['Signs solved', this.solvedStations.size],
+        ['Friends met', this.scannedCreatures.size],
+      ]);
+    });
+    this._save();
+  }
+
+  continueAfterEnding() {
+    this.hud.hideEnding();
+    this.hud.setVisible(true);
+    this.state = 'play';
+    this._updateGoal();
+    this.input.enabled = true;
+    this.audio.setZone(this.currentZoneId);
+    this.input.requestLock();
+    this.hud.showBubble('You can keep exploring forever. There are still sparkles hiding everywhere!', '🐣');
+    this.voice.say('You can keep exploring forever. There are still sparkles hiding everywhere!');
+  }
+
+  // ------------------------------------------------------------------ save --
+
+  flushProgress() {
+    if (this._saveDirty) this._save();
+  }
+
+  _save() {
+    this._saveDirty = !writeSave({
+      zone: this.currentZoneId,
+      sparkles: this.sparkleCount,
+      stars: this.stars,
+      solved: [...this.solvedStations],
+      scanned: [...this.scannedCreatures],
+      visited: [...this.visited],
+      ended: this.endingPlayed,
+    });
+  }
+
+  _load() {
+    const save = loadSave();
+    if (!save) return;
+    this.sparkleCount = save.sparkles ?? 0;
+    this.stars = save.stars ?? {};
+    (save.solved ?? []).forEach((id) => this.solvedStations.add(id));
+    (save.scanned ?? []).forEach((k) => this.scannedCreatures.add(k));
+    this.visited = new Set(save.visited ?? []);
+    this.endingPlayed = save.ended && this.starCount() === ZONE_STAR_ORDER.length;
+    if (this.islands.has(save.zone)) this.currentZoneId = save.zone;
+
+    for (const station of this.stations) {
+      if (this.solvedStations.has(station.def.id)) station.restoreSolved();
+    }
+    for (const c of this.creatures.creatures) {
+      if (c.key && this.scannedCreatures.has(c.key)) c.scanned = true;
+    }
+    for (const zoneId of ZONE_STAR_ORDER) {
+      if (!this.stars[zoneId]) continue;
+      const socketIndex = ZONE_STAR_ORDER.indexOf(zoneId);
+      const socket = this.wishTree?.sockets[socketIndex];
+      if (socket) {
+        socket.berry.visible = true;
+        socket.glow.material.opacity = 0.7;
+      }
+    }
+    // A zone that was finished but whose berry was never picked up gets one.
+    for (const [id, data] of this.islands) {
+      if (id === 'meadow' || this.stars[id]) continue;
+      const all = data.zone.stations.every((s) => this.solvedStations.has(s.id));
+      if (all) this._spawnStarberry(data.zone);
+    }
+    this.hud.setStars(this.starCount(), ZONE_STAR_ORDER.length);
+    this.hud.setSparkles(this.sparkleCount);
+  }
+
+  // ----------------------------------------------------------------- update --
+
+  update(dt, time) {
+    for (let i = this.timers.length - 1; i >= 0; i--) {
+      this.timers[i].t -= dt;
+      if (this.timers[i].t <= 0) {
+        const fn = this.timers[i].fn;
+        this.timers.splice(i, 1);
+        fn();
+      }
+    }
+
+    this.sky.update(dt, this.camera, time);
+    this._updateVisibility();
+    this._updateWishTree(dt, time);
+    this.fx.update(dt);
+    this.blaster.update(dt, time);
+
+    if (this.state === 'paused' || this.state === 'title') return;
+
+    this.portalCooldown = Math.max(0, this.portalCooldown - dt);
+
+    if (this.state === 'play') {
+      this.player.update(dt);
+      this.companion.update(dt, time, this.player);
+      this._updateZoneDetection();
+
+      const data = this.currentData;
+      if (data) {
+        for (const station of data.stations) station.update(dt, time, this.camera, this.player.position);
+        for (const portal of data.portals) {
+          portal.swirl.rotation.z += dt * 0.7;
+          portal.veil.material.opacity = 0.3 + Math.sin(time * 2 + portal.def.x) * 0.08;
+          portal.icon.position.y = 5.9 + Math.sin(time * 1.5) * 0.12;
+          portal.glow.material.opacity = 0.14 + Math.sin(time * 1.8) * 0.05;
+        }
+        this._checkPortals();
+      }
+
+      const forward = this.player.forwardFlat();
+      this.creatures.update(dt, time, this.camera.position, forward, this.currentZoneId);
+      this.sparkles.update(dt, this.camera.position, time);
+      this._updateScan(dt);
+
+      for (const [zoneId, berry] of Object.entries(this.starberries)) {
+        if (berry.state === 'collected') {
+          delete this.starberries[zoneId];
+          continue;
+        }
+        berry.update(dt, time, this.camera.position);
+        if (berry.state === 'collected') {
+          this._collectStarberry(zoneId);
+          delete this.starberries[zoneId];
+        }
+      }
+
+      this._updateAim();
+      if (this.input.consumeFire()) this._fire();
+      this._checkEnding();
+      this._updateCompanionHint(dt);
+    }
+
+    if (this.state === 'ending') {
+      this.endingTimer += dt;
+      this.confettiTimer -= dt;
+      if (this.confettiTimer <= 0) {
+        this.confettiTimer = 0.5;
+        const a = Math.random() * Math.PI * 2;
+        const p = this.wishTreePosition
+          .clone()
+          .add(new THREE.Vector3(Math.cos(a) * 4, 6 + Math.random() * 5, Math.sin(a) * 4));
+        this.fx.fountain(p, [0xfff2b0, 0xffc0d8, 0x8dffd0, 0xc9a8ff][Math.floor(Math.random() * 4)], 22);
+      }
+      this.wishTree?.canopy.children.forEach((c, i) => {
+        c.scale.setScalar(1 + Math.sin(time * 3 + i) * 0.06);
+      });
+      this.creatures.update(dt, time, this.camera.position, this.player.forwardFlat(), this.currentZoneId);
+      this.sparkles.update(dt, this.camera.position, time);
+      this.companion.update(dt, time, this.player);
+    }
+
+    this._saveAccum += dt;
+    if (this._saveDirty && this._saveAccum > 5) {
+      this._saveAccum = 0;
+      this._save();
+    }
+
+    this.audio.update(dt);
+  }
+
+  /** Called on window resize / first frame. */
+  refreshCamera() {
+    this.camera.updateProjectionMatrix();
+  }
+
+  clampSparklesForDisplay() {
+    return clamp(this.sparkleCount, 0, 99999);
+  }
+}
