@@ -7,6 +7,14 @@
 // main instruction channel. Text on screen always mirrors the speech.
 // ---------------------------------------------------------------------------
 
+/**
+ * Pip's garden: the little bed on the meadow path where the Leafwhisk's bundles
+ * go. One spot per family — posy bed, sun bowl, lantern post — so each gift has
+ * a different, readable result. Placed clear of the lantern row, the market, the
+ * shelf and the grotto.
+ */
+export const GARDEN = { zone: 'meadow', x: -10.5, z: 14, faceTo: { x: -6, z: 24 }, radius: 5 };
+
 export const ZONES = [
   // ---------------------------------------------------------------- HUB ----
   {

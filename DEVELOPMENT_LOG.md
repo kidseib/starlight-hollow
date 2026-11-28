@@ -5,6 +5,105 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 23 — Pip's garden: a use for every bundle (2026-11-28)
+
+**Chosen because** iteration 22 made petals, sun puffs and mote lanterns gatherable in every world,
+and then did nothing with them: a child earned a bundle, heard a line, and the bundle vanished into a
+counter that paid nothing again. The roadmap's top item said exactly that. This iteration gives each
+family one authored place to go, with its own visible growth, its own sound and its own voice line, and
+finishes the art to the iteration 17/19/20/21/22 bar at 1280×720.
+
+**Changed**
+
+- `src/game/gifts.js` (new, pure) — the whole rule set: `BUNDLE_KINDS`, `BUNDLE_NAMES/ICONS`,
+  `BASKET_MAX` (9 each), `GIFT_MAX` (3 stages per spot), three `GIFT_SPOTS` (`posy`/`sun`/`lantern`
+  mapping to `petal`/`dust`/`mote`), `sanitizeBundles`/`sanitizeGifts` (clamped, unknown keys dropped,
+  junk saves default to empty), `basketTotal`, `canGive`, `giveGift` (returns fresh objects plus
+  `reason: 'full' | 'empty' | 'unknown'`, never mutates and never spends on a refusal), `giftStage`, and
+  the spoken copy: three `GIFT_LINES` per family, `GIFT_FULL`, `GIFT_EMPTY`, `GIFT_TOAST`,
+  `BASKET_HINT`.
+- `src/world/garden.js` (new) — Pip's garden on the meadow path (`GARDEN` in `src/content.js` at
+  (-10.5, 14), facing the lantern row): an oval of worked earth with a pale kerb, a picket fence, three
+  stepping stones, a painted label post, a teal watering can and a stack of clay pots. Three readable
+  spots: a raised **posy bed** (three clusters of three blooms, each on a leafy stem, always dressed
+  with waiting shoots), a stone **sun bowl** (six coals that warm, a bowl glow, three flames at stage
+  two, drifting embers), and a **lantern post** (three lanterns that hang unlit from the first frame
+  and light one at a time, four motes above the post once it is full). `setGifts`, `flourish(kind)`
+  (an fx burst whose count and speed drop under calm motion), `slotPoint`, `aimPoints`, and an
+  `update` where the butterfly's flap, the flames' flicker, the embers' rise and the motes' orbit all
+  stop or soften under `reducedMotion()`.
+- `src/content.js` — the `GARDEN` placement.
+- `src/engine/save.js` — `bundles` and `gifts` decoded through the new sanitisers; old saves get empty
+  baskets and an empty garden and keep every other field.
+- `src/engine/audio.js` — `give(kind)`: a three-note petal chime with a leaf rustle, a warm dust
+  whoomph with crackles, and three glassy mote pings, so every family sounds like itself.
+- `src/ui/hud.js`, `index.html`, `src/style.css` — a `#chip-bundles` chip with one `bundle-pair` per
+  family, hidden while the basket is empty, updating in place and pulsing on a change; its own
+  `.chip-bundles.hidden` rule because `.hidden` alone is not global in this sheet.
+- `src/game/game.js` — `bundles`, `gifts`, `garden`, `aimGift`, `_basketTold` state; the garden built
+  in the hub branch and blocked at 2.2 m so a child can walk right up to the bed; `_updateAim` now
+  picks the nearest garden spot (0.2 rad, 6.5 m, meadow only) after Momo and before scenery; `_fire`
+  and `onBoltHit` route `{type:'gift'}` to `_giveGift`; `_finishGather` stocks the basket only for the
+  three gift families (the hub leaf stays a celebration) and speaks `BASKET_HINT` once, 2.1 s later, on
+  the first bundle; `_giveGift` spends one, redraws the garden, flourishes, plays `audio.give`, toasts,
+  speaks Pip's stage line, saves, and on a refusal only answers with Pip's `GIFT_FULL`/`GIFT_EMPTY` line
+  (no sound, no particles, nothing taken); `_load`/`_save` carry both keys and `start()` puts the chip
+  in step on a new game; the garden updates with the zone.
+
+**Verified** (true 1280×720 16:9 page in the same authenticated context, not the portrait panel)
+
+- **Art, inspected at gameplay size and fixed twice.** First pass: the earth was a faceted slab that
+  read as a tarp, the lanterns were invisible until lit (so the post looked broken), the bed was bare,
+  and the label had no readable picture. Second pass: oval earth with a rounded rim, waiting shoots in
+  the bed, unlit lanterns hung with cords, a centred painted flower, a watering can, clay pots and stone
+  ends. Third pass on close inspection: the flowers were flat rosettes on long bare stems and the
+  butterfly was two arrowheads — blooms became compact bushes just above the rim in deeper pinks, and
+  the butterfly became four rounded flat wings on pivots with a body and antennae. Captures:
+  `artifacts/iter23-before.png` / `iter23-after.png` (the same framing, empty and grown),
+  `iter23-gather.png` (mid-suction posy), `iter23-petal-stage2.png`, `iter23-dust.png`,
+  `iter23-mote.png`, `iter23-mote-full.png`, `iter23-calm.png`, `iter23-refusal.png`,
+  `iter23-reload.png`, `iter23-legacy.png`, `iter23-hint.png`.
+- **Each family is distinct and each one fires exactly once, instrumented.** Zap at the posy bed:
+  `audio.give(petal)`, toast “Posy planted! 🌸”, one `voice.say` (“A posy for my garden! It smells like
+  the grove.”), bundle 1 → 0, `gifts.petal` 0 → 1. At the bowl: `audio.give(dust)`, “The bowl is warm!”,
+  coals warm, glow rises, flames appear at stage two. At the post: `audio.give(mote)`, “Lantern hung!”,
+  one more lantern lit, motes gather at three. No call appeared twice in any of the four spends.
+- **No sound on a no-op.** With the posy bed full, zapping again produced exactly one `voice.say`
+  (“My flower bed is bursting already! Keep that posy for another day.”), no `audio.give`, no toast and
+  the basket still held its posy.
+- **Persistence.** Reload and a resumed save both restored `{petal:3, dust:2, mote:3}`, three posy
+  clusters, three lit lanterns and the basket chip (`🌸1 🌾0 ✨0`) with no replay of any line. A legacy
+  save (`{zone, sparkles:15, stars, visited}`) booted with 15 sparkles, empty garden, hidden chip and
+  zero errors; the save file was left untouched by the boot.
+- **First bundle is taught without a sign.** With an empty basket and a fresh session, gathering a
+  petal spoke the gather line and then, after 2.1 s, “A petal posy for my basket! Take it to my garden
+  on the meadow path.” — once, after the gather line rather than on top of it.
+- **Calm motion.** With `reducedMotion()` on, the garden keeps its light but loses every flicker:
+  flames 0 visible (3 when animated), embers held at a steady low opacity, butterfly still, motes fixed.
+  A gift given while calm still plays its sound, toast and line. The setting is read every frame, so
+  changing it mid-session also settles a garden that is already warm (this was a real bug found in the
+  capture: flames stayed visible because `setGifts` had run before the setting changed).
+- **Controls, all four devices, after the change.** Keyboard: W walked 3.43 m, Space rose 0.96 m, Q
+  switched bolt → whisk, E held the trigger (`firingHeld` true), Escape paused and resumed. Mouse: look
+  0.29 rad, left click fired one bolt, right click switched the tool. Emulated touch: stick 2.59 m,
+  look 0.34 rad, zap fired, tool button switched, jump rose 0.82 m. Injected gamepad: left stick 2.21 m,
+  right stick 0.54 rad yaw and 0.31 rad pitch, A rose 0.80 m, X zapped, B switched, Start paused and
+  resumed.
+- **Regressions:** the whisk still gathers every family (grove petal mid-suction at 0.73 load, basket
+  +1), bolts still fire, Momo's market, the shelf and the listening stones are untouched, and no page
+  error appeared in any of the twelve captured sessions.
+- **Tests and build:** `node --test tests/*.test.js` 78 pass (4 new gift tests plus save round-trip and
+  junk-sanitising assertions); `npm run build` exits 0.
+
+**Open**
+
+- The bed is deliberately finite (3 + 3 + 3). A full basket after a full garden has nowhere to go:
+  nothing is lost and no line nags, but later gatherings stop mattering. A small repeatable use is now
+  the first roadmap item.
+- Pip's garden exists only in the meadow; the other islands still have no place for a bundle.
+- Android/controller hardware and a Windows build are still unverified, and the GitHub push is still
+  blocked on a user credential.
+
 ## Iteration 22 — The Leafwhisk goes everywhere (2026-11-28)
 
 **Chosen because** iteration 21 shipped the Leafwhisk but wired it to leaf drifts only, and the

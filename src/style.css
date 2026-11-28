@@ -80,6 +80,40 @@ canvas#game {
   letter-spacing: 0.2px;
 }
 
+.chip-bundles {
+  gap: 10px;
+  padding: 9px 14px;
+}
+
+.chip-bundles.hidden {
+  display: none;
+}
+
+.bundle-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 19px;
+  color: var(--ink, #3a3148);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.bundle-pair b {
+  font-size: 17px;
+  font-weight: 700;
+  min-width: 10px;
+  text-align: center;
+}
+
+.bundle-pair.is-empty {
+  opacity: 0.32;
+}
+
+.bundle-ico {
+  font-size: 20px;
+  line-height: 1;
+}
+
 .chip .ico {
   font-size: 22px;
   line-height: 1;

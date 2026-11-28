@@ -267,6 +267,35 @@ export class GameAudio {
     this.noise({ dur: 0.16, gain: 0.06, freq: 1800, q: 0.8, at: 0.02 });
   }
 
+  /**
+   * Giving a bundle to Pip's garden: each family has its own little ceremony, so
+   * a child can hear which gift landed without looking at the screen.
+   */
+  give(kind = 'petal') {
+    if (kind === 'dust') {
+      // A warm whoomph, then a few soft crackles from the coals.
+      this.tone({ freq: 130, to: 78, type: 'sine', dur: 0.55, gain: 0.14, attack: 0.02, echo: 0.12 });
+      this.tone({ freq: 196, to: 147, type: 'triangle', dur: 0.3, gain: 0.05, at: 0.02, echo: 0.2 });
+      for (let i = 0; i < 4; i++) {
+        this.noise({ dur: 0.1, gain: 0.035, freq: 1400 + i * 260, q: 1.6, at: 0.06 + i * 0.09 });
+      }
+      return;
+    }
+    if (kind === 'mote') {
+      // Glassy and high, like a lantern settling on its hook.
+      this.tone({ freq: 1318.5, type: 'sine', dur: 0.5, gain: 0.07, echo: 0.45 });
+      this.tone({ freq: 1568, type: 'triangle', dur: 0.42, gain: 0.045, at: 0.08, echo: 0.5 });
+      this.tone({ freq: 2093, type: 'sine', dur: 0.3, gain: 0.03, at: 0.16, echo: 0.6 });
+      this.noise({ dur: 0.2, gain: 0.014, freq: 6200, q: 1.2 });
+      return;
+    }
+    // Petals: a soft three-note smile with a leafy rustle underneath.
+    [659.25, 830.6, 987.8].forEach((freq, i) => {
+      this.tone({ freq, type: 'sine', dur: 0.28, gain: 0.075 - i * 0.012, at: i * 0.07, echo: 0.28 });
+    });
+    this.noise({ dur: 0.18, gain: 0.03, freq: 2400, q: 0.9, at: 0.01 });
+  }
+
   /** Switching tools: two small clicks, like a latch. */
   tool() {
     this.tone({ freq: 659, to: 659, type: 'square', dur: 0.05, gain: 0.035 });

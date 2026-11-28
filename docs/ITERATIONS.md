@@ -4,6 +4,17 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 23 - Pip's garden
+
+- **A place for every bundle:** `src/game/gifts.js` (pure rules, lines, sanitisers) and `src/world/garden.js` (art) add one authored bed on the meadow path with three spots — a posy bed for petals, a stone sun bowl for dust, a lantern post for motes — each accepting three gifts. Placement is `GARDEN` in `src/content.js`.
+- **Giving is the bolt verb:** aim at a spot (0.2 rad, 6.5 m, meadow only, after Momo and before scenery) and zap. One gift spends one bundle, plays `audio.give(kind)` (petal chime + rustle, dust whoomph + crackles, mote glass pings), toasts, speaks one of three per-stage Pip lines, grows the spot and saves. A full spot or empty basket answers with a spoken line and spends nothing — no sound, no particles.
+- **What grows:** the posy bed pops three flower clusters (three stems each), adds a butterfly; the bowl warms its coals and glow, adds flames at stage two and rising embers; the post lights one hanging lantern per gift, adds motes above it at full. All three read from the path before and after.
+- **Basket:** `_finishGather` stocks only petal/dust/mote (the hub leaf stays a celebration), `#chip-bundles` shows the counts and hides when empty, and the first bundle of a session gets one spoken pointer to the garden 2.1 s after the gather line.
+- **Save:** `bundles` and `gifts` are sanitised (`BASKET_MAX` 9, `GIFT_MAX` 3) and default to empty, so old saves boot with an empty garden.
+- **Calm motion:** flames hidden, embers steady, butterfly still, motes fixed; the setting is read every frame so toggling it later also settles a warm garden.
+- **Evidence:** one audio/toast/voice per gift for all three families; refusal = one voice line, no sound, nothing spent; reload and resume restored 3/2/3 with three clusters and three lit lanterns; legacy save booted with 15 sparkles and no errors; keyboard/mouse/touch/pad still reach walk, look, zap, switch, jump, hold and pause/resume. 78 tests pass, build exit 0. Screenshots `artifacts/iter23-*`.
+- **Not verified:** Android/controller hardware, Windows build. GitHub push still blocked on a user credential.
+
 ## Iteration 22 - The Leafwhisk goes everywhere
 
 - **Three new families:** beside the leaf drift, a **petal** windflower patch, a **dust** vent and a **mote** perch, each authored in `src/world/curios.js` with a base group that never vanishes, a remnant that appears after gathering, and a gather group that shrinks and siphons. One prop per themed island sits in `src/content.js`; the hub's drifts are untouched.

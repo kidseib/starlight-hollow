@@ -16,6 +16,15 @@ When the drift is empty it pops out a little ribboned bundle, and Pip keeps it s
   often as you like. The first bundle of each play session is worth a few sparkles.
 - Calm motion makes the leaves fly straight and holds the whisk still.
 
+**Pip's garden.** Everything you whisk now has somewhere to go. On the meadow path, just off the
+lantern row, Pip has been digging a little garden with three spots: a flower bed, a stone bowl and a
+lantern post. Aim at one and zap, and the bundle in your basket becomes something you can see: posies
+bloom into three bushes and bring a butterfly, sun puffs warm the bowl until it glows and crackles,
+and mote lanterns light one hanging lantern at a time until the post is a small constellation. Each
+spot takes three, so there is always a next one to look forward to; when a spot is full Pip says so and
+keeps your bundle for another day. The basket sits beside your tool chip and only appears when it has
+something in it. Nothing is lost, nothing is timed and none of it is needed to finish the story.
+
 **Every world has something to whisk.** The grove grows a **windflower patch** that sends petals
 fluttering into the nozzle and pops out a ribboned posy. The falls and the peaks keep **dust vents** —
 a ring of stones round a warm golden glow — and gathering one puffs out a little sun-warmed cloud. The

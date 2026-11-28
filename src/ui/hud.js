@@ -168,6 +168,34 @@ export class HUD {
     this.discoveryChip.classList.add('pulse');
   }
 
+  /**
+   * The basket: how many of each family a child is carrying. It only appears
+   * once there is something in it, so an empty basket never adds clutter.
+   */
+  setBundles(bundles = {}) {
+    this.bundleChip ||= document.getElementById('chip-bundles');
+    if (!this.bundleChip) return;
+    const kinds = ['petal', 'dust', 'mote'];
+    let total = 0;
+    let changed = false;
+    for (const kind of kinds) {
+      const el = this.bundleChip.querySelector(`b#bundle-${kind}`);
+      const n = Math.max(0, Math.floor(Number(bundles?.[kind]) || 0));
+      total += n;
+      if (el && el.textContent !== String(n)) {
+        el.textContent = String(n);
+        el.parentElement?.classList.toggle('is-empty', n === 0);
+        changed = true;
+      }
+    }
+    this.bundleChip.classList.toggle('hidden', total === 0);
+    if (changed && total > 0) {
+      this.bundleChip.classList.remove('pulse');
+      void this.bundleChip.offsetWidth;
+      this.bundleChip.classList.add('pulse');
+    }
+  }
+
   setStars(count, total = 5) {
     this.starSlots?.forEach((el, i) => {
       el.textContent = i < count ? '★' : '☆';

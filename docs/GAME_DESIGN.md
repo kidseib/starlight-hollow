@@ -207,6 +207,39 @@ HUD chip (`#chip-tool`) names the active one.
   never blocks movement, jumping or pausing. The first switch in a session is taught out loud.
 - **Calm motion** removes the whisk's bob and sway and straightens every debris path to the mouth.
 
+### Pip's garden
+
+The Leafwhisk's bundles are spent in one place: Pip's garden, a small authored bed on the meadow
+path at (-10.5, 14) facing the lantern row (`GARDEN` in `src/content.js`). It is optional scenery, not
+a gate: nothing in the story or in a sign needs it, nothing is charged for visiting, and a child who
+never goes there loses only the garden.
+
+Three spots, one per family, each accepting `GIFT_MAX` (3) gifts:
+
+- **Posy bed** (petal) — three clusters of three blooms, always dressed with waiting shoots; a
+  butterfly arrives with the first gift and stays.
+- **Sun bowl** (dust) — six coals that warm and a rising glow, three flames from the second gift, and
+  drifting embers.
+- **Lantern post** (mote) — three lanterns hang unlit from the first frame; each mote lantern lights
+  one, and four motes gather above the post once all three are lit.
+
+Giving uses the existing bolt verb: aim at a spot (a forgiving 0.2 rad inside 6.5 m) and zap. The
+rules are pure in `src/game/gifts.js` — `giveGift(bundles, gifts, kind)` returns fresh objects plus an
+`ok` flag and, on refusal, `reason: 'full' | 'empty'`. A refusal costs nothing, plays no sound and
+draws no particles; only Pip's spoken line explains it. A success spends exactly one bundle, plays
+`audio.give(kind)` (a distinct sound per family), toasts, speaks one of three per-stage lines, grows
+the spot, and saves immediately.
+
+The basket (`game.bundles`, `#chip-bundles`) stocks only the three gift families; the hub's leaf drift
+stays a pure celebration with no basket entry. It hides while empty, and the first bundle of a session
+gets one spoken pointer to the garden 2.1 s after the gather line, so no sign or marker is needed. Both
+`bundles` and `gifts` live in the v1 save and are sanitised on load (`BASKET_MAX` 9, `GIFT_MAX` 3), so
+older saves boot with an empty basket and an empty garden.
+
+Everything here obeys calm motion: with reduced motion the butterfly rests, the flames disappear
+(the bowl keeps its steady glow and coals), the embers hold still, and the motes stop orbiting. The
+setting is read every frame, so it also settles a garden that is already warm.
+
 ### Controls on every device
 `src/engine/input.js` is the single source of movement, look and zapping; `src/game/controls.js` is the
 single source of what each device is *called* on screen.

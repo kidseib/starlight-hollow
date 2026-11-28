@@ -12,7 +12,8 @@ test('old saves keep progress and default to the meadow', () => {
 test('malformed fields cannot break game initialization', () => {
   writeSave({solved:{}, scanned:'bad', visited:[1,'cove','cove'], stars:{cove:true,grove:'false'},sparkles:-1,ended:'yes'});
   assert.deepEqual(loadSave(), {solved:[],scanned:[],visited:['cove'],stars:{cove:true},sparkles:0,upgrades:[],shards:[],placed:[],
-    learning:emptyReport(), difficulty:sanitizeDifficulty(null), secrets:[], grotto:false, ended:false, zone:'meadow'});
+    learning:emptyReport(), difficulty:sanitizeDifficulty(null), secrets:[], grotto:false,
+    bundles:{petal:0,dust:0,mote:0}, gifts:{petal:0,dust:0,mote:0}, ended:false, zone:'meadow'});
 });
 test('learning progress and grown-up settings survive a reload', () => {
   let learning = emptyReport();
@@ -44,6 +45,15 @@ test('learning progress and grown-up settings survive a reload', () => {
   }
   writeSave({ sparkles: 2 });
   assert.equal(loadSave().grotto, false);
+  // Bundles in the basket and gifts in the garden round-trip, and junk is dropped.
+  writeSave({ sparkles: 4, bundles: { petal: 2, dust: 'x', mote: 99, leaf: 7 }, gifts: { petal: 1, dust: 3, mote: -2 } });
+  assert.deepEqual(loadSave().bundles, { petal: 2, dust: 0, mote: 9 });
+  assert.deepEqual(loadSave().gifts, { petal: 1, dust: 3, mote: 0 });
+  writeSave({ sparkles: 4, gifts: { petal: 9 } });
+  assert.deepEqual(loadSave().gifts, { petal: 3, dust: 0, mote: 0 });
+  writeSave({ sparkles: 4, bundles: ['petal'], gifts: 'lots' });
+  assert.deepEqual(loadSave().bundles, { petal: 0, dust: 0, mote: 0 });
+  assert.deepEqual(loadSave().gifts, { petal: 0, dust: 0, mote: 0 });
   // Junk in the new fields is thrown away rather than trusted.
   writeSave({ sparkles: 1, learning: { letters: { attempts: 'lots' } }, difficulty: { letters: 'impossible', extra: 'gentle' } });
   assert.deepEqual(loadSave().learning.letters, { attempts: 0, firstTry: 0, misses: 0 });

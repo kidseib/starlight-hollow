@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ZONES, ZONE_BY_ID, ZONE_STAR_ORDER, PIP_LINES } from '../content.js';
+import { ZONES, ZONE_BY_ID, ZONE_STAR_ORDER, PIP_LINES, GARDEN } from '../content.js';
 import { Island } from '../world/terrain.js';
 import { buildScatter, buildSkyIslands, buildPortal, buildWishTree, buildCoveNook } from '../world/props.js';
 import { SkySystem } from '../world/sky.js';
@@ -29,11 +29,29 @@ import { renderProgressPanel } from '../ui/progressPanel.js';
 import { discover, sanitizeSecrets, collectionStatus, secretsForZone } from './secrets.js';
 import { SecretSpot, DiscoveryShelf, KeepsakeCairn } from '../world/discoveries.js';
 import { HubGrowth } from '../world/growth.js';
+import { Garden } from '../world/garden.js';
 import { grottoLoot, GROTTO, growthChange } from './hubBloom.js';
 import { CurioField } from '../world/curios.js';
 import { Whisk } from '../world/whisk.js';
 import { nextTool, toolInfo, inSuction, suctionStrength, gatherDone, GATHER_SECONDS } from './tools.js';
 import { curioReward, curioScanReady, stoneFact, CURIO_LINES, CURIO_AGAIN, CURIO_SPARKLES, isGatherType, familyReward, GATHER_NAMES } from './curios.js';
+import {
+  emptyBundles,
+  emptyGifts,
+  sanitizeBundles,
+  sanitizeGifts,
+  giveGift,
+  basketTotal,
+  GIFT_LINES,
+  GIFT_FULL,
+  GIFT_EMPTY,
+  GIFT_TOAST,
+  BASKET_HINT,
+  BUNDLE_KINDS,
+  BUNDLE_NAMES,
+  BASKET_MAX,
+  GIFT_MAX,
+} from './gifts.js';
 import { reducedMotion } from '../engine/motion.js';
 import { clamp, damp, mulberry32 } from '../engine/utils.js';
 
@@ -94,6 +112,13 @@ export class Game {
     this._marketHinted = false;
     this.aimShop = null;
     this.aimHook = null;
+    // The Leafwhisk's bundles and the little garden on the meadow path that
+    // gives each family somewhere to go.
+    this.bundles = emptyBundles();
+    this.gifts = emptyGifts();
+    this.garden = null;
+    this.aimGift = null;
+    this._basketTold = false;
     this.shards = new Set();
     this.placed = new Set();
     this.shardField = null;
@@ -182,6 +207,9 @@ export class Game {
         // and its stepping stones a quiet pocket behind the Star Tree.
         for (let z = 9; z <= 29; z += 4) blockers.push({ x: 0, z, r: 3.4 });
         blockers.push({ x: GROTTO.local.x, z: GROTTO.local.z, r: 10 });
+        // Pip's garden needs a clear pocket, but a child must be able to walk right
+        // up to the bed and aim without feeling pushed away.
+        blockers.push({ x: GARDEN.x, z: GARDEN.z, r: 2.2 });
       }
       if (zone.id === MARKET.zone) blockers.push({ x: MARKET.x, z: MARKET.z, r: 4.6 });
 
@@ -337,6 +365,19 @@ export class Game {
         // Everything the hub has grown because of the keepsakes: lit lanterns,
         // island flags and beds, and the grotto behind the tree.
         this.hubGrowth = new HubGrowth({ island, found: this.secrets, taken: this.grottoTaken });
+
+        // Pip's garden: the three spots where gathered bundles become something.
+        this.garden = new Garden({
+          island,
+          position: new THREE.Vector3(
+            zone.origin.x + GARDEN.x,
+            island.heightAtLocal(GARDEN.x, GARDEN.z),
+            zone.origin.z + GARDEN.z
+          ),
+          yaw: Math.atan2(GARDEN.faceTo.x - GARDEN.x, GARDEN.faceTo.z - GARDEN.z),
+          fx: this.fx,
+          gifts: this.gifts,
+        });
       }
       void rng;
     }
@@ -358,6 +399,7 @@ export class Game {
 
   start() {
     this.hud.setVisible(true);
+    this.hud.setBundles(this.bundles);
     this.input.enabled = true;
     this.state = 'play';
     this.input.requestLock();
@@ -992,9 +1034,29 @@ export class Game {
     this.aimPad = bestPad;
     this.aimHook = bestPad ? null : hookTarget;
     this.aimCreature = bestPad || this.aimHook ? null : bestCreature;
-    // Curious things are scenery: a sign, a creature, a hook or Momo wins first.
+
+    // Pip's garden: each spot is its own aim target, so looking at the bowl or
+    // the post chooses that gift. Nothing else in the hub competes for it.
+    let giftTarget = null;
+    if (this.garden && this.currentZoneId === GARDEN.zone && !bestPad && !this.aimHook && !this.aimCreature && !this.aimShop) {
+      let giftAngle = 0.2;
+      for (const slot of this.garden.aimPoints()) {
+        const v = slot.point.clone().sub(camPos);
+        const dist = v.length();
+        if (dist > 6.5) continue;
+        const angle = v.normalize().angleTo(dir);
+        if (angle < giftAngle) {
+          giftAngle = angle;
+          giftTarget = slot;
+        }
+      }
+    }
+    this.aimGift = giftTarget;
+
+    // Curious things are scenery: a sign, a creature, a hook, Momo or a garden
+    // spot wins first.
     let curioTarget = null;
-    if (!bestPad && !this.aimHook && !this.aimCreature && !this.aimShop) {
+    if (!bestPad && !this.aimHook && !this.aimCreature && !this.aimShop && !this.aimGift) {
       curioTarget = this.curioFields.get(this.currentZoneId)?.pick(camPos, dir) ?? null;
     }
     this.aimCurio = curioTarget;
@@ -1101,6 +1163,23 @@ export class Game {
         this.voice?.say(line);
       }
     }
+    // What was gathered goes into the basket, so it can be given a home.
+    if (BUNDLE_KINDS.includes(family)) {
+      const had = basketTotal(this.bundles);
+      this.bundles[family] = Math.min(BASKET_MAX, this.bundles[family] + 1);
+      this.hud?.setBundles(this.bundles);
+      this._saveDirty = true;
+      if (had === 0 && !this._basketTold) {
+        this._basketTold = true;
+        const hint = BASKET_HINT[family];
+        if (hint) {
+          this.schedule(2.1, () => {
+            this.hud?.showBubble(hint, '🐣');
+            this.voice?.say(hint);
+          });
+        }
+      }
+    }
     this.suckHeld = 0;
     this.suckTick = 0;
     this._stopSuck();
@@ -1115,6 +1194,38 @@ export class Game {
     if (this.tool === 'whisk') this.whisk.setActive(true);
   }
 
+  /**
+   * Spend one bundle at a garden spot. A full spot or an empty basket is answered
+   * with a friendly pointer and nothing is taken or lost.
+   */
+  _giveGift(slot) {
+    if (!slot) return;
+    const result = giveGift(this.bundles, this.gifts, slot.kind);
+    if (!result.ok) {
+      const line = result.reason === 'full' ? GIFT_FULL[slot.kind] : GIFT_EMPTY[slot.kind];
+      if (line) {
+        this.hud.showBubble(line, '🐣');
+        this.voice?.say(line);
+      }
+      return;
+    }
+    this.bundles = result.bundles;
+    this.gifts = result.gifts;
+    this.garden?.setGifts(this.gifts);
+    this.garden?.flourish(slot.kind);
+    this.audio?.give(slot.kind);
+    this.hud?.setBundles(this.bundles);
+    const [text, icon] = GIFT_TOAST[slot.kind] ?? ['Gift planted!', '✨'];
+    this.hud?.toast(text, icon);
+    const lines = GIFT_LINES[slot.kind] ?? [];
+    const line = lines[Math.min(lines.length - 1, Math.max(0, result.stage - 1))];
+    if (line) {
+      this.hud?.showBubble(line, '🐣');
+      this.voice?.say(line);
+    }
+    this._save();
+  }
+
   _fire() {
     if (this.transitioning) return;
     if (this.tool === 'whisk') return;
@@ -1124,6 +1235,10 @@ export class Game {
     }
     if (this.aimShop) {
       this.blaster.fire(this.aimShop.momoWorld(), { type: 'momo' });
+      return;
+    }
+    if (this.aimGift) {
+      this.blaster.fire(this.aimGift.point.clone(), { type: 'gift', gift: this.aimGift });
       return;
     }
     if (this.aimPad) {
@@ -1148,6 +1263,10 @@ export class Game {
     }
     if (ref?.type === 'hook') {
       this._hang(ref.hook);
+      return;
+    }
+    if (ref?.type === 'gift') {
+      this._giveGift(ref.gift);
       return;
     }
     if (!ref) return;
@@ -1533,6 +1652,8 @@ export class Game {
       upgrades: [...this.upgrades],
       shards: [...this.shards],
       placed: [...this.placed],
+      bundles: this.bundles,
+      gifts: this.gifts,
       learning: this.learning,
       difficulty: this.difficulty,
       secrets: this.secrets,
@@ -1556,6 +1677,9 @@ export class Game {
     this.difficulty = save.difficulty ?? sanitizeDifficulty(null);
     this.secrets = sanitizeSecrets(save.secrets);
     this.grottoTaken = save.grotto === true;
+    this.bundles = sanitizeBundles(save.bundles);
+    this.gifts = sanitizeGifts(save.gifts);
+    this.garden?.setGifts(this.gifts);
     for (const spot of this.secretSpots) spot.setFound(this.secrets.includes(spot.secret.id));
     this.discoveryShelf?.refresh(this.secrets);
     for (const cairn of this.cairns.values()) cairn.refresh(this.secrets);
@@ -1588,6 +1712,7 @@ export class Game {
     }
     this.hud.setStars(this.starCount(), ZONE_STAR_ORDER.length);
     this.hud.setSparkles(this.sparkleCount);
+    this.hud.setBundles(this.bundles);
     this._applyUpgrades();
     this._applyWorkshopState();
     this._refreshPortalBadges();
@@ -1648,6 +1773,7 @@ export class Game {
       this._updateScan(dt);
       this._updateSecrets(dt, time);
       this.curioFields.get(this.currentZoneId)?.update(dt, time);
+      this.garden?.update(dt, time);
       this._updateGrotto(dt, time);
 
       for (const [zoneId, berry] of Object.entries(this.starberries)) {
