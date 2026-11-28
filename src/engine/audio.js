@@ -217,6 +217,63 @@ export class GameAudio {
     this.noise({ dur: 0.26, gain: 0.018, freq: 6200, q: 1.4 });
   }
 
+  /** The Leafwhisk's whoosh: one looping breath whose pitch and level follow the load. */
+  suckStart() {
+    if (!this.ctx || this.muted || this.suckNodes) return;
+    const rate = this.ctx.sampleRate;
+    const len = Math.floor(rate * 1.2);
+    const buffer = this.ctx.createBuffer(1, len, rate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    const src = this.ctx.createBufferSource();
+    src.buffer = buffer;
+    src.loop = true;
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 480;
+    filter.Q.value = 0.9;
+    const gain = this.ctx.createGain();
+    gain.gain.value = 0.0001;
+    src.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.sfxBus);
+    src.start();
+    this.suckNodes = { src, filter, gain };
+  }
+
+  /** 0..1: how much is in the air, so the whoosh rises and settles with it. */
+  suckSet(level) {
+    if (!this.ctx || this.muted || !this.suckNodes) return;
+    const t = this.ctx.currentTime;
+    const amount = Math.max(0, Math.min(1, level));
+    this.suckNodes.gain.gain.setTargetAtTime(0.015 + amount * 0.075, t, 0.09);
+    this.suckNodes.filter.frequency.setTargetAtTime(430 + amount * 900, t, 0.1);
+  }
+
+  suckStop() {
+    if (!this.ctx || !this.suckNodes) return;
+    const { src, gain } = this.suckNodes;
+    const t = this.ctx.currentTime;
+    gain.gain.setTargetAtTime(0.0001, t, 0.06);
+    this.suckNodes = null;
+    setTimeout(() => {
+      try { src.stop(); } catch { /* already stopped */ }
+    }, 350);
+  }
+
+  /** A gathered bundle: a soft pop with a leafy tick. */
+  pop() {
+    this.tone({ freq: 523, to: 784, type: 'sine', dur: 0.12, gain: 0.1, echo: 0.2 });
+    this.noise({ dur: 0.16, gain: 0.06, freq: 1800, q: 0.8, at: 0.02 });
+  }
+
+  /** Switching tools: two small clicks, like a latch. */
+  tool() {
+    this.tone({ freq: 659, to: 659, type: 'square', dur: 0.05, gain: 0.035 });
+    this.tone({ freq: 880, to: 880, type: 'square', dur: 0.05, gain: 0.03, at: 0.07 });
+    this.noise({ dur: 0.08, gain: 0.03, freq: 2600, q: 1.2, at: 0.06 });
+  }
+
   portal() {
     this.tone({ freq: 180, to: 720, type: 'sine', dur: 0.5, gain: 0.12, echo: 0.3 });
     this.noise({ dur: 0.5, gain: 0.08, freq: 2000, q: 1.2 });

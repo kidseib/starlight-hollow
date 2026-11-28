@@ -18,6 +18,7 @@ export class Input {
     this.dy = 0;
     this.firing = false;
     this.fireQueued = false;
+    this.toolQueued = false;
     this.jumpQueued = false;
     this.locked = false;
     this.dragging = false;
@@ -33,9 +34,9 @@ export class Input {
     this.onRepeat = null;
 
     // Touch layer fills this in: x = strafe, y = forward (pushed up is -1).
-    this.touch = { x: 0, y: 0, jump: false, active: false };
+    this.touch = { x: 0, y: 0, jump: false, active: false, holding: false };
     // Gamepad state, refreshed by pollGamepad().
-    this.pad = { x: 0, y: 0, jump: false, connected: false };
+    this.pad = { x: 0, y: 0, jump: false, connected: false, holding: false };
     this._padPrev = new Map();
 
     this.pointerLockAvailable = 'requestPointerLock' in canvas;
@@ -56,6 +57,8 @@ export class Input {
       this.touch.x = 0;
       this.touch.y = 0;
       this.touch.jump = false;
+      this.touch.holding = false;
+      this.pad.holding = false;
     });
 
     canvas.addEventListener('touchstart', (e) => this._onTouchStart(e), { passive: false });
@@ -70,6 +73,11 @@ export class Input {
   _onDown(e) {
     if (!this.enabled) return;
     this.setDevice('mouse');
+    if (e.button === 2) {
+      // Right-click latches the other tool: the mouse's own switch.
+      this.toolQueued = true;
+      return;
+    }
     if (e.button === 0) {
       if (!this.locked && this.pointerLockAvailable) {
         this.requestLock();
@@ -127,6 +135,7 @@ export class Input {
       if (MOVE_KEYS.has(code) || code.startsWith('Key')) this.setDevice('keyboard');
       // One zap per press, on the keyboard as well as the mouse.
       if (!e.repeat && (code === 'KeyE' || code === 'Enter') && !this.keys.has(code)) this.fireQueued = true;
+      if (!e.repeat && code === 'KeyQ') this.toolQueued = true;
       this.keys.add(code);
     } else {
       this.keys.delete(code);
@@ -165,7 +174,29 @@ export class Input {
   touchZap() {
     if (!this.enabled) return;
     this.fireQueued = true;
+    this.touch.holding = true;
     this.setDevice('touch');
+  }
+
+  endTouchZap() {
+    this.touch.holding = false;
+  }
+
+  touchTool() {
+    if (!this.enabled) return;
+    this.toolQueued = true;
+    this.setDevice('touch');
+  }
+
+  consumeTool() {
+    const q = this.toolQueued;
+    this.toolQueued = false;
+    return q;
+  }
+
+  /** True while any device is holding the zap button down (the Leafwhisk's trigger). */
+  get firingHeld() {
+    return this.firing || this.down('KeyE') || this.down('Enter') || this.touch.holding || this.pad.holding;
   }
 
   setTouchJump(held) {
@@ -227,6 +258,8 @@ export class Input {
       this.setDevice('gamepad');
     }
     if (active && pressed(0)) this.setDevice('gamepad');
+    this.pad.holding = active && (pressed(7) || pressed(2));
+    if (edge(1)) this.toolQueued = true;
     if (edge(9)) this.onPause?.();
     if (edge(3)) this.onRepeat?.();
   }

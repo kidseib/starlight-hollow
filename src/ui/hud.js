@@ -45,6 +45,9 @@ export class HUD {
     this.controlsChip = document.getElementById('chip-controls');
     this.controlsText = document.getElementById('controls-text');
     this.repeatKey = document.getElementById('repeat-key');
+    this.toolChip = document.getElementById('chip-tool');
+    this.toolIcon = document.getElementById('tool-icon');
+    this.toolName = document.getElementById('tool-name');
     this.device = 'mouse';
     this.fader = document.getElementById('fader');
     this.ui = document.getElementById('ui');
@@ -265,6 +268,18 @@ export class HUD {
    * Keep the control legend honest: whatever the child just used is what the
    * chip names, and the repeat key hint only appears when there is a key.
    */
+  /** The tool chip: which of the two tools is in the child's hands right now. */
+  setTool(tool) {
+    const info = tool === 'whisk' ? { icon: '🌀', name: 'Leafwhisk' } : { icon: '🔮', name: 'Starbolt' };
+    if (this.toolIcon) this.toolIcon.textContent = info.icon;
+    if (this.toolName) this.toolName.textContent = info.name;
+    if (this.toolChip) {
+      this.toolChip.dataset.tool = tool;
+      this.toolChip.setAttribute('aria-label', `Tool: ${info.name}`);
+    }
+    document.body.dataset.tool = tool;
+  }
+
   setDevice(device) {
     const legend = legendFor(device);
     this.device = legend.id;

@@ -351,6 +351,32 @@ export class CurioField {
     return { first, type: item.type, id: item.id, point };
   }
 
+  /**
+   * The Leafwhisk takes the drift a little at a time. Returns the world point a
+   * leaf should fly from, or null when there is nothing loose to gather.
+   */
+  siphon(item) {
+    if (!item || item.type !== 'leaf' || !item.ready) return null;
+    item.suck = Math.min(1, (item.suck ?? 0) + 0.03);
+    const point = this.aimPoint(item, new THREE.Vector3());
+    point.x += (Math.random() - 0.5) * 0.7;
+    point.z += (Math.random() - 0.5) * 0.7;
+    point.y += (Math.random() - 0.2) * 0.25;
+    return point;
+  }
+
+  /** The last leaf is in: the drift rests and gathers itself back later. */
+  drain(item) {
+    if (!item) return;
+    const data = item.group.userData;
+    item.ready = false;
+    item.timer = 22;
+    item.scatter = 1;
+    item.suck = 1;
+    data.litter.visible = false;
+    data.remnant.visible = true;
+  }
+
   /** The scanning gaze: only a listening stone opens, and only up close. */
   scan(item) {
     if (!item || item.type !== 'stone') return null;
@@ -370,6 +396,7 @@ export class CurioField {
         if (item.timer === 0) {
           item.ready = true;
           item.scatter = 0.999;
+          item.suck = 0;
         }
       }
       // Scatter eases out, regrow eases back in.
@@ -378,8 +405,9 @@ export class CurioField {
       if (Math.abs(target - item.scatter) < 0.01) item.scatter = target;
 
       if (item.type === 'leaf') {
+        const sip = item.ready ? (item.suck ?? 0) : 0;
         data.litter.visible = item.scatter < 0.98;
-        data.litter.scale.setScalar(1 - item.scatter * 0.82);
+        data.litter.scale.setScalar(Math.max(0.12, (1 - item.scatter * 0.82) * (1 - sip * 0.85)));
         data.litter.position.y = item.scatter * 0.05;
         data.litter.rotation.y = Math.sin(time * 0.6 + item.phase) * 0.04;
         data.remnant.visible = item.scatter > 0.3;

@@ -4,6 +4,16 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 21 - The Leafwhisk
+
+- **A real second tool:** `src/game/tools.js` holds the two tools and the intake's rules (`inSuction`, `suctionStrength`, `GATHER_SECONDS`); `src/world/whisk.js` builds the Leafwhisk and its debris. `Q`, right-click, the 🌀 touch button and gamepad B switch, and the HUD chip names the active tool on every device.
+- **The model:** a short teal canister with a cream belly, gold collar, flared cream snout with a gold lip, dark throat with three spinning blades, a pouch that fills, a nozzle glow and a faint cone of air. It sits in the bottom-right corner like the Starbolt.
+- **The gather:** holding the trigger with a leaf drift in the wide cone (7.5 m, cos 0.88) sends two faceted leaves and the odd dust puff to the mouth every 0.07 s on a curve, spinning and shrinking; the whoosh (`suckStart`/`suckSet`) and the cone rise with the load. The pile shrinks as it empties, rests for 22 s and returns; nothing is lost and nothing is timed.
+- **The hello:** the first gather of a drift in a session drains it, pops a ribboned bundle with `audio.pop`, pays 3 sparkles and gives Pip's line; later gathers pay nothing but always work.
+- **Calm motion:** no bob, no sway, no arc (straight paths) and a slower fan.
+- **Evidence:** switch and chip on keyboard/mouse/touch/pad; 10-14 leaves in flight and pile scale 1 → 0.64 at mid-suction; drain, bundle and +3 sparkles; keyboard walk 2.59 m/look −0.189/suction 0.7, right-click switch and click bolt, touch tool + hold 0.48 + stick 2.03 m + jump, pad B + RT hold 0.38 + stick 2.03 m + look −0.121 + pause/resume; calm group y fixed at −0.35; bolt rustle/collect and stone scan/chime unchanged; resumed 15 → 20 sparkles; legacy save 15 sparkles, `0/13`; zero page errors. 72 tests pass; `npm run build` exit 0.
+- **Not verified:** Android/controller hardware, Windows build. GitHub push still blocked on a user credential.
+
 ## Iteration 20 - Curious things that answer back
 
 - **Twelve reacting props, two per island:** leaf drifts, sun crystals and listening stones, placed from `curios` data in `src/content.js` and built by `CurioField` in `src/world/curios.js`.

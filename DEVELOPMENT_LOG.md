@@ -5,6 +5,106 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 21 — The Leafwhisk (2026-11-28)
+
+**Chosen because** the roadmap's top open item was "a vacuum gadget of its own": the hollow had one
+verb (a bolt) and a patient gaze, and the leaf drift iteration 20 added had no second use. A real
+second tool needs a switch on all four devices, its own first-person model and legend, so it was
+recorded as a whole iteration rather than a prop.
+
+**Changed**
+
+- `src/game/tools.js` (new, pure) — `TOOLS`, `TOOL_INFO` (icon, name and spoken line for each),
+  `nextTool`, `toolInfo`, the intake's `SUCTION_RANGE` 7.5 m and `SUCTION_COS` 0.88, `inSuction`
+  (wide cone, and anything within 1.2 m of the mouth), `suctionStrength`, `GATHER_SECONDS` 1.7 and
+  `gatherDone`.
+- `src/world/whisk.js` (new) — the Leafwhisk: a short teal canister with a cream belly, a gold
+  collar, a flared cream snout with a gold lip, a dark throat with three spinning blades, a soft
+  pouch that swells as it fills, a nozzle glow and a faint cone of moving air. Twenty-six reusable
+  faceted leaf blades and ten dust sprites fly from the drift to the mouth along a quadratic curve,
+  spinning and shrinking, and crowd the nozzle; a finished bundle (five leaves and a gold ribbon)
+  arcs out, drops and bursts. Calm motion removes the bob, the sway and the arc (debris travels
+  straight) and slows the fan.
+- `src/engine/input.js` — `Q`, the right mouse button, gamepad **B** (button 1) and a touch button all
+  queue `toolQueued` (`consumeTool`); touch now holds (`endTouchZap`) and the pad holds RT/X
+  (`pad.holding`), so `firingHeld` is "the trigger is down" on every device.
+- `src/ui/touch.js` — a `#touch-tool` button (🌀, labelled "Switch tool") and pointer-up/cancel/leave
+  release for the zap button, so a touch child can hold the intake on.
+- `src/game/controls.js` — every legend gains `tool` (Q / right-click / tool button / B) and its short
+  line names it.
+- `src/ui/hud.js`, `index.html`, `src/style.css` — a `#chip-tool` chip beside the counters showing the
+  active tool's icon and name, `body[data-tool]` styling, and the touch tool button.
+- `src/game/game.js` — `tool` state, `_updateTool`, `_switchTool` (latch sound, chip, toast, and the
+  first switch's spoken lesson), `_suck` (leaf drift in the cone, held trigger, a leaf every 0.07 s,
+  whoosh and cone rising with the load), `_finishGather` (drift drained, bundle, pop, a first-time
+  hello of 3 sparkles, Pip's line), `_stopSuck` on release, pause and zone change; bolts are ignored
+  while the whisk is out, and `Blaster.setActive` hides the Starbolt.
+- `src/world/curios.js` — `siphon` (returns the point a leaf leaves from) and `drain` (rests the drift
+  for 22 s); the litter shrinks from `item.suck` inside `update`, so the pile empties over the hold and
+  still regrows as before.
+- `src/engine/audio.js` — `suckStart`/`suckSet`/`suckStop` (one looping band-passed breath whose gain
+  and centre frequency follow the load, faded out rather than cut), `pop` (a soft pop with a leafy
+  tick) and `tool` (two latch clicks); muting stops the whoosh.
+- `tests/tools.test.js` (new) — six cases: the two tools always toggle to a real tool, each has a
+  name/icon/full spoken line, the cone accepts in front and refuses far behind/out of reach/wide to
+  the side, the strength falls from 1 to 0, gathering completes only after the hold, and every device
+  legend names a switch.
+
+**Verified** (1280×720 page in the same authenticated context; the preview panel is portrait)
+
+- **Switch:** Q with the Starbolt out → `tool: 'whisk'`, chip "🌀 Leafwhisk", blaster hidden, whisk
+  visible, latch audio, toast and Pip's "The Leafwhisk! Hold zap near leaves and they will swirl right
+  up." No bolt fired while the whisk was out; right-click and gamepad B switched back and forth.
+- **Suction:** holding E on the meadow drift reported `suckHeld` 0.57–0.7 with 10–14 leaves in flight
+  and the pile shrinking from scale 1 to 0.64; the whoosh started with `suckStart`, rose with
+  `suckSet`, and `level` reached 0.71. Release returned level to 0 and stopped the loop.
+- **Collection:** the drift drained (`ready: false`, litter hidden, 22 s timer), the bundle popped with
+  `audio.pop`, the toast "A leaf bundle!" and Pip's "A whole bundle of leaves! I will keep it safe by
+  the shelf.", and sparkles rose 26 → 29 (first hello only). A later gather in the same session paid 0
+  (`seen` stays true) and the drift regrows.
+- **Four devices while the vacuum is out:** keyboard walk 2.59 m, look −0.189 rad, jump, pause→play,
+  suction 0.7; mouse right-click switch, left-click bolt (1 projectile); emulated touch: tool button
+  switched, zap hold 0.48 held, release cleared it, stick walk 2.03 m, jump; injected gamepad: B
+  switched, RT hold 0.38 held (level 0.52), stick walk 2.03 m, look −0.121 rad, X zap, A jump, Start
+  pause→resume.
+- **Calm motion:** with `starlight-hollow-calm-motion = on`, `whisk.calm` was true, the tool's y stayed
+  at −0.35 (no bob) and debris travelled straight into the mouth; the capture shows the same gather.
+- **Regressions:** bolt on the leaf drift → `rustle`, `collect`, +3 sparkles, drift scattered; the
+  stone gaze → `scan`, `chime`, rune lit; ordinary sparkle pickups unchanged. A resumed save kept its
+  sparkles (15 → 20 across a save/reload); a legacy save (`{zone, sparkles:15, stars, visited}`) boots
+  at 15 sparkles, `0/13`, with both meadow curios built; zero page errors on fresh, resumed and legacy
+  loads.
+- `node --test tests/*.test.js` → 72 pass; `npm run build` exit 0.
+- Screenshots (tracked): `artifacts/iter21-bolt.png`, `iter21-switch.png`, `iter21-suction.png`,
+  `iter21-collect.png`, `iter21-calm.png`.
+
+**Fixed while inspecting** (each caught at gameplay size, not from code)
+
+- The first nozzle was a long horn: its lip projected to the middle of the screen and read as a frying
+  pan. Shortened the snout, moved the group into the corner (0.46, −0.35, −0.52), scaled to 0.8 and
+  toed it inward 0.56 rad.
+- Rewriting the model dropped the `_buildDebris()` call, so `dustMotes` was undefined and the game
+  loop died on its first frame — with no console error, because the throw happened inside
+  requestAnimationFrame. Caught by `whisk.time` frozen at 0.0005 and replaying `game.update` in a
+  try/catch; fixed and re-checked.
+- The suction cone was inside out (wide end at the camera) and read as a pale balloon over the lawn:
+  flipped it, narrowed it (0.34 × 2.2) and halved the opacity.
+- Debris crossed in 0.42 s and was barely visible: slowed to 0.78–1.08 s, two leaves per siphon tick.
+- The bundle popped at the camera with 200 px leaves: it now starts 0.9 m out, scales 0.45 and bursts
+  with ten 0.16 sparkles.
+- The drift drained almost instantly (0.12 per leaf): 0.03, applied in `update`, so the pile visibly
+  empties over the whole hold.
+- `suckStop` fired every idle frame; it now only runs when the tool was actually working.
+
+**Open**
+
+- The vacuum gathers leaf drifts only; crystals and listening stones stay bolt-and-gaze by design.
+- Nothing has run on Android hardware, a physical controller or a Windows build.
+- GitHub push remains blocked on a user credential (`main` is still behind iterations 12–21); the
+  commit is local.
+
+---
+
 ## Iteration 20 — Curious things that answer back (2026-11-28)
 
 **Chosen because** the roadmap's top item was "signs that use the gadgets": every tool in the hollow

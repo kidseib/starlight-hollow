@@ -31,6 +31,8 @@ import { SecretSpot, DiscoveryShelf, KeepsakeCairn } from '../world/discoveries.
 import { HubGrowth } from '../world/growth.js';
 import { grottoLoot, GROTTO, growthChange } from './hubBloom.js';
 import { CurioField } from '../world/curios.js';
+import { Whisk } from '../world/whisk.js';
+import { nextTool, toolInfo, inSuction, suctionStrength, gatherDone, GATHER_SECONDS } from './tools.js';
 import { curioReward, curioScanReady, stoneFact, CURIO_LINES, CURIO_AGAIN, CURIO_SPARKLES } from './curios.js';
 import { reducedMotion } from '../engine/motion.js';
 import { clamp, damp, mulberry32 } from '../engine/utils.js';
@@ -135,6 +137,14 @@ export class Game {
     this.blaster = new Blaster(camera, scene, audio, this.fx);
     this.blaster.onHit = (ref, pos) => this.onBoltHit(ref, pos);
     this.blaster.groundFn = (x, z) => this._groundAnywhere(x, z);
+
+    // The second tool: a first-person Leafwhisk that gathers loose leaves.
+    this.whisk = new Whisk(camera, scene, this.fx);
+    this.tool = 'bolt';
+    this.toolTold = false;
+    this.suckHeld = 0;
+    this.suckTarget = null;
+    this.suckTick = 0;
 
     this.companion = new Companion({ scene, camera, audio, fx: this.fx });
     this.idleTimer = 0;
@@ -356,6 +366,8 @@ export class Game {
     this.hud.setSparkles(this.sparkleCount);
     this._updateGoal();
     this.hud.setZone(ZONE_BY_ID[this.currentZoneId].name);
+    this.hud.setTool?.(this.tool);
+    this.whisk.setCalm(reducedMotion());
 
     const intro = this.visited.size > 0 ? [{ text: ZONE_GREETINGS[this.currentZoneId], face: this.currentZoneId === 'meadow' ? '🌻' : '✨' }] : [
       { text: PIP_LINES.intro, face: '🐣' },
@@ -371,6 +383,7 @@ export class Game {
 
   pause() {
     if (this.state !== 'play') return;
+    this._stopSuck();
     this.flushProgress();
     this.state = 'paused';
     this.input.enabled = false;
@@ -385,6 +398,7 @@ export class Game {
   resume() {
     if (this.state !== 'paused') return;
     this.state = 'play';
+    this.whisk.setCalm(reducedMotion());
     this.input.enabled = true;
     this.audio.musicPlaying = true;
     this.audio.resume();
@@ -706,6 +720,7 @@ export class Game {
     const data = this.islands.get(zoneId);
     if (!data) return;
     this.currentZoneId = zoneId;
+    this._stopSuck?.();
     this._marketHinted = false;
     this.sky.applyZone(data.zone);
     this.audio.setZone(zoneId);
@@ -985,8 +1000,107 @@ export class Game {
     this.hud.setCrosshairHot(!!(bestPad || this.aimCreature || this.aimShop || this.aimHook || this.aimCurio));
   }
 
+  /** Switching, and the held trigger that turns the Leafwhisk on. */
+  _updateTool(dt) {
+    if (this.input.consumeTool()) this._switchTool();
+    if (this.tool !== 'whisk') return;
+    if (this.input.firingHeld && this.state === 'play' && !this.transitioning) this._suck(dt);
+    else this._stopSuck();
+  }
+
+  _switchTool() {
+    if (this.state !== 'play' || this.transitioning) return;
+    this.tool = nextTool(this.tool);
+    this._stopSuck();
+    this.blaster.setActive(this.tool === 'bolt');
+    this.whisk.setActive(this.tool === 'whisk');
+    this.whisk.setCalm(reducedMotion());
+    this.hud?.setTool(this.tool);
+    this.audio?.tool();
+    const info = toolInfo(this.tool);
+    this.hud?.toast(`${info.icon} ${info.name}`, info.icon);
+    if (!this.toolTold) {
+      // The first switch is taught out loud; after that the chip is enough.
+      this.toolTold = true;
+      this.hud?.showBubble(info.line, info.icon);
+      this.voice?.say(info.line);
+    }
+  }
+
+  /** Hold the trigger with the Leafwhisk out: leaves curve to the mouth. */
+  _suck(dt) {
+    const field = this.curioFields.get(this.currentZoneId);
+    const origin = this.camera.position;
+    const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
+    let target = null;
+    let nearest = Infinity;
+    for (const item of field?.items ?? []) {
+      if (item.type !== 'leaf' || !item.ready) continue;
+      const point = field.aimPoint(item, new THREE.Vector3());
+      if (!inSuction(point, origin, dir)) continue;
+      const distance = origin.distanceTo(point);
+      if (distance < nearest) {
+        nearest = distance;
+        target = item;
+      }
+    }
+    if (!target) {
+      this._stopSuck();
+      return;
+    }
+    this.whisk.setActive(true);
+    this.audio?.suckStart();
+    this.suckTarget = target;
+    this.suckHeld += dt * (0.7 + suctionStrength(nearest) * 0.6);
+    this.suckTick += dt;
+    const load = Math.min(1, 0.3 + this.suckHeld / GATHER_SECONDS);
+    this.audio?.suckSet(load);
+    this.whisk.setLevel(load);
+    if (this.suckTick > 0.07) {
+      this.suckTick = 0;
+      for (let i = 0; i < 2; i++) {
+        const point = field.siphon(target);
+        if (point) {
+          this.whisk.emitLeaf(point);
+          if (Math.random() < 0.4) this.whisk.emitDust(point);
+        }
+      }
+    }
+    if (gatherDone(this.suckHeld)) this._finishGather(field, target);
+  }
+
+  _finishGather(field, item) {
+    if (!item || !item.ready) return;
+    const first = !item.seen;
+    item.seen = true;
+    field.drain(item);
+    this.whisk.popBundle();
+    this.audio?.pop();
+    const reward = curioReward('leaf', !first);
+    if (reward > 0) this.addSparkles(reward, true);
+    this.hud?.toast('A leaf bundle!', '🍂');
+    if (first) {
+      const line = 'A whole bundle of leaves! I will keep it safe by the shelf.';
+      this.hud?.showBubble(line, '🍂');
+      this.voice?.say(line);
+    }
+    this.suckHeld = 0;
+    this.suckTick = 0;
+    this._stopSuck();
+  }
+
+  _stopSuck() {
+    const wasWorking = this.suckTarget !== null || this.whisk.level > 0;
+    this.suckTarget = null;
+    this.suckHeld = 0;
+    this.whisk.setLevel(0);
+    if (wasWorking) this.audio?.suckStop();
+    if (this.tool === 'whisk') this.whisk.setActive(true);
+  }
+
   _fire() {
     if (this.transitioning) return;
+    if (this.tool === 'whisk') return;
     if (this.aimHook) {
       this.blaster.fire(this.aimHook.worldPosition.clone(), { type: 'hook', hook: this.aimHook });
       return;
@@ -1473,10 +1587,12 @@ export class Game {
     this.workshop?.update(dt, time, this.camera.position);
     this.fx.update(dt);
     this.blaster.update(dt, time);
+    this.whisk.update(dt, time);
 
     if (this.state === 'paused' || this.state === 'title') return;
 
     this.portalCooldown = Math.max(0, this.portalCooldown - dt);
+    this._updateTool(dt);
 
     if (this.state === 'shop') {
       this.market?.update(dt, time, this.camera.position);

@@ -60,6 +60,15 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   `src/ui/touch.js` is the thumb pad and buttons, and `src/game/controls.js` owns the legend text each
   device shows. Never add a control that only one device can reach, and keep the HUD legend in step by
   setting `device` through `Input.setDevice`.
+- The two tools are `src/game/tools.js` (pure: `TOOLS`, `nextTool`, `inSuction`, `suctionStrength`,
+  `GATHER_SECONDS`) and `src/world/whisk.js` (the Leafwhisk's art and debris). The switch is reachable
+  from `Q`, the right mouse button, the `#touch-tool` button and gamepad **B**; the held trigger is
+  `Input.firingHeld`, which already folds in keyboard, mouse, touch hold and pad hold. Keep a switch
+  from ever blocking movement, jumping or pausing, keep the HUD chip in step through `HUD.setTool`, and
+  keep the first switch of a session spoken. Gathering is a first-time hello only (`curioReward` with
+  the drift's `seen`), never a currency: the drift regrows, nothing is timed and nothing is gated. The
+  suction cone must stay forgiving (`SUCTION_RANGE` 7.5 m, `SUCTION_COS` 0.88) and every suction
+  animation must straighten under `reducedMotion()`.
 - The hub's growth from keepsakes is pure data in `src/game/hubBloom.js` and 3D in
   `src/world/growth.js`: one lantern per find, a flag per island with a find, a bed per completed
   island, plus the staged counts that keep the meadow changing the whole way (`pavers`, `pennants`,

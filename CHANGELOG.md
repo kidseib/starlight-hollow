@@ -5,6 +5,17 @@ Every public Windows beta, newest first. Player-facing changes only; the develop
 
 ## Unreleased — next beta
 
+**The Leafwhisk: a second tool.** The hollow now has two things in your hands, and a small chip
+beside the sparkle counter shows which one is out. The **Starbolt** is the blaster you know. The
+**Leafwhisk** is new: point it at a drift of leaves and hold the zap button, and the leaves lift off
+the ground and swirl into the glowing nozzle with a soft whoosh that grows as more of them arrive.
+When the drift is empty it pops out a little ribboned bundle, and Pip keeps it safe by the shelf.
+
+- Switch with **Q**, a **right-click**, the **🌀 button** on a touchscreen, or **B** on a gamepad.
+- Nothing is lost or timed: the drift gathers itself back a little later, and the whisk works as
+  often as you like. The first bundle of each play session is worth a few sparkles.
+- Calm motion makes the leaves fly straight and holds the whisk still.
+
 **The hollow is full of curious things.** Every island now hides two bits of
 scenery that answer when you play with them. A **leaf drift** bursts into a
 swirl of leaves when you zap it (there are usually a few sparkles underneath),

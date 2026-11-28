@@ -21,6 +21,7 @@ export class TouchControls {
     this.root.innerHTML = `
       <div id="touch-stick" role="presentation"><div id="touch-knob"></div></div>
       <div id="touch-actions">
+        <button id="touch-tool" type="button" class="touch-btn touch-tool" aria-label="Switch tool">🌀</button>
         <button id="touch-jump" type="button" class="touch-btn">Jump</button>
         <button id="touch-zap" type="button" class="touch-btn is-primary">Zap</button>
       </div>
@@ -31,6 +32,7 @@ export class TouchControls {
     this.knob = this.root.querySelector('#touch-knob');
     this.zapBtn = this.root.querySelector('#touch-zap');
     this.jumpBtn = this.root.querySelector('#touch-jump');
+    this.toolBtn = this.root.querySelector('#touch-tool');
 
     this._bindStick();
     this._bindButtons();
@@ -81,6 +83,15 @@ export class TouchControls {
       e.preventDefault();
       e.stopPropagation();
       this.input.touchZap();
+    });
+    const release = () => this.input.endTouchZap();
+    this.zapBtn.addEventListener('pointerup', release);
+    this.zapBtn.addEventListener('pointercancel', release);
+    this.zapBtn.addEventListener('pointerleave', release);
+    this.toolBtn?.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.input.touchTool();
     });
     const hold = (held) => (e) => {
       e.preventDefault();

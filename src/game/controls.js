@@ -12,7 +12,8 @@ export const CONTROL_LEGENDS = {
     look: 'arrow keys',
     zap: 'E',
     jump: 'space',
-    short: 'WASD move · mouse look · E zap',
+    short: 'WASD move · mouse look · E zap · Q tool',
+    tool: 'Q',
     repeatKey: 'R',
   },
   mouse: {
@@ -22,7 +23,8 @@ export const CONTROL_LEGENDS = {
     look: 'move the mouse',
     zap: 'click',
     jump: 'space',
-    short: 'WASD move · mouse look · click zap',
+    short: 'WASD move · mouse look · click zap · right-click tool',
+    tool: 'right-click',
     repeatKey: 'R',
   },
   touch: {
@@ -32,7 +34,8 @@ export const CONTROL_LEGENDS = {
     look: 'drag on the right',
     zap: 'zap button',
     jump: 'jump button',
-    short: 'Thumb pad to walk · drag to look · zap button',
+    short: 'Thumb pad to walk · drag to look · zap · 🌀 tool',
+    tool: 'tool button',
     repeatKey: null,
   },
   gamepad: {
@@ -42,7 +45,8 @@ export const CONTROL_LEGENDS = {
     look: 'right stick',
     zap: 'RT',
     jump: 'A',
-    short: 'Left stick walk · right stick look · RT zap',
+    short: 'Left stick walk · right stick look · RT zap · B tool',
+    tool: 'B',
     repeatKey: null,
   },
 };

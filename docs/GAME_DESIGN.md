@@ -183,6 +183,23 @@ Everything is derived from `sanitizeSecrets(save.secrets)`, so a save with missi
 or malformed ids simply grows less: no throw, no wiped save, and no display that needs keys the save
 does not have.
 
+### Tools — the Starbolt and the Leafwhisk
+Two tools live in the child's hands; `src/game/tools.js` owns the switch and the intake's rules, and a
+HUD chip (`#chip-tool`) names the active one.
+
+- **Starbolt** — the original blaster: bolts to signs, creatures, hooks, Momo and curios, with snap aim
+  to whatever is nearest the reticle.
+- **Leafwhisk** — the vacuum. Hold the trigger with a leaf drift inside the wide intake cone (7.5 m,
+  `cos 0.88`, anything within 1.2 m of the mouth always counts) and leaves lift off along a curve into
+  the glowing nozzle, shrinking and spinning as they go. The drift shrinks as it empties, the whoosh
+  (`suckStart`/`suckSet`/`suckStop`) and the cone rise with the load, and the finishing move pops a
+  ribboned bundle with `audio.pop`. The first gather of each drift in a session pays 3 sparkles and
+  Pip's line; later gathers pay nothing and the drift regrows after 22 s. Nothing is lost, nothing is
+  timed, nothing is gated.
+- **Switch:** `Q` (keyboard), right mouse button, the 🌀 touch button, or **B** on a gamepad. Switching
+  never blocks movement, jumping or pausing. The first switch in a session is taught out loud.
+- **Calm motion** removes the whisk's bob and sway and straightens every debris path to the mouth.
+
 ### Controls on every device
 `src/engine/input.js` is the single source of movement, look and zapping; `src/game/controls.js` is the
 single source of what each device is *called* on screen.
@@ -191,7 +208,8 @@ single source of what each device is *called* on screen.
 |---|---|---|---|---|
 | Walk | W A S D / arrows | W A S D | thumb pad | left stick |
 | Look | arrow keys | mouse | drag the world | right stick |
-| Zap | E / Enter | click | Zap button | RT or X |
+| Zap (hold to gather) | E / Enter | click | Zap button | RT or X |
+| Switch tool | Q | right-click | 🌀 button | B |
 | Jump | space | space | Jump button | A |
 | Pause | Escape | Escape | Continue button | Start |
 | Say it again | R | R | repeat button | Y |
@@ -252,15 +270,16 @@ friendships and any finished-but-uncollected island berry. New checkpoints resum
 ## 6. Controls & accessibility
 
 WASD/arrows to walk, mouse to look (pointer lock, with drag fallback), Space to jump, click to zap,
-R or the repeat button to hear the nearby sign again, Esc to pause, M to mute. Movement is forgiving: coyote time, jump buffering, a soft magical edge
+Q (or right-click) to switch between the Starbolt and the Leafwhisk, hold zap to gather leaves, R or
+the repeat button to hear the nearby sign again, Esc to pause, M to mute. Movement is forgiving: coyote time, jump buffering, a soft magical edge
 instead of falling off, and aim assist that snaps to the pad nearest the reticle.
 
 Accessibility in place: all instructions voiced and repeatable, picture-first pads, forgiving
 interaction ranges, colour-independent pad states (ring shape/scale + flash), reduced camera motion
 (subtle bob), pause on blur, and a **Calm motion** switch on the pause screen beside Sound. Calm motion
 follows the device's `prefers-reduced-motion` setting until a grown-up chooses otherwise; it removes the
-hub flourish's scale swell and sparkle burst (leaving a light mote) and is remembered across sessions
-(`starlight-hollow-calm-motion`).
+hub flourish's scale swell and sparkle burst (leaving a light mote), stills the Leafwhisk and makes
+its debris fly straight, and is remembered across sessions (`starlight-hollow-calm-motion`).
 
 ## 7. Technology
 
@@ -289,7 +308,8 @@ frustum culling, sprite-based glows, shared geometries within a station, `pixelR
 2. Parent dashboard and a grown-up progress corner (per-subject stats, profile settings).
 3. Telling-time curriculum (no clock activity yet).
 4. Touch controls for Android; split-screen/local co-op; sandbox mode.
-5. Per-subject adaptive practice beyond the per-sign choice narrowing introduced in iteration 9.
+5. Per-subject adaptive practice beyond the per-sign choice narrowing introduced in iteration 9, and a
+   second purpose for the Leafwhisk beyond gathering leaf drifts.
 6. Finish the two-pattern wrong/correct input capture; verify the filled blank after reloading.
 7. A human Windows playtest of the current beta (both editions, narration offline, save/reopen,
    installer shortcut, uninstall).

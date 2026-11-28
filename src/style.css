@@ -113,6 +113,19 @@ canvas#game {
   text-shadow: 0 0 12px rgba(255, 201, 75, 0.85);
 }
 
+.chip-tool {
+  gap: 6px;
+  background: rgba(255, 250, 236, 0.92);
+  border: 2px solid rgba(95, 214, 196, 0.55);
+}
+
+.chip-tool .chip-icon { font-size: 1rem; line-height: 1; }
+
+body[data-tool="whisk"] .chip-tool {
+  border-color: rgba(95, 214, 196, 0.95);
+  box-shadow: 0 0 0 3px rgba(95, 214, 196, 0.18);
+}
+
 .chip-zone {
   background: linear-gradient(180deg, rgba(185, 165, 255, 0.95), rgba(150, 128, 240, 0.95));
   color: #fff;
@@ -1107,6 +1120,14 @@ body[data-device="gamepad"] .chip-controls {
   box-shadow: 0 6px 18px rgba(60, 40, 90, 0.18);
   touch-action: none;
 }
+.touch-tool {
+  width: 54px;
+  height: 54px;
+  font-size: 1.15rem;
+  align-self: flex-end;
+  margin-bottom: 74px;
+}
+
 .touch-btn.is-primary {
   width: 96px;
   height: 96px;

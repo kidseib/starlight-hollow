@@ -15,6 +15,7 @@ export class Blaster {
     this.recoil = 0;
     this.bobPhase = 0;
     this.rainbow = false;
+    this.active = true;
     this.hue = 0;
     this.projectiles = [];
     this.onHit = null;
@@ -146,6 +147,7 @@ export class Blaster {
 
   update(dt, time) {
     this.cooldown = Math.max(0, this.cooldown - dt);
+    this.group.visible = this.active;
     this.recoil = damp(this.recoil, 0, 11, dt);
 
     const idle = Math.sin(time * 1.2) * 0.006;
@@ -195,5 +197,11 @@ export class Blaster {
 
   setVisible(v) {
     this.group.visible = v;
+  }
+
+  /** The Starbolt rests while the Leafwhisk is out. */
+  setActive(on) {
+    this.active = !!on;
+    this.group.visible = this.active;
   }
 }
