@@ -4,6 +4,18 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 18 - The hub grows all the way
+
+- **Staged growth data:** `hubBloom()` now returns `pavers` (7, two keepsakes at a time), `pennants` (one per keepsake), per-island `fills` (planter fill 0–1), `stones` (5, one per keepsake past eight), `rim` (9, waking from the fifth), `fireflies` (4) and `veil` (0–1) plus a named `step`. Lanterns, flags, blooms and the grotto rule are unchanged, and everything still comes from `sanitizeSecrets`.
+- **New hub geometry:** `_buildPavers()` lays hexagonal flagstones with a darker lip and moss tufts; `_buildPennants()` hangs a sagging rope with thirteen triangular pennants between two posts above the planters. Planter stems are separate groups, so a bed fills one keepsake at a time.
+- **Grotto clearing wakes gradually:** rim stones, stepping stones and arch fireflies appear one at a time, and the veil thins and brightens as the last keepsakes arrive — it still only parts at thirteen.
+- **Lanterns rebuilt** as framed glass lamps (sill, lintel, corner bars, roof, finial, hanging hook) instead of pale cubes, so lit versus unlit is obvious in daylight.
+- **Keepsake row evened again:** pebble display scale 1.55 → 1.25, kite on a wooden stand with a longer string, drum with an inset cream head and dark rim, shell flatter and wider.
+- **Evidence:** fresh 0·0·0·0; 4/13 four lanterns, 2 flags, 4 pennants, 2 pavers, planters 5·3·0·0·0·0; 7/13 7/3/7/4 with rim 3 and the child stopped 5.21 m out with Pip's hint; 10/13 10/5/10/5, stones 2, rim 6, one firefly, veil still up; 13/13 13/6/13/7, stones 5, rim 9, fireflies 4, veil gone, chest 40 → 70 sparkles, `grotto:true`, and a reload kept it all. A pre-iteration save booted at 15 sparkles, `0/13`, no errors.
+- **Inputs:** keyboard (4.64 m, 1.04 rad, jump, zap, pause↔play), mouse (1.34 rad under pointer lock, click zap), touch (0.92 m, −0.21 rad, zap, jump, pad shown) and gamepad (3.92 m, −0.62 rad, zap, jump, play↔paused) matched their legends.
+- **Tests:** 61 pass (three new hubBloom cases); `npm run build` exit 0.
+- **Not verified:** Android/controller hardware, Windows build. GitHub push still blocked on a user credential.
+
 ## Iteration 17 - Carved stone, and a real 16:9 inspection
 
 - **The arch is carved:** plinths, tapered eight-sided shafts with three carved bands, capitals with gold trim, a diamond keystone with a star inset, a wall lantern on each column, ivy at the capitals and a seamed mossy threshold. The bead-like vines were removed.

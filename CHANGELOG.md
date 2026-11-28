@@ -48,6 +48,15 @@ chime, a line from Pip and ten sparkles.
   dish, a flatter shell and a warmer drum — still one tidy row.
 - Lanterns glow softly instead of blooming into white, and the flower beds are proper wooden planters
   with little flowers in them.
+- The meadow now grows all the way, not just at the end: a worn stone path is laid two keepsakes at
+  a time, a line of little bunting flags gains one for every keepsake, and each planter fills with
+  flowers as its own island is explored.
+- The grotto clearing wakes a little at a time too. Stones in the water, the stepping stones and the
+  fireflies arrive one by one over the last keepsakes, and the veil gets thinner — it still only
+  opens when all thirteen are home.
+- The path lanterns are proper little lamps now, with a wooden frame, warm glass and a hook, so you
+  can see at a glance which ones are lit.
+
 
 - Each island also shows what you found *there*: a little stone cairn beside the
   way home holds that island's keepsakes. The meadow's Discovery Shelf has grown

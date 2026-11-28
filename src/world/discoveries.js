@@ -139,10 +139,10 @@ export function trophyMesh(kind, color = 0xffd166) {
   } else if (kind === 'kite') {
     const sail = new THREE.Mesh(new THREE.OctahedronGeometry(0.19, 0), solid(0xc9a8ff, { roughness: 0.55, emissive: glowColor, emissiveIntensity: 0.3 }));
     sail.scale.set(1, 1.15, 0.28);
-    sail.position.y = 0.22;
+    sail.position.y = 0.18;
     group.add(sail);
     const spine = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.34, 5), solid(0xfff2b0, { roughness: 0.6 }));
-    spine.position.y = 0.22;
+    spine.position.y = 0.18;
     group.add(spine);
     for (let i = 0; i < 3; i++) {
       const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.006), solid(0xff9ec4, { roughness: 0.7 }));
@@ -150,8 +150,12 @@ export function trophyMesh(kind, color = 0xffd166) {
       ribbon.rotation.z = i % 2 ? 0.5 : -0.5;
       group.add(ribbon);
     }
-    const string = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.22, 4), solid(0xb5825a, { roughness: 0.9 }));
-    string.position.set(-0.02, 0.06, 0);
+    // A little wooden stand, so the kite is displayed rather than floating.
+    const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.018, 0.16, 5), solid(0x9c7a52, { roughness: 0.85 }));
+    stand.position.set(0, 0.08, 0);
+    group.add(stand);
+    const string = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.16, 4), solid(0xb5825a, { roughness: 0.9 }));
+    string.position.set(-0.02, 0.14, 0);
     group.add(string);
   } else if (kind === 'chart') {
     const paper = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.008, 0.32), solid(0xfff8e6, { roughness: 0.85, emissive: glowColor, emissiveIntensity: 0.12 }));
@@ -167,9 +171,13 @@ export function trophyMesh(kind, color = 0xffd166) {
     const body = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.13, 0.18, 14), solid(0xe08a4f, { roughness: 0.5, emissive: glowColor, emissiveIntensity: 0.2 }));
     body.position.y = 0.13;
     group.add(body);
-    const skin = new THREE.Mesh(new THREE.CylinderGeometry(0.152, 0.152, 0.012, 14), solid(0xfff4dd, { roughness: 0.75 }));
-    skin.position.y = 0.225;
+    const skin = new THREE.Mesh(new THREE.CylinderGeometry(0.142, 0.142, 0.012, 14), solid(0xfff4dd, { roughness: 0.75 }));
+    skin.position.y = 0.226;
     group.add(skin);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.147, 0.012, 4, 16), solid(0x6b4a32, { roughness: 0.7 }));
+    rim.rotation.x = Math.PI / 2;
+    rim.position.y = 0.226;
+    group.add(rim);
     for (const s of [-1, 1]) {
       const lace = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.2, 0.012), solid(0xb5825a, { roughness: 0.8 }));
       lace.position.set(s * 0.13, 0.13, 0);
@@ -188,14 +196,14 @@ export function trophyMesh(kind, color = 0xffd166) {
   } else if (kind === 'shell') {
     // A flat scallop fan tilted towards the child, not a meringue.
     const fan = new THREE.Group();
-    fan.rotation.x = -0.18;
+    fan.rotation.x = -0.32;
     for (let i = 0; i < 7; i++) {
       const angle = -0.75 + i * 0.25;
       const rib = new THREE.Mesh(
         new THREE.SphereGeometry(0.06, 7, 5),
         solid(i % 2 ? 0xffd6b0 : 0xffc9a6, { roughness: 0.5, emissive: glowColor, emissiveIntensity: 0.16 })
       );
-      rib.scale.set(0.55, 2.2, 0.22);
+      rib.scale.set(0.62, 1.85, 0.26);
       rib.position.set(Math.sin(angle) * 0.13, 0.16, Math.cos(angle) * 0.05);
       rib.rotation.z = angle * 0.5;
       fan.add(rib);
@@ -360,7 +368,7 @@ export class SecretSpot {
 // Some keepsakes are authored small (a pebble, a shell) and read tiny beside the
 // egg and drum; the display scales each kind so the row looks even.
 const TROPHY_DISPLAY_SCALE = {
-  stone: 1.55,
+  stone: 1.25,
   shell: 1.45,
   jar: 1.3,
   feather: 1.25,

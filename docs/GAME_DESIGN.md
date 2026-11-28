@@ -156,6 +156,13 @@ moonwell with rim stones and lily pads, two crystals, fireflies, ferns, mushroom
 banded chest on a cut stone footing. Walking to the chest gives 30 sparkles, a banner, a burst and a
 Pip line, stored as `save.grotto` (only a literal `true` reopens it after a reload).
 
+Growth is staged rather than all-or-nothing, so the meadow keeps changing between the first find and
+the last: a worn stone path is laid two keepsakes at a time (seven flagstones), a bunting swag above
+the planters gains one pennant per keepsake, each planter's five stems fill as its own island is
+explored and glow only when that island is complete, the moonwell's nine rim stones wake from the
+fifth keepsake on, the five stepping stones rise over the last five, four fireflies drift to the arch,
+and the veil thins and brightens without ever parting until thirteen.
+
 Everything is derived from `sanitizeSecrets(save.secrets)`, so a save with missing, partial, unknown
 or malformed ids simply grows less: no throw, no wiped save, and no display that needs keys the save
 does not have.

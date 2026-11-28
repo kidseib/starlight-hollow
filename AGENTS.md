@@ -62,7 +62,10 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   setting `device` through `Input.setDevice`.
 - The hub's growth from keepsakes is pure data in `src/game/hubBloom.js` and 3D in
   `src/world/growth.js`: one lantern per find, a flag per island with a find, a bed per completed
-  island, and the Moonwell Grotto which opens **only** at all thirteen. Never derive that state by
+  island, plus the staged counts that keep the meadow changing the whole way (`pavers`, `pennants`,
+  per-island `fills`, `stones`, `rim`, `fireflies`, `veil`, `step`) — and the Moonwell Grotto which
+  opens **only** at all thirteen. Keep new growth staged and monotonic: every count must come from
+  `hubBloom`, never from adding up ids in the world code, and a junk save must not over-grow it. Never derive that state by
   adding up ids yourself, never let a save with junk ids open the grotto, and never make the grotto a
   menu, a locked door or a purchase — it is a place you walk into, and its chest is taken by walking
   up to it. `save.grotto` is a boolean that only accepts a literal `true`. The arch is carved stone

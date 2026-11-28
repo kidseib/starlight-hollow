@@ -5,6 +5,86 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 18 — The hub grows all the way, not just at the end (2026-11-28)
+
+**Chosen because** iteration 17 made the grotto beautiful, but the meadow went from "nothing" to
+"everything" with only two or three visible steps between: thirteen lanterns, three flags and three
+blooms carried the whole journey. Halfway felt like a slightly longer list, not a place changing.
+
+**Changed**
+
+- `src/game/hubBloom.js` — the rules now return staged counts, still from `sanitizeSecrets` only:
+  `pavers` (path flagstones, laid two keepsakes at a time, seven in all), `pennants` (one bunting
+  pennant per keepsake), `fills` (per-island planter fill, 0–1), `stones` (stepping stones, one per
+  keepsake past eight), `rim` (moonwell rim stones waking from the fifth), `fireflies` (arch
+  fireflies over the last four), `veil` (0–1, how thin the sleeping veil has become) and a named
+  `step`. Lanterns, flags, blooms, `grottoOpen` and `grottoWhisper` are unchanged.
+- `src/world/growth.js` — new `_buildPavers()` (hexagonal flagstones with a darker lip and moss
+  tufts, not discs) and `_buildPennants()` (two posts, a sagging rope and thirteen small triangular
+  pennants in island colours). Each planter's five stems are now separate groups, so a bed fills one
+  keepsake at a time and only glows when its island is complete. The moonwell's nine rim stones and
+  the five stepping stones come in one at a time, four fireflies drift to the arch, and the veil
+  thins and brightens as the last keepsakes arrive — it still only parts at thirteen.
+- Lanterns rebuilt: a dark wooden frame (sill, lintel, four corner bars, a roof and a gold finial)
+  around warm glass, hung from an arm with a hook. They now read as lamps instead of pale cubes, and
+  lit versus unlit is obvious in daylight.
+- `src/world/discoveries.js` — the keepsake row evened again: the pebble's display scale came down
+  from 1.55 to 1.25 (it had begun to out-read the egg), the kite got a wooden stand and a longer
+  string so it is displayed rather than floating, the drum got an inset cream head with a dark rim,
+  and the shell lies flatter and wider.
+- `tests/hubBloom.test.js` — three new cases: the staged counts never go backwards across 0→13 and
+  land on their caps, planters fill partially and only complete with their island, and a hostile save
+  (duplicates, junk, non-lists) cannot over-grow any stage.
+
+**Verified** (1280×720 page in the same authenticated context; the preview panel is portrait)
+
+| Save | Lanterns | Flags | Pennants | Pavers | Planter stems | Stones | Rim | Fireflies | Veil |
+|---|---|---|---|---|---|---|---|---|---|
+| fresh | 0 | 0 | 0 | 0 | 0·0·0·0·0·0 | 0 | 0 | 0 | up |
+| 4/13 | 4 | 2 | 4 | 2 | 5·3·0·0·0·0 | 0 | 0 | 0 | up |
+| 7/13 | 7 | 3 | 7 | 4 | 5·5·5·0·0·0 | 0 | 3 | 0 | up |
+| 10/13 | 10 | 5 | 10 | 5 | 5·5·5·5·3·0 | 2 | 6 | 1 | up |
+| 13/13 | 13 | 6 | 13 | 7 | 5·5·5·5·5·5 | 5 | 9 | 4 | parted |
+
+- At 7/13 walking at the arch still stopped the child 5.21 m out with Pip's "Something is sleeping
+  here. 6 keepsakes would wake it."; the grotto stayed shut at 10/13 with two stones and a thin veil.
+- At 13/13 the chest collected 40 → 70 sparkles with the "30 sparkles!" banner, `save.grotto: true`,
+  and a reload kept 70 sparkles, 13 lanterns, 13 pennants, 7 pavers, 5 stones, 9 rim stones, the open
+  lid and the taken chest.
+- A pre-iteration save (`{zone, sparkles: 15, stars, visited}`) booted at 15 sparkles, `0/13`, nothing
+  grown, veil up, with an empty page-error and console-error collector.
+- Inputs: keyboard 4.64 m walk / 1.04 rad turn / jump / zap / pause↔play; mouse 1.34 rad yaw and
+  0.94 rad pitch under real pointer lock plus click-zap; emulated touch walk 0.92 m, look −0.21 rad,
+  zap, jump, pad visible; injected gamepad walk 3.92 m, look −0.62 rad, zap, jump, play↔paused. Each
+  legend matched its device.
+- `node --test tests/*.test.js` → 61 pass, 0 fail. `npm run build` → exit 0.
+- Screenshots: `artifacts/r18-fresh.png`, `r18-low.png`, `r18-mid.png`, `r18-high.png`,
+  `r18-thirteen.png` (path), `r18-garden-4/10/13.png` (planters), `r18-grotto-10/13.png`,
+  `r18-grotto-chest.png`, `r18-bench.png`, `r18-lamp-lit.png`.
+
+**Fixes during the iteration**
+
+- The first flagstones rendered as pale discs with a hole in the middle; rebuilt as hexagonal slabs
+  with a darker base lip and moss tufts at the edge.
+- The lanterns read as cream cubes; rebuilt with a frame, glass and a hanging hook.
+- State-by-state capture kept restoring the previous save: `pagehide` flushes progress over the top of
+  a hand-written save, so the harness now stubs `flushProgress`/`_save` before writing. Worth knowing
+  for any future save-state testing.
+
+**Open**
+
+- Real Android hardware, a physical controller and a Windows build are still untested.
+- The grotto veil is a glow and a translucent sheet; it reads as "asleep" but not as fabric.
+- GitHub push remains blocked on a user credential; iteration 18 exists only in the local checkpoint.
+
+**Next**
+
+1. Signs that use the gadgets (vacuum-able leaf pile, blast-able crystal) so the tools have scenery.
+2. A keepsake hidden behind a small environmental puzzle instead of a walk-in.
+3. Mid-collection music and Pip lines that name the new stage, so the growth is heard as well as seen.
+
+---
+
 ## Iteration 17 — The grotto gets its stone, and the hub is inspected at 16:9 (2026-11-28)
 
 **Chosen because** iteration 16 proved the growth *worked* but skipped the look: its own open list

@@ -4,7 +4,7 @@
 
 import * as THREE from 'three';
 import { makeSprite } from './textures.js';
-import { hubBloom, grottoWhisper, GROTTO } from '../game/hubBloom.js';
+import { hubBloom, grottoWhisper, GROTTO, PAVER_COUNT, PENNANT_COUNT, RIM_COUNT, FIREFLY_COUNT } from '../game/hubBloom.js';
 import { WORLD_IDS } from '../game/secrets.js';
 
 const mat = (color, opts = {}) =>
@@ -36,6 +36,12 @@ export class HubGrowth {
     this.lanterns = [];
     this.flags = [];
     this.beds = [];
+    this.pavers = [];
+    this.pennants = [];
+    this.rimStones = [];
+    this.archFlies = [];
+    this.stones = null;
+    this.veilLevel = 0;
     this.open = false;
     this.taken = false;
     this._whisperAt = 0;
@@ -51,6 +57,8 @@ export class HubGrowth {
     this._buildLanterns();
     this._buildFlags();
     this._buildBeds();
+    this._buildPavers();
+    this._buildPennants();
     this._buildGrotto();
     this._buildTreeline();
   }
@@ -58,26 +66,48 @@ export class HubGrowth {
   /** One lamp for every keepsake, alternating along the path to the market. */
   _buildLanterns() {
     const wood = mat(0x8b6b4a);
+    const frame = mat(0x6f533a, { roughness: 0.8 });
     for (let i = 0; i < 13; i++) {
       const x = (i % 2 ? 1 : -1) * 3.3;
       const z = 27 - i * 1.45;
       const post = new THREE.Group();
       post.position.set(x, this._y(x, z), z);
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 1.35, 6), wood);
-      pole.position.y = 0.67;
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.095, 1.4, 6), wood);
+      pole.position.y = 0.7;
       post.add(pole);
-      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.06, 0.06), wood);
-      arm.position.set(x > 0 ? -0.16 : 0.16, 1.3, 0);
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.05, 0.05), wood);
+      arm.position.set(x > 0 ? -0.15 : 0.15, 1.46, 0);
       post.add(arm);
-      const cage = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.3, 0.24), mat(0xfff0c0, { roughness: 0.3, emissive: 0xffd166, emissiveIntensity: 0.05, transparent: true, opacity: 0.55 }));
-      cage.position.set(x > 0 ? -0.3 : 0.3, 1.14, 0);
+
+      // A glass lantern with a dark frame, so it reads as a lamp rather than
+      // a pale cube: four corner posts, a sill and a lintel.
+      const cage = new THREE.Mesh(new THREE.BoxGeometry(0.21, 0.27, 0.21), mat(0x9a8d74, { roughness: 0.3, emissive: 0xffb02e, emissiveIntensity: 0.04, transparent: true, opacity: 0.5 }));
       post.add(cage);
-      const glow = makeSprite(0xffd166, 0.95, 0.0);
+      const cageX = x > 0 ? -0.3 : 0.3;
+      cage.position.set(cageX, 1.16, 0);
+      const sill = new THREE.Mesh(new THREE.BoxGeometry(0.27, 0.035, 0.27), frame);
+      sill.position.set(cageX, 1.01, 0);
+      post.add(sill);
+      const lintel = new THREE.Mesh(new THREE.BoxGeometry(0.27, 0.035, 0.27), frame);
+      lintel.position.set(cageX, 1.31, 0);
+      post.add(lintel);
+      for (const [cx, cz] of [[-0.1, -0.1], [0.1, -0.1], [-0.1, 0.1], [0.1, 0.1]]) {
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.3, 0.028), frame);
+        bar.position.set(cageX + cx, 1.16, cz);
+        post.add(bar);
+      }
+      const glow = makeSprite(0xffd166, 0.9, 0.0);
       glow.position.copy(cage.position);
       post.add(glow);
-      const roof = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.18, 6), mat(0xffd166, { metalness: 0.35, roughness: 0.4 }));
-      roof.position.set(cage.position.x, 1.33, 0);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.16, 6), mat(0x7a5a3c, { roughness: 0.7 }));
+      roof.position.set(cageX, 1.41, 0);
       post.add(roof);
+      const hook = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.06, 0.022), frame);
+      hook.position.set(cageX, 1.45, 0);
+      post.add(hook);
+      const finial = new THREE.Mesh(new THREE.SphereGeometry(0.035, 5, 4), mat(0xffd166, { metalness: 0.4, roughness: 0.35 }));
+      finial.position.set(cageX, 1.5, 0);
+      post.add(finial);
       this.group.add(post);
       this.lanterns.push({ cage, glow, roof });
     }
@@ -129,32 +159,109 @@ export class HubGrowth {
       plant.position.y = 0.29;
       const bedColor = WORLD_COLORS[zone] ?? 0xffd166;
       // Dainty little flowers: five stems, each with a small four-petal head.
+      // Each stem is its own group so a planter can fill one keepsake at a time.
+      const stems = [];
       for (let f = 0; f < 5; f++) {
         const fx = ((f % 3) - 1) * 0.22;
         const fz = (Math.floor(f / 3) - 0.5) * 0.2;
         const h = 0.24 + (f % 2) * 0.09;
+        const sprout = new THREE.Group();
+        sprout.position.set(fx, 0, fz);
         const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.022, h, 4), mat(0x6fbf72));
-        stem.position.set(fx, h / 2, fz);
+        stem.position.y = h / 2;
         stem.rotation.z = (f - 2) * 0.05;
-        plant.add(stem);
+        sprout.add(stem);
         for (let p = 0; p < 4; p++) {
           const petal = new THREE.Mesh(new THREE.SphereGeometry(0.045, 5, 4), mat(bedColor, { roughness: 0.55, emissive: bedColor, emissiveIntensity: 0.16 }));
           const a = (p / 4) * Math.PI * 2;
-          petal.position.set(fx + Math.cos(a) * 0.055, h, fz + Math.sin(a) * 0.055);
+          petal.position.set(Math.cos(a) * 0.055, h, Math.sin(a) * 0.055);
           petal.scale.set(1, 0.55, 1);
-          plant.add(petal);
+          sprout.add(petal);
         }
         const pip = new THREE.Mesh(new THREE.SphereGeometry(0.028, 5, 4), mat(0xfff2b0, { emissive: 0xffd166, emissiveIntensity: 0.4 }));
-        pip.position.set(fx, h + 0.012, fz);
-        plant.add(pip);
+        pip.position.y = h + 0.012;
+        sprout.add(pip);
+        sprout.visible = false;
+        plant.add(sprout);
+        stems.push(sprout);
       }
       const centre = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 5), mat(0xfff2b0, { emissive: bedColor, emissiveIntensity: 0.3 }));
       centre.position.set(0, 0.16, 0);
       plant.add(centre);
       bed.add(plant);
       this.group.add(bed);
-      this.beds.push({ zone, plant, centre });
+      this.beds.push({ zone, plant, centre, stems });
     });
+  }
+
+  /** The path is laid two keepsakes at a time: worn flagstones with mossy edges. */
+  _buildPavers() {
+    const stone = mat(0xd8ccb0, { flatShading: true });
+    const stoneDark = mat(0xb9aa8c, { flatShading: true });
+    const moss = mat(0x86cf7c, { roughness: 0.95 });
+    for (let i = 0; i < PAVER_COUNT; i++) {
+      const x = (i % 2 ? 1 : -1) * 1.2;
+      const z = 25.9 - i * 2.15;
+      const y = this._y(x, z);
+      const holder = new THREE.Group();
+      holder.position.set(x, y, z);
+      holder.rotation.y = 0.4 + i * 0.8;
+      // A hexagonal flagstone with a darker lip underneath, so it reads as cut
+      // stone rather than a pale disc lying on the grass.
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.55, 0.07, 6), stoneDark);
+      base.position.y = 0.035;
+      base.scale.x = 1.12;
+      holder.add(base);
+      const top = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.48, 0.09, 6), stone);
+      top.position.y = 0.075;
+      top.scale.x = 1.12;
+      holder.add(top);
+      // A pair of moss tufts at the edge, not a hole in the middle.
+      const caps = [];
+      for (const [cx, cz, cs] of [[-0.3, 0.16, 0.11], [0.24, -0.22, 0.08]]) {
+        const cap = new THREE.Mesh(new THREE.SphereGeometry(cs, 5, 4), moss);
+        cap.position.set(cx, 0.11, cz);
+        cap.scale.y = 0.4;
+        holder.add(cap);
+        caps.push(cap);
+      }
+      holder.visible = false;
+      this.group.add(holder);
+      this.pavers.push({ holder, base, top, caps });
+    }
+  }
+
+  /** A bunting swag above the planters gains one pennant for every keepsake. */
+  _buildPennants() {
+    const wood = mat(0x8b6b4a);
+    const [x0, x1, z, top] = [1.3, 7.3, 19.9, 2.45];
+    for (const px of [x0, x1]) {
+      const y = this._y(px, z);
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.065, top, 6), wood);
+      post.position.set(px, y + top / 2, z);
+      this.group.add(post);
+      const knob = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 5), mat(0xffd166, { metalness: 0.4, roughness: 0.35 }));
+      knob.position.set(px, y + top + 0.04, z);
+      this.group.add(knob);
+    }
+    const pointAt = (t) => {
+      const x = x0 + (x1 - x0) * t;
+      return new THREE.Vector3(x, this._y(x, z) + top - 0.42 * Math.sin(Math.PI * t) - 0.06, z);
+    };
+    const curve = new THREE.CatmullRomCurve3(Array.from({ length: 13 }, (_, i) => pointAt(i / 12)));
+    const rope = new THREE.Mesh(new THREE.TubeGeometry(curve, 26, 0.018, 4, false), mat(0xe8d9b8, { roughness: 0.9 }));
+    this.group.add(rope);
+    for (let i = 0; i < PENNANT_COUNT; i++) {
+      const p = pointAt((i + 0.5) / PENNANT_COUNT);
+      const colour = WORLD_COLORS[WORLD_IDS[i % WORLD_IDS.length]] ?? 0xffd166;
+      const flag = new THREE.Mesh(new THREE.ConeGeometry(0.085, 0.22, 3), mat(colour, { roughness: 0.72 }));
+      flag.rotation.z = Math.PI;
+      flag.scale.z = 0.2;
+      flag.position.set(p.x, p.y - 0.11, p.z);
+      flag.visible = false;
+      this.group.add(flag);
+      this.pennants.push(flag);
+    }
   }
 
   _buildGrotto() {
@@ -275,8 +382,16 @@ export class HubGrowth {
       step.rotation.y = t * 2;
       this.stones.add(step);
     }
-    this.stones.visible = false;
     g.add(this.stones);
+
+    // Fireflies drift to the arch as the last keepsakes come home.
+    for (let i = 0; i < FIREFLY_COUNT; i++) {
+      const fly = makeSprite(0xfff2b0, 0.5, 0.85);
+      fly.position.set(-1.4 + i * 0.95, 1.15 + (i % 2) * 0.5, 1.15 + (i % 3) * 0.3);
+      fly.visible = false;
+      g.add(fly);
+      this.archFlies.push(fly);
+    }
 
     // A rock outcrop closes the back of the grotto, so it is a place rather
     // than an arch standing in an open field.
@@ -319,7 +434,9 @@ export class HubGrowth {
       rimStone.position.set(-1.2 + Math.cos(a) * 1.62, 0.16, -2.6 + Math.sin(a) * 1.62);
       rimStone.rotation.set(i, i * 2, i * 0.5);
       rimStone.scale.y = 0.7;
+      rimStone.visible = false;
       g.add(rimStone);
+      this.rimStones.push(rimStone);
     }
     for (const [cx, cz, cs] of [[-3.2, -3.4, 0.55], [1.1, -3.6, 0.42], [2.3, -2.2, 0.3]]) {
       const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(cs, 0), mat(0xc9a8ff, { emissive: 0xc9a8ff, emissiveIntensity: 0.55, roughness: 0.25, transparent: true, opacity: 0.9 }));
@@ -487,24 +604,36 @@ export class HubGrowth {
 
     this.lanterns.forEach((lantern, i) => {
       const lit = i < bloom.lanterns;
-      lantern.cage.material.emissiveIntensity = lit ? 0.85 : 0.04;
-      lantern.cage.material.opacity = lit ? 0.95 : 0.4;
-      lantern.roof.material.emissive.set(lit ? 0xffd166 : 0x000000);
-      lantern.roof.material.emissiveIntensity = lit ? 0.35 : 0;
+      lantern.cage.material.color.set(lit ? 0xffe0a0 : 0x8f8674);
+      lantern.cage.material.emissiveIntensity = lit ? 1.3 : 0.03;
+      lantern.cage.material.opacity = lit ? 0.82 : 0.5;
+      lantern.roof.material.emissive.set(lit ? 0xffb85a : 0x000000);
+      lantern.roof.material.emissiveIntensity = lit ? 0.22 : 0;
       lantern.glow.visible = lit;
       lantern.glow.material.opacity = lit ? 0.5 : 0;
     });
     for (const flag of this.flags) flag.holder.visible = bloom.flags.includes(flag.zone);
+    this.pavers.forEach((paver, i) => {
+      const laid = i < bloom.pavers;
+      paver.holder.visible = laid;
+    });
+    this.pennants.forEach((flag, i) => { flag.visible = i < bloom.pennants; });
     for (const bed of this.beds) {
+      const fill = bloom.fills[bed.zone] ?? 0;
+      const shown = Math.ceil(fill * bed.stems.length);
+      bed.stems.forEach((stem, i) => { stem.visible = i < shown; });
       const full = bloom.blooms.includes(bed.zone);
-      bed.plant.scale.setScalar(full ? 1.25 : 0.55);
-      bed.centre.material.emissiveIntensity = full ? 0.9 : 0.1;
+      bed.centre.material.emissiveIntensity = full ? 0.95 : 0.12;
+      bed.plant.scale.setScalar(full ? 1.1 : 1);
     }
 
     this.veil.visible = !this.open;
     this.veilSparkle.visible = !this.open;
-    this.stones.visible = this.open;
-    this.water.material.emissiveIntensity = this.open ? 0.85 : 0.12;
+    this.stones.children.forEach((step, i) => { step.visible = i < bloom.stones; });
+    this.rimStones.forEach((rimStone, i) => { rimStone.visible = i < bloom.rim; });
+    this.archFlies.forEach((fly, i) => { fly.visible = i < bloom.fireflies; });
+    this.veilLevel = bloom.veil;
+    this.water.material.emissiveIntensity = 0.12 + (bloom.rim / RIM_COUNT) * 0.45 + (this.open ? 0.2 : 0);
     this.motes.forEach((m) => { m.visible = this.open; });
     this.chest.visible = this.open;
     this.chestGlow.visible = this.open && !this.taken;
@@ -546,11 +675,18 @@ export class HubGrowth {
     for (let i = 0; i < this.lanterns.length; i++) {
       const lantern = this.lanterns[i];
       if (!lantern.glow.visible) continue;
-      lantern.glow.material.opacity = 0.26 + Math.sin(time * 2.1 + i) * 0.07;
+      lantern.glow.material.opacity = 0.34 + Math.sin(time * 2.1 + i) * 0.08;
     }
     if (this.veil.visible) {
-      this.veilSparkle.material.opacity = 0.16 + Math.sin(time * 1.6) * 0.07;
-      this.veil.material.opacity = 0.42 + Math.sin(time * 1.2) * 0.08;
+      const thin = this.veilLevel ?? 0;
+      this.veilSparkle.material.opacity = 0.16 + thin * 0.2 + Math.sin(time * 1.6) * 0.07;
+      this.veil.material.opacity = 0.44 - thin * 0.18 + Math.sin(time * 1.2) * 0.07;
+    }
+    for (let i = 0; i < this.archFlies.length; i++) {
+      const fly = this.archFlies[i];
+      if (!fly.visible) continue;
+      fly.position.y = 1.15 + (i % 2) * 0.5 + Math.sin(time * 1.3 + i * 0.8) * 0.12;
+      fly.material.opacity = 0.45 + Math.sin(time * 2.1 + i) * 0.25;
     }
     if (this.open) {
       this.water.material.emissiveIntensity = 0.7 + Math.sin(time * 1.4) * 0.15;
