@@ -5,9 +5,14 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
 
 ## Now (next two iterations)
 
-1. **Secrets for the other four islands** — the hub and Letterleaf Grove have five hollows and a
-   filling shelf; Tallybrook Falls, Pattern Peaks, Storysong Glade and Pebblecount Cove have none,
-   so the second half of the game still has nothing to find off the path.
+1. **Raise the shelf's back row** — with all six keepsakes found, the two rear dishes sit partly
+   behind the front row from a distance; a taller back step (or a slight fan) would make the
+   completed collection readable without walking around the stand.
+2. **Give Pebblecount Cove its own art pass** — its sand plain away from the path is still bare
+   compared with the meadow; shells, driftwood and tide pools would stop it feeling unfinished.
+3. **Secrets that use the gadgets** — every find is a walk-in today; two or three could sit behind a
+   vacuum-able leaf pile or a blast-able crystal so the gadgets have a reason to be pointed at
+   scenery.
 2. **Grown-up corner follow-ups** — it now shows per-subject tallies and difficulty buttons; next
    comes a short list of the signs last met, so a parent can see *what* was hard, not just how many.
 3. **Star Tree follow-ups** - a second ornament set and a small "which shape is

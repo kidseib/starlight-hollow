@@ -72,6 +72,94 @@ export const SECRETS = [
     clue: 'Mushrooms like the shade on the left of the Grove.',
     hidden: 'A Glow Mushroom! It lights up when you say hello.',
   },
+  {
+    id: 'falls-stone',
+    zone: 'falls',
+    at: { x: 34, z: 4 },
+    name: 'Ripple Stone',
+    trophy: 'stone',
+    color: 0x8fd6ff,
+    sparkles: 10,
+    clue: 'Something smooth is drying in the sun, far from the falls.',
+    hidden: 'A Ripple Stone! It still remembers the shape of the water.',
+  },
+  {
+    id: 'falls-jar',
+    zone: 'falls',
+    at: { x: -33, z: 9 },
+    name: 'Bubble Jar',
+    trophy: 'jar',
+    color: 0x5fe0c0,
+    sparkles: 10,
+    clue: 'The quiet side of the falls has a jar with something in it.',
+    hidden: 'A Bubble Jar! The bubbles inside never stop climbing.',
+  },
+  {
+    id: 'peaks-kite',
+    zone: 'peaks',
+    at: { x: 33, z: -8 },
+    name: 'Wind Kite',
+    trophy: 'kite',
+    color: 0xc9a8ff,
+    sparkles: 10,
+    clue: 'The wind keeps tugging at something on the far ridge.',
+    hidden: 'A Wind Kite! It wants to fly, so I will hold it tight.',
+  },
+  {
+    id: 'peaks-chart',
+    zone: 'peaks',
+    at: { x: -34, z: -4 },
+    name: 'Star Chart',
+    trophy: 'chart',
+    color: 0xffe08a,
+    sparkles: 10,
+    clue: 'Someone left a map of the night sky up here.',
+    hidden: 'A Star Chart! Every star up there has a name.',
+  },
+  {
+    id: 'words-drum',
+    zone: 'words',
+    at: { x: 32, z: 12 },
+    name: 'Singing Drum',
+    trophy: 'drum',
+    color: 0xffc46b,
+    sparkles: 10,
+    clue: 'Listen past the singing flowers on the sunny side.',
+    hidden: 'A Singing Drum! It hums when you tap it twice.',
+  },
+  {
+    id: 'words-feather',
+    zone: 'words',
+    at: { x: -33, z: -9 },
+    name: 'Story Feather',
+    trophy: 'feather',
+    color: 0xff9ec4,
+    sparkles: 10,
+    clue: 'A soft thing is caught in the shade at the back.',
+    hidden: 'A Story Feather! It tickles when you write with it.',
+  },
+  {
+    id: 'cove-shell',
+    zone: 'cove',
+    at: { x: 34, z: -6 },
+    name: 'Whisper Shell',
+    trophy: 'shell',
+    color: 0xffd6b0,
+    sparkles: 10,
+    clue: 'One shell on the sand still has the sea inside it.',
+    hidden: 'A Whisper Shell! Hold it up and you can hear the waves.',
+  },
+  {
+    id: 'cove-spyglass',
+    zone: 'cove',
+    at: { x: -32, z: 11 },
+    name: 'Little Spyglass',
+    trophy: 'spyglass',
+    color: 0x8fe8ff,
+    sparkles: 10,
+    clue: 'A pirate-small telescope is hiding by the far rocks.',
+    hidden: 'A Little Spyglass! Now I can see the whole Hollow.',
+  },
 ];
 
 export const SECRET_IDS = SECRETS.map((s) => s.id);
@@ -124,4 +212,46 @@ export function isFound(found, id) {
 }
 
 /** How the shelf reads each trophy, so the world and the tests agree. */
-export const TROPHY_KINDS = ['egg', 'lantern', 'chime', 'book', 'mushroom'];
+export const TROPHY_KINDS = [
+  'egg', 'lantern', 'chime', 'book', 'mushroom',
+  'stone', 'jar', 'kite', 'chart', 'drum', 'feather', 'shell', 'spyglass',
+];
+
+/** The islands that hide things, in the order a child meets them. */
+export const WORLD_IDS = ['meadow', 'grove', 'falls', 'peaks', 'words', 'cove'];
+
+export const WORLD_LABELS = {
+  meadow: 'Sunbeam Meadow',
+  grove: 'Letterleaf Grove',
+  falls: 'Tallybrook Falls',
+  peaks: 'Pattern Peaks',
+  words: 'Storysong Glade',
+  cove: 'Pebblecount Cove',
+};
+
+/**
+ * How many are hidden on each island, so a display can show "1 of 2 here"
+ * without reading: every world needs the same shape of answer.
+ */
+export function worldTotals() {
+  const out = {};
+  for (const zone of WORLD_IDS) out[zone] = SECRETS.filter((s) => s.zone === zone).length;
+  return out;
+}
+
+/** Per-world progress plus the grand total, all from the same sanitised list. */
+export function progressByWorld(found) {
+  const list = sanitizeSecrets(found);
+  const worlds = WORLD_IDS.map((zone) => {
+    const secrets = SECRETS.filter((s) => s.zone === zone);
+    const hits = secrets.filter((s) => list.includes(s.id));
+    return { zone, label: WORLD_LABELS[zone], found: hits.length, total: secrets.length, complete: secrets.length > 0 && hits.length === secrets.length, secrets };
+  }).filter((w) => w.total > 0);
+  return { worlds, total: list.length, of: SECRETS.length };
+}
+
+/** The first thing found on an island, used as that island's shelf keepsake. */
+export function firstFoundInWorld(found, zone) {
+  const list = sanitizeSecrets(found);
+  return SECRETS.find((s) => s.zone === zone && list.includes(s.id)) ?? null;
+}

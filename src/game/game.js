@@ -27,7 +27,7 @@ import {
 } from './progress.js';
 import { renderProgressPanel } from '../ui/progressPanel.js';
 import { discover, sanitizeSecrets, collectionStatus, secretsForZone } from './secrets.js';
-import { SecretSpot, DiscoveryShelf } from '../world/discoveries.js';
+import { SecretSpot, DiscoveryShelf, KeepsakeCairn } from '../world/discoveries.js';
 import { clamp, damp, mulberry32 } from '../engine/utils.js';
 
 // Momo's Wisp Market: one stall in the hub, on the path between the landing
@@ -70,6 +70,7 @@ export class Game {
     this.secrets = [];
     this.secretSpots = [];
     this.discoveryShelf = null;
+    this.cairns = new Map();
     this.pickupStreak = 0;
     this.pickupStreakTimer = 0;
     this.sparkleCount = 0;
@@ -257,6 +258,20 @@ export class Game {
         });
         spot.zoneId = zone.id;
         this.secretSpots.push(spot);
+      }
+
+      // Every island that hides something also shows its own finds, so coming
+      // back to a world reminds the child what they did there.
+      if (zone.kind !== 'hub' && secretsForZone(zone.id).length) {
+        const cx = 8;
+        const cz = 42;
+        this.cairns.set(zone.id, new KeepsakeCairn({
+          scene: this.scene,
+          position: new THREE.Vector3(zone.origin.x + cx, island.heightAtLocal(cx, cz), zone.origin.z + cz),
+          yaw: Math.atan2(-cx, 46 - cz),
+          zone: zone.id,
+          found: this.secrets,
+        }));
       }
 
       this.islands.set(zone.id, { zone, island, portals, stations, sky: skyDecor });
@@ -1024,6 +1039,7 @@ export class Game {
       }
     }
     this.discoveryShelf?.update(dt, time);
+    this.cairns.get(this.currentZoneId)?.update(dt, time);
   }
 
   _findSecret(spot) {
@@ -1044,6 +1060,7 @@ export class Game {
     this.voice?.say(secret.hidden);
     this.companion?.celebrate();
     this.discoveryShelf?.refresh(this.secrets);
+    this.cairns.get(spot.zoneId)?.refresh(this.secrets);
     this._save();
     if (status.complete) {
       this.hud?.showHint('You found every hidden treasure in the Hollow!', 4200);
@@ -1219,6 +1236,7 @@ export class Game {
     this.secrets = sanitizeSecrets(save.secrets);
     for (const spot of this.secretSpots) spot.setFound(this.secrets.includes(spot.secret.id));
     this.discoveryShelf?.refresh(this.secrets);
+    for (const cairn of this.cairns.values()) cairn.refresh(this.secrets);
     const found = collectionStatus(this.secrets);
     this.hud.setDiscoveries(found.count, found.total);
     this.endingPlayed = save.ended && this.starCount() === ZONE_STAR_ORDER.length;

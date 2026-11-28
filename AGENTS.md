@@ -43,9 +43,13 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   follow the tapered trunk (`trunkRadius(y)`), so move a row only together with
   that helper.
 - Hidden discoveries live in `src/game/secrets.js` (data + rules) and `src/world/discoveries.js`
-  (the hollow and the shelf). Finding one is proximity only — never add a button, prompt or marker,
-  and never charge or punish a second visit. `save.secrets` holds found ids and is sanitised to
-  known secrets; adding a secret means adding it to `SECRETS`, which the shelf and tests both read.
+  (the hollow, the meadow shelf and each island's keepsake cairn). Finding one is proximity only —
+  never add a button, prompt or marker, and never charge or punish a second visit. `save.secrets`
+  holds found ids and is sanitised to known secrets; adding a secret means adding it to `SECRETS`,
+  which the shelf, the cairns and the tests all read. Every island must hide at least two and show
+  its own finds in a cairn; the meadow shelf carries one keepsake per island plus a gem per secret,
+  and the HUD chip carries the total. `progressByWorld`/`worldTotals`/`firstFoundInWorld` are the only
+  place those counts are worked out, and a test enforces off-path placement.
 - Adaptive difficulty lives in `src/game/progress.js` (pure) and is set only from the pause
   screen's grown-up corner (`src/ui/progressPanel.js`). Keep it per subject: `subjectOfStation`
   files a sign, `levelFor` chooses Gentle/Just right/Stretch, and `narrowAfter`/`hintDelay` are the

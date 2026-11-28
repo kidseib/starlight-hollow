@@ -18,8 +18,13 @@ chime, a line from Pip and ten sparkles.
 - Collecting sparkles now answers back: sweeping up a row plays a little rising
   run of notes and bounces the sparkle counter, so picking things up feels like
   music rather than a single beep.
-- The treasures are the first of their kind; more corners are planned for the
-  other islands.
+- Every island now hides its own pair of keepsakes — behind the falls, up on the
+  ridge, in the shade of the glade and by the cove rocks — so nowhere in the
+  Hollow is only a walk between signs.
+- Each island also shows what you found *there*: a little stone cairn beside the
+  way home holds that island's keepsakes. The meadow's Discovery Shelf has grown
+  into a stepped stand with one dish per island and a row of gems that light as
+  you find them, so the whole collection is readable at a glance.
 
 **A grown-up corner, and questions that resize themselves.** Pausing the game now
 opens a small panel under the pause card. For each of the five subjects — letters

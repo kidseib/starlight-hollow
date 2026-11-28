@@ -5,6 +5,57 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 14 — Secrets everywhere, and each world remembers (2026-11-28)
+
+**Chosen because** iteration 13 put five finds in two islands and then stopped. A child who wandered
+Tallybrook Falls, Pattern Peaks, Storysong Glade or Pebblecount Cove found nothing that was there for
+its own sake, and every find was only ever visible back in the meadow.
+
+**Changed**
+
+- `src/game/secrets.js`: eight new secrets, two per remaining island, each with its own trophy, colour
+  and Pip line — Ripple Stone and Bubble Jar (falls), Wind Kite and Star Chart (peaks), Singing Drum
+  and Story Feather (words), Whisper Shell and Little Spyglass (cove). Added `WORLD_IDS`,
+  `WORLD_LABELS`, `worldTotals()`, `progressByWorld()` and `firstFoundInWorld()` so displays never
+  recount the list themselves.
+- `src/world/discoveries.js`: eight new trophy shapes (stone, jar, kite, chart, drum, feather, shell,
+  spyglass); `DiscoveryShelf` rebuilt as a low stepped stone stand — one dish per island, three front
+  and three back, a row of gems per island that light as its secrets are found, and only that island's
+  first find standing on its dish so six islands fit without crowding.
+- New `KeepsakeCairn`: a stacked-stone plinth beside each island's return portal, with one dish per
+  secret on that island. Finding something away from home now leaves a mark where you found it.
+- `src/game/game.js`: builds a cairn per island that has secrets, refreshes the shelf and the current
+  cairn on every find and on load, and ticks the cairn with the same proximity update.
+- `tests/secrets.test.js`: four new cases — every world hides at least two and none sits within 10 m of
+  the landing path or on an island's centre; per-world progress sums to the total and marks finished
+  islands; first-find selection; every trophy kind is distinct and used.
+
+**Checked**
+
+- `node --test tests/*.test.js` → 47 pass, 0 fail. `npm run build` → exit 0.
+- Cloud browser, real game: with a pre-iteration save in `localStorage` (no `secrets` key) the game
+  booted with 12 sparkles kept, chip `0/13`, 13 unlit gems, five cairns empty, learning zero — nothing
+  thrown, nothing wiped.
+- Walked into both Tallybrook Falls hollows: sparkles 12 → 32, chip `0/13` → `2/13`, two banners, two
+  spoken Pip lines, two `audio.star()` calls, six particle bursts, `save.secrets` written, the falls
+  cairn showing both keepsakes. Repeated in Pebblecount Cove → `4/13`, cove cairn two keepsakes, shelf
+  showing the falls and cove keepsakes with four gems lit.
+- Reload: `4/13`, both cairns still full, shelf keepsakes and gems restored from the save, found flags
+  on the spots restored.
+- Screenshots at gameplay size (`artifacts/r14-cove-cairn2.png`, `r14-hub-shelf7.png`) drove two
+  rebuilds: the shelf first read as a flat stone table with invisible trophies, then as a wall of posts,
+  then as a blank board that blocked the meadow. The stepped stand in the final shot shows the egg,
+  book, kite and drum seated on their dishes with all thirteen gems lit and the chip gold at `13/13`.
+
+**Open**
+
+- Two of the six keepsakes are partly hidden behind the front row from a distance; walking up solves
+  it, but the back row could be raised further.
+- The cove still looks sparse away from its path — the island's own art needs a pass.
+- Not verified on Windows or Android, and the new chimes were not listened to on real hardware.
+
+---
+
 ## Iteration 13 — Discovery is the reward (2026-11-28)
 
 **Chosen because** every reward in the game hung off a sign. A child who just wanted to wander

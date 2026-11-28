@@ -4,6 +4,18 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 14 - Secrets everywhere, and each world remembers
+
+- **Gap closed:** iteration 13's five finds covered only the hub and Letterleaf Grove. Eight new hollows (`src/game/secrets.js`) put two on each remaining island - Tallybrook Falls (Ripple Stone, Bubble Jar), Pattern Peaks (Wind Kite, Star Chart), Storysong Glade (Singing Drum, Story Feather) and Pebblecount Cove (Whisper Shell, Little Spyglass) - all off the landing path (a test enforces >10 m from it and >6 m from an island's centre).
+- **Eight new trophy shapes** in `src/world/discoveries.js`: smooth ripple pebble, glass bubble jar, kite with ribbons, star chart, laced drum, quill feather, fan shell and spyglass.
+- **Each world shows its own finds.** `KeepsakeCairn` is a stacked-stone plinth beside every island's return portal with one dish per secret hidden there; finding something away from home now leaves a mark where you found it.
+- **The hub shelf became a collection display.** `DiscoveryShelf` is a low stepped stone stand: one dish per island (three front, three back), the island's first find standing on it, and a row of gems per island that light as its secrets are found. `progressByWorld`, `worldTotals` and `firstFoundInWorld` keep the counting in one place; the HUD chip still shows the total (`N/13`, gold when complete).
+- **Sanitising unchanged and verified:** unknown ids are dropped, duplicates collapse, `save.secrets` missing entirely loads as zero. No new save keys, no new input, no timers or locks added.
+- **Tests:** 47 pass (`tests/secrets.test.js` gained four cases: per-world coverage and off-path placement, per-world progress and totals, first-find selection, trophy distinctness). `npm run build` exit 0.
+- **Browser evidence:** pre-iteration save → `0/13`, empty shelf and cairns, sparkles preserved; walked into both falls hollows (sparkles 12→32, two banners, two spoken lines, two star chimes, six bursts, saved, cairn filled); both cove hollows (→ `4/13`, cove cairn filled); reload restored chip, shelf, gems, cairns and found flags.
+- **Visual repairs made in-pass:** the shelf was rebuilt three times because it read as a flat table (trophies invisible), then a ring of posts (everything occluded), then a board that walled off the meadow; the final stepped stand seats trophies on their dishes with the islands' gems below. The falls hollows were re-seated after the first screenshot showed one clipping the grass.
+- **Not verified:** Windows/Android, real audio. The cove island itself is still sparse away from its path, and two back-row keepsakes are partly occluded from a distance.
+
 ## Iteration 13 - Discovery is the reward
 
 - Added a reason to wander that has nothing to do with signs: five hand-placed hidden hollows (`src/game/secrets.js`), three in Sunbeam Meadow and two in Letterleaf Grove. Nothing marks them from a distance; a mossy stone ring, a gold cradle and a warm glow that only wakes within 12 m is all a child gets.

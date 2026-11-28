@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 import { makeSprite } from './textures.js';
-import { SECRETS, SECRET_IDS } from '../game/secrets.js';
+import {
+  SECRETS,
+  WORLD_IDS,
+  sanitizeSecrets,
+  secretById,
+  firstFoundInWorld,
+} from '../game/secrets.js';
 
 const solid = (color, opts = {}) =>
   new THREE.MeshStandardMaterial({
@@ -85,6 +91,104 @@ export function trophyMesh(kind, color = 0xffd166) {
     const spine = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.07, 0.22), solid(0x4f8a5c, { roughness: 0.6 }));
     spine.position.set(-0.145, 0.1, 0);
     group.add(spine);
+  } else if (kind === 'stone') {
+    const pebble = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 10), solid(0x9fc6d8, { roughness: 0.35, emissive: glowColor, emissiveIntensity: 0.18 }));
+    pebble.scale.set(1.15, 0.42, 1);
+    pebble.position.y = 0.11;
+    group.add(pebble);
+    for (const [r, y] of [[0.1, 0.135], [0.05, 0.15]]) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.008, 5, 18), solid(0xdff3ff, { roughness: 0.4 }));
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = y;
+      group.add(ring);
+    }
+  } else if (kind === 'jar') {
+    const glass = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.11, 0.13, 0.26, 12, 1, true),
+      solid(0xbfeaf5, { roughness: 0.15, metalness: 0.2, transparent: true, opacity: 0.34 })
+    );
+    glass.position.y = 0.15;
+    group.add(glass);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.03, 12), solid(0x8fd6ff, { roughness: 0.5 }));
+    group.add(base);
+    const cork = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.1, 0.05, 10), solid(0xb5825a, { roughness: 0.8 }));
+    cork.position.y = 0.3;
+    group.add(cork);
+    for (const [x, y, r] of [[0.02, 0.1, 0.028], [-0.04, 0.17, 0.022], [0.04, 0.22, 0.018]]) {
+      const bubble = new THREE.Mesh(new THREE.SphereGeometry(r, 8, 6), solid(0xffffff, { emissive: glowColor, emissiveIntensity: 0.6, roughness: 0.2, transparent: true, opacity: 0.85 }));
+      bubble.position.set(x, y + 0.05, 0.01);
+      group.add(bubble);
+    }
+  } else if (kind === 'kite') {
+    const sail = new THREE.Mesh(new THREE.OctahedronGeometry(0.19, 0), solid(0xc9a8ff, { roughness: 0.55, emissive: glowColor, emissiveIntensity: 0.3 }));
+    sail.scale.set(1, 1.15, 0.28);
+    sail.position.y = 0.26;
+    group.add(sail);
+    const spine = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.34, 5), solid(0xfff2b0, { roughness: 0.6 }));
+    spine.position.y = 0.26;
+    group.add(spine);
+    for (let i = 0; i < 3; i++) {
+      const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.006), solid(0xff9ec4, { roughness: 0.7 }));
+      ribbon.position.set(i % 2 ? 0.05 : -0.05, 0.1 - i * 0.05, 0);
+      ribbon.rotation.z = i % 2 ? 0.5 : -0.5;
+      group.add(ribbon);
+    }
+  } else if (kind === 'chart') {
+    const paper = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.008, 0.32), solid(0xfff8e6, { roughness: 0.85, emissive: glowColor, emissiveIntensity: 0.12 }));
+    paper.rotation.x = -0.18;
+    paper.position.y = 0.09;
+    group.add(paper);
+    for (const [x, z] of [[-0.06, -0.08], [0.05, -0.02], [-0.02, 0.07]]) {
+      const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.022, 0), solid(glowColor, { emissive: glowColor, emissiveIntensity: 0.9, roughness: 0.3 }));
+      star.position.set(x, 0.11, z);
+      group.add(star);
+    }
+  } else if (kind === 'drum') {
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.13, 0.18, 14), solid(0xffc46b, { roughness: 0.5, emissive: glowColor, emissiveIntensity: 0.2 }));
+    body.position.y = 0.13;
+    group.add(body);
+    const skin = new THREE.Mesh(new THREE.CylinderGeometry(0.152, 0.152, 0.012, 14), solid(0xfff4dd, { roughness: 0.75 }));
+    skin.position.y = 0.225;
+    group.add(skin);
+    for (const s of [-1, 1]) {
+      const lace = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.2, 0.012), solid(0xb5825a, { roughness: 0.8 }));
+      lace.position.set(s * 0.13, 0.13, 0);
+      group.add(lace);
+    }
+  } else if (kind === 'feather') {
+    const vane = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.34, 7), solid(0xff9ec4, { roughness: 0.55, emissive: glowColor, emissiveIntensity: 0.25 }));
+    vane.scale.set(1, 1, 0.35);
+    vane.position.set(0, 0.24, 0);
+    vane.rotation.z = 0.28;
+    group.add(vane);
+    const quill = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.01, 0.36, 5), solid(0xfff4dd, { roughness: 0.6 }));
+    quill.position.set(-0.02, 0.2, 0);
+    quill.rotation.z = 0.28;
+    group.add(quill);
+  } else if (kind === 'shell') {
+    for (let i = 0; i < 5; i++) {
+      const rib = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), solid(0xffd6b0, { roughness: 0.5, emissive: glowColor, emissiveIntensity: 0.2 }));
+      const angle = -0.7 + i * 0.35;
+      rib.scale.set(1, 2.4, 0.6);
+      rib.position.set(Math.sin(angle) * 0.12, 0.13, Math.cos(angle) * 0.05);
+      rib.rotation.z = angle;
+      group.add(rib);
+    }
+    const hinge = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), solid(0xffbe94, { roughness: 0.6 }));
+    hinge.position.y = 0.05;
+    group.add(hinge);
+  } else if (kind === 'spyglass') {
+    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.065, 0.22, 12), solid(0x8fe8ff, { roughness: 0.4, metalness: 0.15, emissive: glowColor, emissiveIntensity: 0.25 }));
+    tube.rotation.z = Math.PI / 2.6;
+    tube.position.set(0, 0.17, 0);
+    group.add(tube);
+    const wide = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.06, 0.09, 12), solid(0xffd166, { roughness: 0.35, metalness: 0.45 }));
+    wide.rotation.z = Math.PI / 2.6;
+    wide.position.set(0.12, 0.11, 0);
+    group.add(wide);
+    const lens = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), solid(0xdffcff, { roughness: 0.1, transparent: true, opacity: 0.8, emissive: 0xffffff, emissiveIntensity: 0.4 }));
+    lens.position.set(0.15, 0.1, 0);
+    group.add(lens);
   } else {
     // mushroom
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.075, 0.17, 9), solid(0xfff4dd, { roughness: 0.75 }));
@@ -231,6 +335,12 @@ export class SecretSpot {
  * as a child explores. It is also the only place the collection is shown in the
  * world, which makes walking back to the meadow worth doing.
  */
+/**
+ * The Discovery Shelf in the meadow: one dish per island, each with a row of
+ * little pips — one per secret that island hides. A non-reading child reads the
+ * whole collection by looking: which dishes are empty, which pips are lit, and
+ * whether the gold rim sparkles because every pip is lit.
+ */
 export class DiscoveryShelf {
   constructor({ scene, position, yaw = 0, found = [] }) {
     this.scene = scene;
@@ -240,7 +350,7 @@ export class DiscoveryShelf {
     this.group.rotation.y = yaw;
     scene.add(this.group);
     this.trophies = new Map();
-    this.pop = 0;
+    this.pips = [];
     this._build();
     this.refresh(found);
   }
@@ -249,82 +359,199 @@ export class DiscoveryShelf {
     const stone = solid(0xe3d3ae, { roughness: 0.85, flatShading: true });
     const stoneDark = solid(0xc9b894, { roughness: 0.88, flatShading: true });
     const wood = solid(0xb5825a, { roughness: 0.72 });
+    const gold = solid(0xffd166, { metalness: 0.4, roughness: 0.35 });
 
-    const foot = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.7, 0.22, 14), stoneDark);
-    foot.position.y = 0.11;
+    // A low stepped stand: three keepsakes in front, three one step back, so a
+    // child can see every island's find at once without the stand walling off
+    // the meadow behind it.
+    const foot = new THREE.Mesh(new THREE.CylinderGeometry(1.34, 1.48, 0.15, 18), stoneDark);
+    foot.position.y = 0.08;
     this.group.add(foot);
-
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(1.34, 1.44, 0.62, 14), stone);
-    body.position.y = 0.52;
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.3, 0.44, 18), stone);
+    body.position.y = 0.37;
     this.group.add(body);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(1.26, 1.2, 0.09, 18), wood);
+    cap.position.y = 0.64;
+    this.group.add(cap);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(1.23, 0.04, 6, 26), gold);
+    rim.rotation.x = Math.PI / 2;
+    rim.position.y = 0.7;
+    this.group.add(rim);
+    const moss = new THREE.Mesh(new THREE.CircleGeometry(1.15, 20), solid(0x7fd47a, { roughness: 0.95 }));
+    moss.rotation.x = -Math.PI / 2;
+    moss.position.y = 0.695;
+    this.group.add(moss);
 
-    const top = new THREE.Mesh(new THREE.CylinderGeometry(1.46, 1.4, 0.12, 14), wood);
-    top.position.y = 0.89;
-    this.group.add(top);
+    // The raised back step.
+    const step = new THREE.Mesh(new THREE.CylinderGeometry(0.92, 1.0, 0.26, 16), stoneDark);
+    step.position.set(0, 0.78, -0.26);
+    step.scale.set(1, 1, 0.72);
+    this.group.add(step);
+    const stepTop = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.86, 0.07, 16), wood);
+    stepTop.position.set(0, 0.92, -0.26);
+    stepTop.scale.set(1, 1, 0.72);
+    this.group.add(stepTop);
 
-    const trim = new THREE.Mesh(new THREE.TorusGeometry(1.42, 0.04, 6, 26), solid(0xffd166, { metalness: 0.4, roughness: 0.35 }));
-    trim.rotation.x = Math.PI / 2;
-    trim.position.y = 0.95;
-    this.group.add(trim);
-
-    const mossRing = new THREE.Mesh(new THREE.CircleGeometry(1.3, 20), solid(0x7fd47a, { roughness: 0.95 }));
-    mossRing.rotation.x = -Math.PI / 2;
-    mossRing.position.y = 0.955;
-    this.group.add(mossRing);
-
-    // Five dishes, evenly spaced and slightly uneven, in a hand-made arc.
-    const total = 5;
-    this.dishes = [];
-    for (let i = 0; i < total; i++) {
-      const angle = -Math.PI * 0.72 + (i / (total - 1)) * Math.PI * 1.44;
-      const radius = 0.86;
-      const dish = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.2, 0.07, 12), wood);
-      dish.position.set(Math.sin(angle) * radius, 0.99, Math.cos(angle) * radius);
+    this.worlds = WORLD_IDS.filter((zone) => SECRETS.some((s) => s.zone === zone));
+    this.worldDish = new Map();
+    this.worlds.forEach((zone, i) => {
+      // Front row left, centre, right; back row in the gaps between them.
+      const back = i % 2 === 1;
+      const slot = Math.floor(i / 2);
+      const spread = back ? [-0.58, 0.58, 0][slot] : [-0.96, 0, 0.96][slot];
+      const x = spread;
+      const y = back ? 0.96 : 0.7;
+      const z = back ? -0.4 : 0.16;
+      const dish = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.17, 0.05, 12), wood);
+      dish.position.set(x, y + 0.03, z);
       this.group.add(dish);
-      this.dishes.push(dish.position.clone());
-    }
+      this.worldDish.set(zone, new THREE.Vector3(x, y + 0.01, z));
 
-    this.halo = makeSprite(0xfff2b0, 2.6, 0.08);
-    this.halo.position.y = 1.2;
+      // A row of gems on the stand in front of each dish: one per secret here.
+      const secrets = SECRETS.filter((s) => s.zone === zone);
+      secrets.forEach((secret, j) => {
+        const gemSpread = (j - (secrets.length - 1) / 2) * 0.1;
+        const pip = new THREE.Mesh(new THREE.OctahedronGeometry(0.05, 0), solid(0xbfc6d4, { roughness: 0.55 }));
+        pip.position.set(x + gemSpread, back ? 0.72 : 0.58, back ? -0.04 : 0.46);
+        this.group.add(pip);
+        this.pips.push({ id: secret.id, mesh: pip, color: secret.color });
+      });
+    });
+
+    this.halo = makeSprite(0xfff2b0, 2.6, 0.05);
+    this.halo.position.set(0, 1.35, -0.2);
     this.group.add(this.halo);
   }
 
-  /** Show exactly the trophies the save says were found. Idempotent. */
+  /** Show the keepsake and pips the save says were found. Idempotent. */
   refresh(found = []) {
-    this.found = new Set(found);
-    const list = [...this.found];
-    for (const [id, mesh] of this.trophies) {
-      if (!this.found.has(id)) {
-        this.group.remove(mesh);
-        this.trophies.delete(id);
-      }
+    this.found = new Set(sanitizeSecrets(found));
+    for (const pip of this.pips) {
+      const lit = this.found.has(pip.id);
+      pip.mesh.material.color.set(lit ? pip.color : 0xbfc6d4);
+      pip.mesh.material.emissive.set(lit ? pip.color : 0x000000);
+      pip.mesh.material.emissiveIntensity = lit ? 0.95 : 0;
+      pip.mesh.scale.setScalar(lit ? 1.5 : 1);
     }
-    for (const id of list) {
-      if (this.trophies.has(id)) continue;
-      const index = SECRET_IDS.indexOf(id);
-      const dish = this.dishes[index >= 0 ? index : 0];
-      const secret = SECRETS.find((s) => s.id === id);
-      if (!secret || !dish) continue;
-      const mesh = trophyMesh(secret.trophy, secret.color);
+    for (const [id, mesh] of this.trophies) {
+      if (this.found.has(id)) continue;
+      this.group.remove(mesh);
+      this.trophies.delete(id);
+    }
+    for (const zone of this.worlds) {
+      const first = firstFoundInWorld([...this.found], zone);
+      const dish = this.worldDish.get(zone);
+      if (!dish) continue;
+      // Only the island's first find stands on the dish; the gems carry the rest.
+      for (const [id, mesh] of this.trophies) {
+        if (secretById(id)?.zone === zone && id !== first?.id) { this.group.remove(mesh); this.trophies.delete(id); }
+      }
+      if (!first || this.trophies.has(first.id)) continue;
+      const mesh = trophyMesh(first.trophy, first.color);
       mesh.position.copy(dish);
+      mesh.rotation.y = 0.25;
       mesh.scale.setScalar(0.001);
-      mesh.userData.target = 0.95;
       this.group.add(mesh);
-      this.trophies.set(id, mesh);
-      this.pop = 1;
+      this.trophies.set(first.id, mesh);
     }
   }
 
   update(dt, time) {
-    this.halo.material.opacity = 0.06 + this.found.size * 0.02 + Math.sin(time * 1.3) * 0.02;
-    this.pop = Math.max(0, this.pop - dt * 1.2);
-    let i = 0;
-    for (const mesh of this.trophies.values()) {
-      const target = mesh.userData.target ?? 0.95;
-      const scale = Math.min(target, mesh.scale.x + dt * 1.6);
-      mesh.scale.setScalar(scale);
-      mesh.position.y = (this.dishes[i]?.y ?? 0.99) + Math.sin(time * 1.4 + i) * 0.012;
-      i += 1;
+    this.halo.material.opacity = 0.04 + this.found.size * 0.01 + Math.sin(time * 1.3) * 0.02;
+    for (const [id, mesh] of this.trophies) {
+      mesh.scale.setScalar(Math.min(1.12, mesh.scale.x + dt * 2.6));
+      const dish = this.worldDish.get(secretById(id)?.zone);
+      if (dish) {
+        mesh.position.y = dish.y + Math.sin(time * 1.4 + dish.x) * 0.012;
+        mesh.rotation.y = 0.25 + Math.sin(time * 0.9 + dish.x) * 0.2;
+      }
+    }
+  }
+}
+
+/**
+ * An island's own keepsake cairn: two dishes beside the way home. Whatever was
+ * found on this island stands here, so coming back to a world shows what you did
+ * there instead of only telling the meadow about it.
+ */
+export class KeepsakeCairn {
+  constructor({ scene, position, yaw = 0, zone, found = [] }) {
+    this.scene = scene;
+    this.zone = zone;
+    this.group = new THREE.Group();
+    this.group.position.copy(position);
+    this.group.rotation.y = yaw;
+    scene.add(this.group);
+    this.trophies = new Map();
+    this.pips = [];
+    this._build();
+    this.refresh(found);
+  }
+
+  _build() {
+    const stone = solid(0xdcc9a6, { roughness: 0.86, flatShading: true });
+    const stoneDark = solid(0xc2ad8b, { roughness: 0.9, flatShading: true });
+    const wood = solid(0xb5825a, { roughness: 0.74 });
+
+    for (let i = 0; i < 3; i++) {
+      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.42 - i * 0.09, 0), i % 2 ? stone : stoneDark);
+      rock.position.set(0, 0.24 + i * 0.3, 0);
+      rock.rotation.set(i * 0.6, i * 1.1, i * 0.3);
+      rock.scale.set(1, 0.8, 1);
+      this.group.add(rock);
+    }
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.46, 0.1, 12), wood);
+    cap.position.y = 1.06;
+    this.group.add(cap);
+    const trim = new THREE.Mesh(new THREE.TorusGeometry(0.49, 0.03, 6, 20), solid(0xffd166, { metalness: 0.4, roughness: 0.4 }));
+    trim.rotation.x = Math.PI / 2;
+    trim.position.y = 1.11;
+    this.group.add(trim);
+
+    const secrets = SECRETS.filter((s) => s.zone === this.zone);
+    this.dishes = secrets.map((secret, i) => {
+      const spread = (i - (secrets.length - 1) / 2) * 0.42;
+      const dish = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.15, 0.05, 10), wood);
+      dish.position.set(spread, 1.13, 0.1);
+      this.group.add(dish);
+      const pip = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 6), solid(0xbfc6d4, { roughness: 0.6 }));
+      pip.position.set(spread, 1.14, 0.42);
+      this.group.add(pip);
+      this.pips.push({ id: secret.id, mesh: pip, color: secret.color });
+      return { secret, position: dish.position.clone() };
+    });
+  }
+
+  refresh(found = []) {
+    const list = sanitizeSecrets(found);
+    for (const pip of this.pips) {
+      const lit = list.includes(pip.id);
+      pip.mesh.material.color.set(lit ? pip.color : 0xbfc6d4);
+      pip.mesh.material.emissive.set(lit ? pip.color : 0x000000);
+      pip.mesh.material.emissiveIntensity = lit ? 0.85 : 0;
+      pip.mesh.scale.setScalar(lit ? 1.4 : 1);
+    }
+    for (const slot of this.dishes) {
+      const has = list.includes(slot.secret.id);
+      const existing = this.trophies.get(slot.secret.id);
+      if (has && !existing) {
+        const mesh = trophyMesh(slot.secret.trophy, slot.secret.color);
+        mesh.position.copy(slot.position);
+        mesh.scale.setScalar(0.001);
+        this.group.add(mesh);
+        this.trophies.set(slot.secret.id, mesh);
+      } else if (!has && existing) {
+        this.group.remove(existing);
+        this.trophies.delete(slot.secret.id);
+      }
+    }
+  }
+
+  update(dt, time) {
+    for (const [id, mesh] of this.trophies) {
+      mesh.scale.setScalar(Math.min(0.85, mesh.scale.x + dt * 1.6));
+      const slot = this.dishes.find((s) => s.secret.id === id);
+      if (slot) mesh.position.y = slot.position.y + Math.sin(time * 1.5 + slot.position.x) * 0.008;
     }
   }
 }

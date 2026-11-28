@@ -115,17 +115,30 @@ payoff: canopy tint, sixteen coloured glows, a warm crown star, a HUD badge, a
 Momo + Pip speech chain and a banner. `save.shards` / `save.placed` persist it.
 
 ### Hidden discoveries
-`src/game/secrets.js` (pure) + `src/world/discoveries.js` (geometry). Five authored hollows — three in
-the hub, two in Letterleaf Grove — reward wandering with no educational objective attached. There is
-no prompt, no marker and no input: walking within 2.1 m is the whole interaction, because a child who
-stops exploring can still stumble into one.
+`src/game/secrets.js` (pure) + `src/world/discoveries.js` (geometry). Thirteen authored hollows across
+all six islands reward wandering with no educational objective attached: three in the hub, two in each
+themed world. There is no prompt, no marker and no input — walking within 2.1 m is the whole
+interaction, because a child who stops exploring can still stumble into one. Placement is data
+(`at: { x, z }`, local to the island) and a test keeps every one at least 10 m from the landing path
+and 6 m from an island's centre, so nothing sits where a child is already walking.
 
-Each `SecretSpot` is a mossy stone ring with a gold cradle and one trophy inside (egg, lantern, chime,
-book, mushroom), lit by a glow that only brightens inside 12 m. Finding it pops the object up and
-away with two particle bursts, `audio.star()`, a banner, a Pip line, ten sparkles and a companion
-cheer. Every find is a permanent trophy on the **Discovery Shelf** — a mossy plinth with five dishes
-on the meadow path — so the hub visibly fills up, and the HUD chip `#chip-discoveries` reads `N/5`.
-`save.secrets` stores the ids and is sanitised to known secrets on load.
+Each `SecretSpot` is a mossy stone hollow with a gold cradle and one trophy inside (egg, lantern, chime,
+book, mushroom, pebble, jar, kite, chart, drum, feather, shell, spyglass), lit by a glow that only
+brightens inside 12 m. Finding it pops the object up and away with two particle bursts, `audio.star()`,
+a banner, a Pip line spoken aloud, ten sparkles and a companion cheer.
+
+**Where finds live.** Every find is permanent and visible in two places:
+
+- **At home:** the *Discovery Shelf* on the meadow path is a low stepped stone stand with one dish per
+  island — three in front, three behind — holding that island's first keepsake, with a row of gems per
+  island that light one by one. The HUD chip `#chip-discoveries` carries the total (`N/13`, gold when
+  every gem is lit). `progressByWorld()`, `worldTotals()` and `firstFoundInWorld()` in `secrets.js`
+  own the counting so no display recounts the list itself.
+- **Where you found it:** a `KeepsakeCairn` stands beside each themed island's return portal, with a
+  dish and a gem for each secret that island hides. Returning to a world shows what you did there.
+
+`save.secrets` stores found ids and is sanitised to known secrets on load; an older save with no
+`secrets` key opens at zero without losing anything else.
 
 ### Learning progress & adaptive difficulty
 `src/game/progress.js` (pure) + `src/ui/progressPanel.js` (pause screen). Five subjects —
