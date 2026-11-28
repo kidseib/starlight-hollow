@@ -4,6 +4,16 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 20 - Curious things that answer back
+
+- **Twelve reacting props, two per island:** leaf drifts, sun crystals and listening stones, placed from `curios` data in `src/content.js` and built by `CurioField` in `src/world/curios.js`.
+- **Leaf drift:** nine faceted leaf clumps, twenty-eight blades, curled rim leaves, a twig and a mushroom. A bolt scatters it (`audio.rustle()`, 3 sparkles the first time, toast and a Pip line) and it gathers itself back after 22 s; a second zap pays nothing.
+- **Sun crystal:** four faceted shards with gold flecks on a slate slab and moss cluster. A bolt rings it (`audio.crystal()`, 4 sparkles the first time) and it regrows after 18 s.
+- **Listening stone:** a leaning menhir with weathering, moss at the foot, a pebble ring and one carved gold rune. The existing scanning gaze (0.7 s within 4.6 m) lights the rune, plays `scan` + `chime(3)` and speaks a true one-line fact; the first listen pays 3 sparkles and repeats are free.
+- **No new controls:** aiming, bolts and the scan gaze are the existing systems, so keyboard, mouse, touch and gamepad all work unchanged; a curio is only picked when no sign, creature, hook or Momo is in front of it.
+- **Evidence:** leaf 20 → 23 sparkles with rustle/collect/toast/Pip; crystal 20 → 25 with the crystal chime; stone lit with scan/chime/fact and a free repeat; regrow verified by running the timer down; 13/13 still opens the grotto, 12/13 still keeps it shut, a pre-iteration save still boots at 15 sparkles and `0/13`; zero console or page errors; keyboard, mouse, emulated touch and injected gamepad all reached walk, look, zap, jump and pause. 66 tests pass; `npm run build` exit 0.
+- **Not verified:** Android/controller hardware, Windows build. GitHub push still blocked on a user credential.
+
 ## Iteration 19 - The meadow answers when it grows
 
 - **Data-driven announcement:** `growthChange(before, after)` in `hubBloom.js` diffs two `hubBloom()` results into `kinds`, added flags/blooms, `stageIndex`, `stageChanged` and a short line. The line names one or two things that actually grew and only adds "The far lanterns are still sleeping." when a new stage begins.

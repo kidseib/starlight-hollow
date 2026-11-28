@@ -30,6 +30,8 @@ import { discover, sanitizeSecrets, collectionStatus, secretsForZone } from './s
 import { SecretSpot, DiscoveryShelf, KeepsakeCairn } from '../world/discoveries.js';
 import { HubGrowth } from '../world/growth.js';
 import { grottoLoot, GROTTO, growthChange } from './hubBloom.js';
+import { CurioField } from '../world/curios.js';
+import { curioReward, curioScanReady, stoneFact, CURIO_LINES, CURIO_AGAIN, CURIO_SPARKLES } from './curios.js';
 import { reducedMotion } from '../engine/motion.js';
 import { clamp, damp, mulberry32 } from '../engine/utils.js';
 
@@ -72,6 +74,8 @@ export class Game {
     // shelf in the meadow where the trophies live.
     this.secrets = [];
     this.secretSpots = [];
+    this.curioFields = new Map();
+    this.stoneTimer = 0;
     this.discoveryShelf = null;
     this.cairns = new Map();
     this.hubGrowth = null;
@@ -160,6 +164,7 @@ export class Game {
       ];
       for (const p of zone.portals) blockers.push({ x: p.x, z: p.z, r: 5 });
       for (const s of zone.stations) blockers.push({ x: s.x, z: s.z, r: 6 });
+      for (const c of zone.curios ?? []) blockers.push({ x: c.x, z: c.z, r: 4.2 });
       if (zone.kind === 'hub') {
         blockers.push({ x: 0, z: 4, r: 8 });
         // Keep the walk-up path clear for the lantern row, and leave the grotto
@@ -223,6 +228,9 @@ export class Game {
         stations.push(station);
         this.stations.push(station);
       }
+
+      // Curious things: scenery that answers the blaster and the scanning gaze.
+      this.curioFields.set(zone.id, new CurioField({ island, zone, fx: this.fx }));
 
       // sparkles scattered around the island
       this.sparkles.spawnCluster(
@@ -968,7 +976,13 @@ export class Game {
     this.aimPad = bestPad;
     this.aimHook = bestPad ? null : hookTarget;
     this.aimCreature = bestPad || this.aimHook ? null : bestCreature;
-    this.hud.setCrosshairHot(!!(bestPad || this.aimCreature || this.aimShop || this.aimHook));
+    // Curious things are scenery: a sign, a creature, a hook or Momo wins first.
+    let curioTarget = null;
+    if (!bestPad && !this.aimHook && !this.aimCreature && !this.aimShop) {
+      curioTarget = this.curioFields.get(this.currentZoneId)?.pick(camPos, dir) ?? null;
+    }
+    this.aimCurio = curioTarget;
+    this.hud.setCrosshairHot(!!(bestPad || this.aimCreature || this.aimShop || this.aimHook || this.aimCurio));
   }
 
   _fire() {
@@ -986,6 +1000,10 @@ export class Game {
     } else if (this.aimCreature) {
       const target = this.aimCreature.group.position.clone().setY(this.aimCreature.group.position.y + 0.7);
       this.blaster.fire(target, this.aimCreature);
+    } else if (this.aimCurio) {
+      const field = this.curioFields.get(this.currentZoneId);
+      const point = field?.aimPoint(this.aimCurio, new THREE.Vector3());
+      this.blaster.fire(point ?? null, { type: 'curio', curio: this.aimCurio, field });
     } else {
       this.blaster.fire(null);
     }
@@ -1002,6 +1020,10 @@ export class Game {
       return;
     }
     if (!ref) return;
+    if (ref.type === 'curio') {
+      this._hitCurio(ref.field, ref.curio);
+      return;
+    }
     if (ref.station) {
       ref.station.onPadHit(ref);
       return;
@@ -1048,6 +1070,55 @@ export class Game {
     } else {
       this.scanTimer = 0;
     }
+
+    // A listening stone opens to the same patient gaze, if it is close enough.
+    const field = this.curioFields.get(this.currentZoneId);
+    const stone = this.aimCurio?.type === 'stone' ? this.aimCurio : null;
+    if (field && stone && !stone.lit) {
+      const point = field.aimPoint(stone, new THREE.Vector3());
+      const dist = this.camera.position.distanceTo(point);
+      if (curioScanReady('stone', dist, 0)) {
+        this.stoneTimer += dt;
+        if (this.stoneTimer > 0.7) {
+          this.stoneTimer = 0;
+          this._listenStone(field, stone);
+        }
+        return;
+      }
+    }
+    this.stoneTimer = 0;
+  }
+
+  /** A zap lands on curious scenery: scatter, ring, or nothing at all. */
+  _hitCurio(field, item) {
+    const result = field?.zap(item);
+    if (!result) return;
+    if (result.type === 'leaf') this.audio?.rustle();
+    else this.audio?.crystal();
+    const reward = curioReward(result.type, !result.first);
+    if (reward > 0) {
+      this.addSparkles(reward, true);
+      this.hud?.toast(result.type === 'leaf' ? 'Leaves everywhere!' : 'Crystal song!', result.type === 'leaf' ? '🍂' : '💎');
+      const line = CURIO_LINES[result.type];
+      if (line) {
+        this.hud?.showBubble(line, '🐣');
+        this.voice?.say(line);
+      }
+    } else {
+      this.hud?.toast(CURIO_AGAIN[result.type] ?? 'It hums softly.', '🍃');
+    }
+  }
+
+  /** A listening stone tells a true little fact, as often as a child asks. */
+  _listenStone(field, stone) {
+    const result = field?.scan(stone);
+    if (!result) return;
+    const fact = stoneFact(stone.id);
+    this.audio?.scan();
+    this.audio?.chime(3);
+    this.hud?.showBubble(fact, '🪨');
+    this.voice?.say(fact);
+    if (result.first) this.addSparkles(CURIO_SPARKLES.stone, true);
   }
 
   /** Walk near a hidden hollow and it is yours. No button, no question. */
@@ -1436,6 +1507,7 @@ export class Game {
       this._updateShards(dt, time);
       this._updateScan(dt);
       this._updateSecrets(dt, time);
+      this.curioFields.get(this.currentZoneId)?.update(dt, time);
       this._updateGrotto(dt, time);
 
       for (const [zoneId, berry] of Object.entries(this.starberries)) {

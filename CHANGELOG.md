@@ -5,6 +5,20 @@ Every public Windows beta, newest first. Player-facing changes only; the develop
 
 ## Unreleased — next beta
 
+**The hollow is full of curious things.** Every island now hides two bits of
+scenery that answer when you play with them. A **leaf drift** bursts into a
+swirl of leaves when you zap it (there are usually a few sparkles underneath),
+and gathers itself back a little later. A **sun crystal** rings like a tiny bell
+— three glassy notes — and grows back. A **listening stone** is quieter: stand
+close and look at it, and its carved rune lights up while it tells you a true
+little fact, like "A snail carries its little house on its back."
+
+- Sparkles are a small hello the first time you play with each one; nothing is
+  lost, nothing is timed, and the drift and crystal come back by themselves.
+- The listening stone will tell you its fact as often as you like.
+- Everything uses the zap and the looking you already do — no new buttons on any
+  device.
+
 **The meadow tells you when it grows.** Every time a keepsake brings a new
 lantern, flagstone, pennant, flag, planter bloom or moonwell stone, that thing
 answers on the spot: a soft glow and a little rising ribbon of light, its own

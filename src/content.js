@@ -11,6 +11,10 @@ export const ZONES = [
   // ---------------------------------------------------------------- HUB ----
   {
     id: 'meadow',
+    curios: [
+      { id: 'meadow-leaf', type: 'leaf', x: 10.8, z: 2.2 },
+      { id: 'meadow-stone', type: 'stone', x: -9.2, z: 6.1 },
+    ],
     name: 'Sunbeam Meadow',
     subtitle: 'Where every adventure begins',
     kind: 'hub',
@@ -88,6 +92,10 @@ export const ZONES = [
   // ------------------------------------------------------- LETTERS ZONE ----
   {
     id: 'grove',
+    curios: [
+      { id: 'grove-leaf', type: 'leaf', x: 7.6, z: 9.6 },
+      { id: 'grove-crystal', type: 'crystal', x: -4.5, z: 11.4 },
+    ],
     name: 'Letterleaf Grove',
     subtitle: 'Where letters grow on trees',
     kind: 'letters',
@@ -212,6 +220,10 @@ export const ZONES = [
   // ------------------------------------------------------- NUMBERS ZONE ----
   {
     id: 'falls',
+    curios: [
+      { id: 'falls-leaf', type: 'leaf', x: -0.4, z: 13.6 },
+      { id: 'falls-stone', type: 'stone', x: -12, z: 6.5 },
+    ],
     name: 'Tallybrook Falls',
     subtitle: 'Where numbers tumble and splash',
     kind: 'numbers',
@@ -336,6 +348,10 @@ export const ZONES = [
   // ------------------------------------------------------- PATTERN ZONE ----
   {
     id: 'peaks',
+    curios: [
+      { id: 'peaks-crystal', type: 'crystal', x: -9.9, z: 11.1 },
+      { id: 'peaks-stone', type: 'stone', x: -14.9, z: 0.8 },
+    ],
     name: 'Pattern Peaks',
     subtitle: 'Where the sky hums a repeating song',
     kind: 'patterns',
@@ -489,6 +505,10 @@ export const ZONES = [
   // ------------------------------------------------------- READING ZONE ----
   {
     id: 'words',
+    curios: [
+      { id: 'words-leaf', type: 'leaf', x: -16, z: 2.3 },
+      { id: 'words-crystal', type: 'crystal', x: -13, z: -9.7 },
+    ],
     name: 'Storysong Glade',
     subtitle: 'Where words sing and stories grow',
     kind: 'words',
@@ -631,6 +651,10 @@ export const ZONES = [
   // ---------------------------------------------------------- MATH ZONE ----
   {
     id: 'cove',
+    curios: [
+      { id: 'cove-crystal', type: 'crystal', x: -14.8, z: -9.3 },
+      { id: 'cove-stone', type: 'stone', x: -3.9, z: -17.1 },
+    ],
     name: 'Pebblecount Cove',
     subtitle: 'Where numbers stack up like pebbles',
     kind: 'math',

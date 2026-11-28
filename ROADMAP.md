@@ -5,10 +5,11 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
 
 ## Now (next two iterations)
 
-1. **Signs that use the gadgets** — a vacuum-able leaf pile, a blast-able crystal and a scanner-only
-   landmark would give the tools scenery to point at instead of only floating signs.
-2. **Secrets behind a small puzzle** — every find is still a walk-in; two could sit behind a
-   vacuum-able leaf pile or a blast-able crystal so exploration and gadgets meet.
+1. **Secrets behind a small puzzle** — every find is still a walk-in; two could sit behind a leaf
+   drift you scatter or a crystal you ring, so exploration and the reacting scenery meet.
+2. **A vacuum gadget of its own** — the hollow's verbs are a bolt and a patient gaze; a real vacuum
+   would need a tool switch on all four devices, a first-person model and its own legend, so it is a
+   whole iteration rather than a prop.
 3. **A grotto veil that reads as fabric** — it is a glow and a translucent sheet today; woven ribbons
    or drifting motes in the arch would sell "asleep" better.
 4. **A keepsake worth finding further out** — the meadow's three are close to the path; one grove or

@@ -82,6 +82,13 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
 - Reduced motion is `src/engine/motion.js`: `reducedMotion()` follows the OS setting until someone
   chooses in the pause screen's `Calm motion` button, and the choice lives in
   `starlight-hollow-calm-motion` (not in the save). Any new animation must soften or stop under it.
+- Curious things live in `src/world/curios.js` (art and play state) and `src/game/curios.js` (pure
+  rules, facts and lines); the placement is `curios` data in `src/content.js`, two per island, and each
+  one is added to the scatter blockers. They must stay optional scenery: no prompt, no marker, no
+  failure, nothing lost, and a first-play sparkle reward only once per session (`curioReward`). The
+  leaf drift and crystal gather themselves back; a listening stone repeats its fact for free. Keep them
+  on the existing verbs (a bolt and the scanning gaze) so all four devices keep working — the scanning
+  stone was proved with `curioScanReady` and needs 0.7 s within 4.6 m of the aim point.
 - The meadow shelf is one row of six keepsakes on a low bench with a gem per secret along the front;
   keep it readable from 3 m without walking around it, and keep the cove's nooks dressed by
   `buildCoveNook()` so its finds never sit on bare sand.

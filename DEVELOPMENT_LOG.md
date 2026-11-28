@@ -5,6 +5,79 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 20 — Curious things that answer back (2026-11-28)
+
+**Chosen because** the roadmap's top item was "signs that use the gadgets": every tool in the hollow
+pointed at a floating sign, and the worlds themselves never reacted. A child could walk past a whole
+island and nothing but sparkles noticed.
+
+**Changed**
+
+- `src/game/curios.js` (new, pure) — the rules and copy for twelve "curious things": `CURIO_TYPES`
+  (leaf, crystal, stone), `CURIO_SPARKLES`, `CURIO_LINES`/`CURIO_AGAIN`, four true `STONE_FACTS`,
+  `curioReward(type, seen)` (pays once, never twice) and `curioScanReady(type, distance, angle)`.
+- `src/world/curios.js` (new) — `CurioField` builds and animates the three kinds from content data:
+  a **leaf drift** (nine faceted clumps, twenty-eight blades, curled rim leaves, a twig and a shy
+  mushroom), a **sun crystal** (four faceted shards on a dodecahedron slate slab with slate chips, a
+  moss cluster and gold flecks) and a **listening stone** (a leaning six-sided menhir with a slanted
+  head, two weathering plates, a crack, moss at the foot, a pebble ring and a carved gold rune).
+  Zapping scatters a drift or rings a crystal (14-particle burst + 6 motes, no camera motion); both
+  gather themselves back (22 s / 18 s). A stone opens to the existing scanning gaze after 0.7 s within
+  4.6 m, lights its rune and stays lit for the session.
+- `src/content.js` — two curios per island (`curios` data): meadow leaf + stone, grove leaf + crystal,
+  falls leaf + stone, peaks crystal + stone, words leaf + crystal, cove crystal + stone. They are also
+  added to the scatter blockers so no tree grows through one.
+- `src/game/game.js` — aim picks a curio only when no sign, creature, hook or Momo is in front of it;
+  `_fire` sends a bolt at it and `onBoltHit` routes `type: 'curio'` to `_hitCurio`, which plays
+  `audio.rustle()`/`audio.crystal()`, pays the first-time sparkles and speaks Pip's line. `_updateScan`
+  now also charges a `stoneTimer` for a close listening stone and `_listenStone` speaks the fact, with
+  `audio.scan()` and `chime(3)`. Everything is a normal bolt and the normal gaze — no new buttons.
+- `src/engine/audio.js` — `rustle()` (two filtered noise layers plus a settling tone) and `crystal()`
+  (three glassy triangle strikes with echo and a shimmer).
+- `tests/curios.test.js` (new) — three cases: every island has at least two curios clear of signs,
+  arches, the landing spot and each other; ids are unique and every stone has a short statement (never
+  a question); rewards pay once and only a close, centred look opens a stone.
+
+**Verified** (1280×720 page in the same authenticated context; the preview panel is portrait)
+
+- Aim reports `meadow-leaf` when looked at; a bolt plays `rustle` → `collect` → toast "Leaves
+  everywhere!" → Pip's line and pays 3 sparkles (20 → 23). A second zap of the regrown drift pays 0.
+- Running the regrow timer down put the drift back (`ready: true`, scatter easing 1 → 0.85) with no
+  loss and no repeat reward.
+- Crystal: bolt plays `crystal` → `collect` → "Crystal song!" → Pip's line and pays its 4 first-time
+  sparkles; the cluster shrinks to a stub and its timer runs 18 s before it grows back.
+- Listening stone: the gaze lit the rune, played `scan` and `chime(3)` and spoke "A snail carries its
+  little house on its back."; the first listen paid 3 sparkles, a repeat paid 0 but still spoke.
+- Kept guarantees: a 13/13 save still opens the grotto (13 lanterns, `grottoOpen: true`), a 12/13 save
+  keeps it shut, and a pre-iteration save (`{zone, sparkles:15, stars, visited}`) boots at 15 sparkles,
+  `0/13`, with all six islands' curios built — and zero console or page errors on every load.
+- Inputs while a curio was in view: keyboard walk 0.39 m / jump 0.32 m / zap, mouse look −0.25 rad /
+  click zap, emulated touch stick walk 0.15 m / zap button, injected gamepad stick 0.09 m / X zap /
+  Start pause → resume. Nothing was blocked.
+- `node --test tests/*.test.js` → 66 pass; `npm run build` exit 0.
+
+**Fixed while inspecting** (each caught at gameplay size, not from code)
+
+- The first leaf drift read as a lumpy potato: rebuilt from nine faceted clumps with a fan of blade
+  leaves and curled rim leaves.
+- The crystal's moss was a flat green cookie and its plinth a smooth bun: now a faceted slate slab with
+  chips, a moss cluster and gold flecks; the white glow was cut from 1.35/0.2 to 0.9/0.12.
+- The stone was a smooth bollard with a moss lid and a dark hoop: now a leaning menhir with weathering,
+  moss at the foot, and a single carved face. The back rune was removed after the screenshot showed its
+  ring peeking around both sides as pale "wings".
+- Scatter bursts were blowing out to white: 20 × 0.4 → 14 × 0.24 with the amber/blue tints.
+
+**Open**
+
+- The roadmap's word was "vacuum-able" leaf pile. The hollow has two verbs (a bolt and a patient gaze),
+  so the drift answers the bolt instead; a real vacuum tool would need a tool switch on all four
+  devices and is recorded as its own roadmap item rather than half-built here.
+- Curios are session state only (no save key): they regrow in place and never gate anything.
+- Still unverified on an Android phone, a physical controller or a Windows build. GitHub push remains
+  blocked on a user credential.
+
+---
+
 ## Iteration 19 — The meadow answers when it grows (2026-11-28)
 
 **Chosen because** iteration 18 gave the hub thirteen staged details, but a child who found a keepsake

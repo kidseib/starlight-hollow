@@ -201,6 +201,22 @@ export class GameAudio {
     this.noise({ dur: 0.45, gain: 0.028, freq: 3200, q: 1 });
   }
 
+  /** A drift of leaves: a dry rustle that settles into a soft pat. */
+  rustle() {
+    this.noise({ dur: 0.42, gain: 0.11, freq: 2400, q: 0.7 });
+    this.noise({ dur: 0.3, gain: 0.07, freq: 5200, q: 1.2, at: 0.07 });
+    this.tone({ freq: 392, to: 262, type: 'sine', dur: 0.3, gain: 0.045, at: 0.05, echo: 0.18 });
+  }
+
+  /** Sun crystal: three glassy strikes that keep ringing. */
+  crystal() {
+    [1046.5, 1318.5, 1568].forEach((freq, i) => {
+      this.tone({ freq, type: 'triangle', dur: 0.55, gain: 0.07 - i * 0.008, at: i * 0.07, echo: 0.42 });
+    });
+    this.tone({ freq: 523.25, type: 'sine', dur: 0.7, gain: 0.05, at: 0.02, echo: 0.22 });
+    this.noise({ dur: 0.26, gain: 0.018, freq: 6200, q: 1.4 });
+  }
+
   portal() {
     this.tone({ freq: 180, to: 720, type: 'sine', dur: 0.5, gain: 0.12, echo: 0.3 });
     this.noise({ dur: 0.5, gain: 0.08, freq: 2000, q: 1.2 });

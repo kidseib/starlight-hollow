@@ -160,6 +160,13 @@ from the ordinary pickup; and Pip names what actually grew — one or two things
 Below thirteen a new stage adds "The far lanterns are still sleeping.", a pointer, not a countdown.
 Waking the grotto keeps its own announcement instead of a second one. Resumed saves, reloads and
 duplicates never re-announce: only a find that crosses a count celebrates.
+
+**Curious things.** Two per island, from `curios` data: a **leaf drift** that a bolt scatters (and that
+gathers itself back in 22 s), a **sun crystal** that rings to a bolt and regrows in 18 s, and a
+**listening stone** that opens to the existing patient gaze (0.7 s within 4.6 m) and speaks one true
+nature fact. Each pays a few sparkles the first time per session and nothing after, so nothing can be
+farmed. They are scenery first: no prompt, no marker, no failure state, and a curio is only chosen as a
+zap target when no sign, creature, hook or Momo stands in front of it.
  At 13/13 the veil parts, stepping stones appear, and the grotto holds a
 moonwell with rim stones and lily pads, two crystals, fireflies, ferns, mushrooms, a stone bench and a
 banded chest on a cut stone footing. Walking to the chest gives 30 sparkles, a banner, a burst and a
