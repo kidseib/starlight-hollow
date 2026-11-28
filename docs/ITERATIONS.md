@@ -4,6 +4,18 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 11 - The Star Tree Workshop
+
+- The Star Tree became a second progression system and a second sparkle sink. Five star shards hide on the five adventure islands (`SHARD_BEARING` in `shardSpot(zone)` keeps each in its own corner, clear of the arch, portals and signs); the sixth shape, a Sky Lantern, is Momo's 90-sparkle gift, so exploring and shopping feed the same goal.
+- Each shard is a beacon a pre-reader can find: crystal in a gold cradle on a stone plinth, ground ring, drifting motes and a column of light visible across the island, with a chime and a spoken hint at 16 m and pickup at 2.7 m. Pouch pictures appear under the sparkle counter.
+- The tree carries two gold garlands with six hooks, each showing a dashed outline of its shape. Zapping the matching outline hangs a 3D ornament with a pop, a line and a sparkle burst; a wrong outline costs nothing and names the shape and its island. `canPlace`/`place`/`isComplete` are pure and tested.
+- Completion changes the tree: mint-gold canopy wash, sixteen coloured glows, a warm crown star, a gold HUD badge, a Momo-then-Pip speech chain and a persistent "The Star Tree is decorated" goal. `save.shards` / `save.placed` persist; pre-iteration saves open with an empty pouch.
+- Art pass: `src/world/ornaments.js` paints every shape once and reuses it for pouch, market card, tree outline and 3D ornament; market cards for magnet/bell/rainbow are now drawn too, the stall counter widened for four jars and the panel grid became 2x2.
+- `tests/workshop.test.js` adds 9 cases (stock, purchase gating, single pickup, single placement, market ornament, completion, clear shard spots, save round trip). `node --test tests/*.test.js` -> 26 pass; `npm run build` -> exit 0.
+- Cloud browser evidence: five beacons collected, Sky Lantern bought (97 -> 7 sparkles), six ornaments hung by zapping outlines, decorated tree + badge + character reaction reached, and everything intact after a reload. Screenshots: `artifacts/r11-{beacon-final,shard-beacon,pouch,tree-hooks2,tree-four,market-lantern,tree-final}.png`.
+- Fixed during inspection: garlands clipping the octagonal trunk, ornaments floating and reading edge-on, undersized ornaments, an over-bright beacon, a patchwork decorated canopy, and a truncated pouch row. `blaster.js` now counts the frame's travel distance when testing arrival, which removes bolt tunnelling at low frame rates.
+- Not verified: real audio, a Windows run, pointer-lock clicking on real hardware, or a child playtest.
+
 ## Iteration 10 - Momo's Wisp Market
 
 - Sparkles were the one collectible with no use, so the hub gained a merchant: Momo, a lantern-snail with a striped stall at (11, 10) in Sunbeam Meadow. Zapping him opens a market that pauses the world; Esc or "All done" closes it.
@@ -11,14 +23,8 @@ A running record so future sessions do not repeat work. Newest first.
 - Cards are picture-first and stay clickable when unaffordable: the card shakes and Momo says how many more sparkles are needed. Owned gifts turn the card gold, add a badge under the sparkle counter, and swap the stall jar's icon for a star. `purchase()`/`shopStatus()` are pure and unit tested.
 - `save.upgrades` stores owned gift ids; older saves load with an empty list, so the v1 key is untouched. Art pass: new Momo (body, eyestalks, glowing spiral shell, scarf), the stall with awning, jars, lanterns, hand-drawn sign and jar icons, and the Star Tree altar rebuilt with moss, a gold band and five rune lights.
 - `tests/shop.test.js` adds 8 cases; `node --test tests/*.test.js` -> 17 pass. `npm run build` -> exit 0.
-- Cloud browser, real render loop: crosshair went hot at the stall, a queued zap opened the market (`state === 'shop'`, purse 9, three saving cards), an unaffordable click shook the card and charged nothing, then all three gifts were bought for 40 + 70 + 110. A sparkle parked 8.09 m away drifted to 4.27 m, the next zap changed colour, and after a reload `upgrades` still held all three with magnet range 9.5 and jars marked sold. Screenshots: `artifacts/r10-market-{approach,stall,panel,owned,after-reload,final}.png`, `artifacts/r10-altar.png`.
+- Cloud browser, real render loop: crosshair went hot at the stall, a queued zap opened the market (`state === 'shop'`, purse 9, three saving cards), an unaffordable click shook the card and charged nothing, then all three gifts were bought for 40 + 70 + 110. A sparkle parked 8.09 m away drifted to 4.27 m, the next zap changed colour, and after a reload `upgrades` still held all three with magnet range 9.5 and jars marked sold. Screenshots: `artifacts/r10-market-{approach,stall,panel,owned,after-reload}.png`, `artifacts/r10-altar.png`.
 - Not verified: audible narration, real pointer-lock clicking, both Windows executables, or a child playtest. Three gifts is the whole stock, so a child who buys them all has nothing left to save for.
-
-## Windows beta release — v0.1.3-beta.1
-
-- Dispatched `windows-beta.yml` on `main` with the single `tag` input `v0.1.3-beta.1` against commit `0ebf63c`; run #5 passed on `windows-latest` and attached the ZIP to the draft, which was published as a public prerelease at `https://github.com/kidseib/starlight-hollow/releases/tag/v0.1.3-beta.1`.
-- Verified signed-out: HTTP 200, 223,010,427 bytes, SHA-256 `96bb7bd52216604b60e37ea4d671a8861eb85a0704344e957b9f3a2e468258b4` (matches GitHub's asset digest), all three entries present, ZIP integrity clean, and the packaged `START-HERE.txt` reads `Starlight Hollow 0.1.3-beta.1` with the market playtest section, so the build carries this iteration.
-- The Windows EXEs, installer shortcut, offline narration, save/relaunch and uninstall still need a human Windows playtest; the build is unsigned.
 
 ## Windows beta release — v0.1.2-beta.1
 
@@ -119,7 +125,7 @@ screenshot fixed the harness (the game's look code was correct).
 **Verified**
 
 - Walked to both signs with W: plates at the standard 2.1 scale / 5.4 height, centred and readable,
-  prompts voiced, four pads spaced 21 %–79 % of the screen.
+  prompts voiced, four pads spaced 21 %–79% of the screen.
 - Solved sign 1 with real mouse presses: wrong pad → "Start again!", flashing pad, repeated prompt;
   ⭐→🌸→🌙 → "You did it!", solved plinth, "1 of 5 signs solved".
 - Reload restored the solved sign plus all five zones' stars, sockets, berries and friend.
