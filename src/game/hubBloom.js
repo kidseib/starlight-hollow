@@ -50,6 +50,24 @@ export const GROTTO = {
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
+const stageIndexOf = (count) => GROWTH_STEPS.filter((s) => s.at <= count).length - 1;
+
+/** Island names, used only for the spoken line that announces a change. */
+export const WORLD_NAMES = {
+  meadow: 'Sunbeam Meadow',
+  grove: 'Letterleaf Grove',
+  falls: 'Tallybrook Falls',
+  peaks: 'Pattern Peaks',
+  words: 'Storysong Glade',
+  cove: 'Pebblecount Cove',
+};
+
+/** Which named stage a keepsake count is in (0 = nothing found yet). */
+export function growthStageIndex(found) {
+  const count = sanitizeSecrets(found).length;
+  return GROWTH_STEPS.filter((s) => s.at <= count).length - 1;
+}
+
 /**
  * Everything the hub shows, derived only from the saved secrets list: lanterns
  * lit, island flags flying, beds filled and bloomed, the path laid, the bunting
@@ -83,6 +101,69 @@ export function hubBloom(found) {
     grottoOpen: count === SECRETS.length,
     missing: Math.max(0, SECRETS.length - count),
   };
+}
+
+/**
+ * What a finds a keepsake advances, in words and in world terms. Both arguments
+ * are `hubBloom` results, so the spoken line and the geometry are read from the
+ * same data and cannot disagree. Returns null when nothing grew.
+ */
+export function growthChange(before, after) {
+  if (!before || !after || after.count <= before.count) return null;
+  const kinds = [];
+  const note = (kind, amount = 1) => { if (amount > 0) kinds.push({ kind, amount }); };
+  if (after.grottoOpen && !before.grottoOpen) kinds.push({ kind: 'grotto', amount: 1 });
+  note('lantern', after.lanterns - before.lanterns);
+  note('pennant', after.pennants - before.pennants);
+  note('paver', after.pavers - before.pavers);
+  note('rim', after.rim - before.rim);
+  note('stone', after.stones - before.stones);
+  note('firefly', after.fireflies - before.fireflies);
+  const flags = after.flags.filter((z) => !before.flags.includes(z));
+  const blooms = after.blooms.filter((z) => !before.blooms.includes(z));
+  if (flags.length) kinds.push({ kind: 'flag', amount: flags.length });
+  if (blooms.length) kinds.push({ kind: 'bloom', amount: blooms.length });
+  if (!kinds.length) return null;
+  return {
+    kinds,
+    flags,
+    blooms,
+    stageIndex: GROWTH_STEPS.findIndex((s) => s === GROWTH_STEPS.filter((t) => t.at <= after.count).pop()),
+    stageName: after.step,
+    next: after,
+    stageChanged: stageIndexOf(before.count) !== stageIndexOf(after.count),
+    line: growthLine({
+      kinds, flags, blooms, after,
+      stageChanged: stageIndexOf(before.count) !== stageIndexOf(after.count),
+    }),
+  };
+}
+
+const KIND_LINE = {
+  grotto: 'The Moonwell Grotto is awake and the veil is parting!',
+  stone: 'A stepping stone rose out of the moss!',
+  rim: 'A moonwell stone woke up!',
+  firefly: 'Fireflies gathered at the sleeping grotto!',
+  paver: 'A new flagstone is laid on the path!',
+  pennant: 'A new pennant joined the bunting!',
+  lantern: 'Another lamp is lit!',
+};
+
+/** The spoken line for a change: what actually grew, said plainly and briefly. */
+function growthLine({ kinds, flags, blooms, after, stageChanged }) {
+  const order = ['grotto', 'bloom', 'flag', 'stone', 'rim', 'firefly', 'paver', 'pennant', 'lantern'];
+  const named = order.filter((kind) => kinds.some((k) => k.kind === kind)).slice(0, 2);
+  const phrase = (kind) => {
+    if (kind === 'bloom') return `The planter for ${WORLD_NAMES[blooms[0]] ?? 'this island'} is in full bloom!`;
+    if (kind === 'flag') return `The ${WORLD_NAMES[flags[0]] ?? 'island'} flag is flying!`;
+    return KIND_LINE[kind] ?? 'Something in the hollow grew!';
+  };
+  const parts = named.map(phrase);
+  // A stage crossing already carries a second sentence, so it names one thing.
+  let line = parts.slice(0, stageChanged ? 1 : 2).join(' ');
+  // A gentle pointer at what is still asleep, only when a new stage begins.
+  if (!after.complete && stageChanged) line += ' The far lanterns are still sleeping.';
+  return line;
 }
 
 /** Whether the grotto chest still holds its treasure. */

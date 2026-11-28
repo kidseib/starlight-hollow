@@ -5,6 +5,23 @@ Every public Windows beta, newest first. Player-facing changes only; the develop
 
 ## Unreleased — next beta
 
+**The meadow tells you when it grows.** Every time a keepsake brings a new
+lantern, flagstone, pennant, flag, planter bloom or moonwell stone, that thing
+answers on the spot: a soft glow and a little rising ribbon of light, its own
+warm four-note chime (quite different from the keepsake sparkle), and a line
+from Pip that names exactly what grew — "The planter for Tallybrook Falls is in
+full bloom!" While there are still keepsakes out there, the same line adds a
+gentle "The far lanterns are still sleeping."
+
+- The flourish only happens when something really grew. Coming back to a
+  meadow you already grew, or picking up ordinary sparkles, stays quiet — no
+  replay, no nagging.
+- The moonwell chest has its own version at the chest itself, and the grotto
+  waking still gets its own announcement.
+- A new **Calm motion** switch on the pause screen (next to Sound) turns the
+  flourish into a simple glow with no movement or sparkle burst. If your device
+  is already set to reduce motion, the game starts that way.
+
 **Hidden treasures, and a shelf that fills up.** Five small secrets are tucked
 away in the hollow: behind Momo's stall, around the back of the Star Tree, beside
 the far arch, and in two quiet corners of Letterleaf Grove. Nothing points at

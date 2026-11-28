@@ -29,7 +29,8 @@ import { renderProgressPanel } from '../ui/progressPanel.js';
 import { discover, sanitizeSecrets, collectionStatus, secretsForZone } from './secrets.js';
 import { SecretSpot, DiscoveryShelf, KeepsakeCairn } from '../world/discoveries.js';
 import { HubGrowth } from '../world/growth.js';
-import { grottoLoot, GROTTO } from './hubBloom.js';
+import { grottoLoot, GROTTO, growthChange } from './hubBloom.js';
+import { reducedMotion } from '../engine/motion.js';
 import { clamp, damp, mulberry32 } from '../engine/utils.js';
 
 // Momo's Wisp Market: one stall in the hub, on the path between the landing
@@ -1083,13 +1084,53 @@ export class Game {
     this.companion?.celebrate();
     this.discoveryShelf?.refresh(this.secrets);
     this.cairns.get(spot.zoneId)?.refresh(this.secrets);
+    const bloomBefore = this.hubGrowth?.bloom ?? null;
     this.hubGrowth?.refresh(this.secrets, this.grottoTaken);
+    this._celebrateGrowth(bloomBefore);
     this._save();
     if (status.complete) {
       this.hud?.showHint('Every keepsake is home! The grotto behind the Star Tree is awake.', 5200);
       this.schedule(6, () => this.hud?.showBubble('The grotto behind my tree is glowing! Follow the lanterns.', '🌙'));
     }
     return true;
+  }
+
+  /**
+   * The hub grew because of this find: a soft flourish at the new thing, a chime
+   * of its own, and Pip naming what changed. Read from the same `hubBloom` data
+   * the world renders from, so words and geometry cannot disagree. Returns the
+   * change, or null when the find did not grow anything.
+   */
+  _celebrateGrowth(before) {
+    const growth = this.hubGrowth;
+    if (!growth || !before || !growth.bloom) return null;
+    const change = growthChange(before, growth.bloom);
+    if (!change) return null;
+    const reduced = reducedMotion();
+    growth.flourish(change, {
+      reduced,
+      burst: (point, colour) => this.fx?.burst(point, {
+        color: colour,
+        count: reduced ? 6 : 20,
+        speed: reduced ? 0.9 : 1.5,
+        life: 1.25,
+        size: 0.34,
+        gravity: 0.55,
+      }),
+    });
+    this.audio?.grow(change.stageIndex);
+    // Waking the grotto has its own announcement; do not say it twice.
+    if (change.kinds[0]?.kind === 'grotto') {
+      this._lastGrowth = change;
+      return change;
+    }
+    // The keepsake has its own spoken line first; the hub answers just after.
+    this.schedule(1.9, () => {
+      this.hud?.showBubble(change.line, '🌱');
+      this.voice?.say(change.line);
+    });
+    this._lastGrowth = change;
+    return change;
   }
 
   /** The hub's grotto: whisper while it sleeps, treasure once it is awake. */
@@ -1124,6 +1165,13 @@ export class Game {
     this.fx?.burst(this.hubGrowth.chestWorld, { color: 0xffc0d8, count: 14, speed: 1.8, life: 1.5, size: 0.7, gravity: 0.3 });
     this.audio?.star();
     this.hud?.showBanner('Moonwell Treasure', `${loot.sparkles} sparkles!`, 4000);
+    this.hubGrowth?.flourishAt(this.hubGrowth.chestWorld, {
+      reduced: reducedMotion(),
+      colour: 0xfff2b0,
+      object: this.hubGrowth.chest,
+      burst: (point, colour) => this.fx?.burst(point, { color: colour, count: 14, speed: 2.2, life: 1.1, size: 0.55, gravity: -0.9 }),
+    });
+    this.audio?.grow(5);
     this.hud?.showBubble(loot.line, '🌙');
     this.voice?.say(loot.line);
     this.companion?.celebrate();

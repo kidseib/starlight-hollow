@@ -134,3 +134,38 @@ test('a hostile save cannot over-grow the staged hub', () => {
     assert.equal(safe.grottoOpen, false);
   }
 });
+
+test('a keepsake announces exactly what grew, and nothing when nothing did', async () => {
+  const { growthChange } = await import('../src/game/hubBloom.js');
+  const at = (n) => hubBloom(all.slice(0, n));
+  const first = growthChange(at(0), at(1));
+  assert.ok(first.kinds.some((k) => k.kind === 'lantern'));
+  assert.ok(first.kinds.some((k) => k.kind === 'pennant'));
+  assert.match(first.line, /lamp|flagstone|flag/i);
+  // The same count twice is not a change, and neither is going backwards.
+  assert.equal(growthChange(at(4), at(4)), null);
+  assert.equal(growthChange(at(4), at(3)), null);
+  assert.equal(growthChange(null, at(2)), null);
+  // Each step past a keepsake names the stage that actually appeared.
+  const seven = growthChange(at(6), at(7));
+  assert.match(seven.line, /planter|bloom|Tallybrook/i);
+  assert.equal(seven.stageIndex, 3);
+  const nine = growthChange(at(8), at(9));
+  assert.ok(nine.kinds.some((k) => k.kind === 'stone'));
+  const last = growthChange(at(12), at(13));
+  assert.ok(last.kinds[0].kind === 'grotto');
+  assert.equal(last.next.grottoOpen, true);
+  assert.doesNotMatch(last.line, /still sleeping/);
+  // Below thirteen the line points at what is still asleep, never a threat.
+  assert.match(first.line, /still sleeping/);
+});
+
+test('announced changes come from the sanitised set, so junk cannot announce', async () => {
+  const { growthChange } = await import('../src/game/hubBloom.js');
+  const clean = all.slice(0, 4);
+  const dirty = [...clean, 'not-real', null, 3, { id: 'x' }, ...clean];
+  const before = hubBloom(clean);
+  const after = hubBloom(dirty);
+  assert.equal(growthChange(before, after), null);
+  assert.equal(after.count, before.count);
+});

@@ -4,6 +4,17 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 19 - The meadow answers when it grows
+
+- **Data-driven announcement:** `growthChange(before, after)` in `hubBloom.js` diffs two `hubBloom()` results into `kinds`, added flags/blooms, `stageIndex`, `stageChanged` and a short line. The line names one or two things that actually grew and only adds "The far lanterns are still sleeping." when a new stage begins.
+- **Flourish:** `HubGrowth.flourish(change)` puts a warm mote on each new detail plus one gentle scale swell (per-kind amounts, motes lifted onto the art); `flourishAt(point)` does the same for the chest. No camera or input changes.
+- **A chime of its own:** `audio.grow(stage)` is a four-note rise in the stage's key with a low pad and shimmer, distinct from `collect()` and `star()`.
+- **Wired on every route:** keepsakes celebrate immediately (chime + flourish) with Pip's line 1.9 s later so it does not cut off the keepsake line; the chest celebrates at the chest; resumed saves and reloads stay silent; at 13/13 the grotto's own line is used instead of a second one.
+- **Calm motion:** `src/engine/motion.js` follows the OS setting and remembers an explicit choice; a pause-screen button toggles it. Calm turns the flourish into a light mote only.
+- **Evidence:** 3→4 lantern+pennant+flag with `grow(2)`; 6→7 adds paver and rim with `grow(3)`; 9→10 adds stone and firefly with `grow(4)`; 12→13 opens the grotto with `grow(5)` and the veil gone. A resumed 7/13 save, a reload, a duplicate keepsake and an ordinary sparkle pickup each produced no flourish. Reduced motion: 0 pulses, 6-particle burst. Keyboard, mouse, emulated touch and injected gamepad all reached walk, look, zap, jump and pause during a flourish. A pre-iteration save booted at 15 sparkles, `0/13`, no errors.
+- **Tests:** 63 pass (two new hubBloom cases); `npm run build` exit 0.
+- **Not verified:** Android/controller hardware, Windows build. GitHub push still blocked on a user credential.
+
 ## Iteration 18 - The hub grows all the way
 
 - **Staged growth data:** `hubBloom()` now returns `pavers` (7, two keepsakes at a time), `pennants` (one per keepsake), per-island `fills` (planter fill 0–1), `stones` (5, one per keepsake past eight), `rim` (9, waking from the fifth), `fireflies` (4) and `veil` (0–1) plus a named `step`. Lanterns, flags, blooms and the grotto rule are unchanged, and everything still comes from `sanitizeSecrets`.

@@ -5,6 +5,78 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 19 — The meadow answers when it grows (2026-11-28)
+
+**Chosen because** iteration 18 gave the hub thirteen staged details, but a child who found a keepsake
+heard the same star chime as any pickup and read a keepsake-flavoured line. Nothing told them the
+*place* had changed, and the change itself could be on another island.
+
+**Changed**
+
+- `src/game/hubBloom.js` — new pure `growthChange(before, after)` compares two `hubBloom()` results and
+  returns the named change: `kinds` (grotto, lantern, pennant, paver, rim, stone, firefly, flag, bloom
+  with amounts), `flags`/`blooms` added, `stageIndex`, `stageChanged`, and a spoken `line`. Because both
+  sides are the same data the world renders from, the words cannot disagree with the geometry. Also
+  added `growthStageIndex(found)` and `WORLD_NAMES`.
+- The line names one or two things that actually grew ("The planter for Tallybrook Falls is in full
+  bloom! A moonwell stone woke up!"), stays to two sentences, and only when a *new stage* begins adds
+  the gentle pointer "The far lanterns are still sleeping." — never a countdown, never a threat.
+- `src/world/growth.js` — `HubGrowth.bloom` is now kept on the instance, and `flourish(change)` places
+  a warm mote of light on each new thing plus one soft scale swell (`SWELL` 0.03–0.35 per kind, with
+  `LIFT` so the mote sits on the art, not its origin), returning the world targets. `flourishAt(point)`
+  does the same for the chest. Neither touches the camera or input.
+- `src/engine/audio.js` — `grow(stage)` is its own motif: a four-note rise in the key of the stage with
+  a low triangle pad and a soft shimmer. Deliberately unlike `collect()` (two blips) and `star()` (the
+  five-note keepsake sparkle), so a child can hear "the meadow changed" as a different event.
+- `src/game/game.js` — `_findSecret` snapshots `hubGrowth.bloom` before refreshing and calls
+  `_celebrateGrowth(before)`: flourish + `audio.grow(stageIndex)` immediately, then (1.9 s later, so it
+  does not cut off the keepsake's own line) Pip's hub line in the bubble and voice. `_collectGrotto`
+  adds the same flourish and chime at the chest. At 13/13 the grotto has its own announcement, so the
+  hub line is suppressed there instead of speaking twice. Resumed saves never call the celebrate path,
+  so a load or reload is silent.
+- `src/engine/motion.js` (new) — `reducedMotion()` follows the OS `prefers-reduced-motion` setting by
+  default and remembers an explicit choice in `starlight-hollow-calm-motion`; `setReducedMotion()`.
+  The pause screen gained a `Calm motion: on/off` button beside Sound. When it is on, the flourish is a
+  pure light mote — no scale swell, no burst, no shake.
+- `index.html`, `src/main.js` — the pause-screen toggle and its label.
+- `tests/hubBloom.test.js` — two new cases: the announcement names real growth (and returns null for the
+  same count, a lower count or a missing before), each threshold names the stage that appeared, the
+  pre-thirteen line points at what is asleep while 13/13 does not, and a hostile save cannot announce
+  anything.
+
+**Verified** (1280×720 page in the same authenticated context; the preview panel is portrait)
+
+- Threshold 3→4: `growthChange` = lantern+pennant+flag, `audio.grow(2)` fired once (330/415/494/659 Hz
+  + 165 Hz pad + shimmer) after the ordinary `star()` sparkle, three glows and three swells on the new
+  lamp, pennant and flag; Pip said "The Sunbeam Meadow flag is flying! The far lanterns are still
+  sleeping." Screenshot `artifacts/iter19-flourish-low.png`.
+- Threshold 6→7: lantern+pennant+paver+rim+flag, `grow(3)` (349/440/523/698 Hz + 175 Hz), the Pip line
+  arrived 1.9 s later as designed. Screenshot `artifacts/iter19-flourish-mid.png`.
+- Threshold 9→10: lantern+pennant+rim+stone+firefly+flag, `grow(4)`, new flagstone row and motes at the
+  grotto approach. Screenshot `artifacts/iter19-flourish-high.png`.
+- 12→13: `kinds` starts with `grotto`, `grow(5)`, veil 1 → 0, `grottoOpen: true`, and the grotto's own
+  line spoken once. Screenshot `artifacts/iter19-flourish-13.png`.
+- No spurious flourish: a resumed 7/13 save produced zero `grow` calls, zero pulses and zero glows on
+  load and again after a reload (7 lanterns already standing); a duplicate `_findSecret` on a found spot
+  returned false with no flourish; an ordinary sparkle pickup (20 → 21) produced no flourish.
+- Reduced motion on: pulses 0, glow mote present, burst count 6 — nothing swells or shakes.
+- Inputs while a flourish was on screen: keyboard walk 0.16 m + jump 0.32 m + zap; mouse look −0.336 rad
+  + click zap; emulated touch stick `y −1` walk 0.16 m + jump + zap; injected gamepad stick `x 1` walk
+  0.39 m + jump + zap + Start pause → resume. Nothing was blocked.
+- The grotto chest: `grow(5)`, one glow and one swell at the chest, banner "Moonwell Treasure", 30
+  sparkles (30 → 60), lid open.
+- Legacy save (`{zone, sparkles:15, stars, visited}`): boots at 15 sparkles, `0/13`, no growth, no
+  console or page errors.
+- `node --test tests/*.test.js` → 63 pass; `npm run build` exit 0.
+
+**Open**
+
+- The chime is synthesised, not recorded; whether it carries on a phone speaker is untested.
+- The flourish was proved with emulated touch and an injected pad — no Android phone, controller or
+  Windows build was run. GitHub push remains blocked on a user credential.
+
+---
+
 ## Iteration 18 — The hub grows all the way, not just at the end (2026-11-28)
 
 **Chosen because** iteration 17 made the grotto beautiful, but the meadow went from "nothing" to

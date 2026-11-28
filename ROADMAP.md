@@ -9,10 +9,10 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
    landmark would give the tools scenery to point at instead of only floating signs.
 2. **Secrets behind a small puzzle** — every find is still a walk-in; two could sit behind a
    vacuum-able leaf pile or a blast-able crystal so exploration and gadgets meet.
-3. **Hear the growth** — a short musical flourish and a Pip line when the hub reaches a new stage, so
-   progress is heard as well as seen (the stage names already exist in `GROWTH_STEPS`).
-4. **A grotto veil that reads as fabric** — it is a glow and a translucent sheet today; woven ribbons
+3. **A grotto veil that reads as fabric** — it is a glow and a translucent sheet today; woven ribbons
    or drifting motes in the arch would sell "asleep" better.
+4. **A keepsake worth finding further out** — the meadow's three are close to the path; one grove or
+   peaks find could need a jump or a gadget so the last keepsake feels like a journey.
 5. **A real-device pass** — touch and gamepad were proved with emulated pointer events and an injected
    pad; nothing has run on an Android phone or a physical controller, and no Windows build was made.
 6. **A real Windows playtest of the current beta** — both editions, narration with the network off,
@@ -31,7 +31,7 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
 
 9. Local split-screen co-op.
 10. Parent profile settings and difficulty overrides.
-11. Accessibility pass: caption size, colour-blind-safe pad palettes, reduced motion.
+11. Accessibility pass: caption size, colour-blind-safe pad palettes (reduced motion now exists).
 
 ## Known issues
 

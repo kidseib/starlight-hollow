@@ -6,6 +6,7 @@ import { Voice } from './engine/voice.js';
 import { HUD } from './ui/hud.js';
 import { TouchControls } from './ui/touch.js';
 import { Game } from './game/game.js';
+import { reducedMotion, setReducedMotion } from './engine/motion.js';
 
 const canvas = document.getElementById('game');
 
@@ -87,6 +88,17 @@ function setMuted(next) {
 muteBtn?.addEventListener('click', () => {
   audio.ui();
   setMuted(!muted);
+});
+
+const motionBtn = document.getElementById('motion-btn');
+function paintMotion() {
+  if (motionBtn) motionBtn.textContent = `Calm motion: ${reducedMotion() ? 'on' : 'off'}`;
+}
+paintMotion();
+motionBtn?.addEventListener('click', () => {
+  audio.ui();
+  setReducedMotion(!reducedMotion());
+  paintMotion();
 });
 
 const repeatInstruction = () => game.repeatInstruction();

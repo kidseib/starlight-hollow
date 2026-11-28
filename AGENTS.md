@@ -72,6 +72,16 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   (plinth, bands, capital, keystone, wall lanterns) with a boulder outcrop behind it and a dressed
   clearing: never leave it as bare cylinders in an empty lawn, and keep the scatter blocker at 10 m
   so no tree grows through it. Judge hub art at 1280×720, not in the portrait preview.
+- A hub change announces itself from the same data: `growthChange(before, after)` in `hubBloom.js`
+  diffs two `hubBloom()` results into the kinds that grew and the spoken line, and only ever returns a
+  change when the sanitised count actually rose. Never write announcement copy in the world or game
+  code — add it to `KIND_LINE`/the line builder so words and geometry cannot drift. `HubGrowth.flourish`
+  and `flourishAt` only add light, a swell and a burst; they must never move the camera or take input,
+  and `audio.grow(stage)` must stay distinct from `collect()` and `star()`. Resumed saves, reloads and
+  duplicate finds must stay silent: celebrate only from the find that crossed the count.
+- Reduced motion is `src/engine/motion.js`: `reducedMotion()` follows the OS setting until someone
+  chooses in the pause screen's `Calm motion` button, and the choice lives in
+  `starlight-hollow-calm-motion` (not in the save). Any new animation must soften or stop under it.
 - The meadow shelf is one row of six keepsakes on a low bench with a gem per secret along the front;
   keep it readable from 3 m without walking around it, and keep the cove's nooks dressed by
   `buildCoveNook()` so its finds never sit on bare sand.

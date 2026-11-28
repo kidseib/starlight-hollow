@@ -185,6 +185,22 @@ export class GameAudio {
     this.tone({ freq: 261.63, type: 'sine', dur: 1.4, gain: 0.1, at: 0.1, echo: 0.2 });
   }
 
+  /**
+   * The hub grew: a warm four-note rise in the key of the stage, with a low
+   * pad under it. Deliberately unlike `collect()` (a bright blip) and `star()`
+   * (a five-note sparkle), so a child can hear the meadow change.
+   */
+  grow(stage = 0) {
+    const roots = [261.63, 293.66, 329.63, 349.23, 392, 440];
+    const root = roots[Math.max(0, Math.min(roots.length - 1, stage))];
+    [0, 4, 7, 12].forEach((semi, i) => {
+      const freq = root * 2 ** (semi / 12);
+      this.tone({ freq, type: 'sine', dur: 0.6, gain: 0.1 - i * 0.012, at: i * 0.1, echo: 0.3 });
+    });
+    this.tone({ freq: root / 2, type: 'triangle', dur: 1.0, gain: 0.07, at: 0.02, echo: 0.2 });
+    this.noise({ dur: 0.45, gain: 0.028, freq: 3200, q: 1 });
+  }
+
   portal() {
     this.tone({ freq: 180, to: 720, type: 'sine', dur: 0.5, gain: 0.12, echo: 0.3 });
     this.noise({ dur: 0.5, gain: 0.08, freq: 2000, q: 1.2 });

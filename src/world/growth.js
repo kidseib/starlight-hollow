@@ -28,6 +28,16 @@ const WORLD_COLORS = {
   cove: 0x5fe0c0,
 };
 
+// How much each new thing swells, and how high its mote of light sits.
+const SWELL = {
+  lantern: 0.14, pennant: 0.16, paver: 0.05, flag: 0.06, bloom: 0.12,
+  rim: 0.1, stone: 0.1, firefly: 0.35, grotto: 0.03,
+};
+const LIFT = {
+  lantern: 0.1, pennant: 0.4, paver: 0.25, flag: 1.25, bloom: 0.55,
+  rim: 0.45, stone: 0.4, firefly: 0, grotto: 1.0,
+};
+
 export class HubGrowth {
   constructor({ island, found = [], taken = false }) {
     this.island = island;
@@ -41,6 +51,9 @@ export class HubGrowth {
     this.rimStones = [];
     this.archFlies = [];
     this.stones = null;
+    this.bloom = null;
+    this.pulses = [];
+    this.glows = [];
     this.veilLevel = 0;
     this.open = false;
     this.taken = false;
@@ -598,6 +611,7 @@ export class HubGrowth {
   /** Apply a found list (already sanitised by the caller) and the chest flag. */
   refresh(found = [], taken = false) {
     const bloom = hubBloom(found);
+    this.bloom = bloom;
     this.found = found;
     this.open = bloom.grottoOpen;
     this.taken = !!taken;
@@ -640,6 +654,64 @@ export class HubGrowth {
     this.lid.rotation.x = this.taken ? -1.9 : 0;
   }
 
+  /**
+   * Announce what a keepsake grew: a soft mote of light at the new thing and, if
+   * motion is welcome, one gentle swell of its scale. Never touches the player,
+   * the camera or input, and takes no input away.
+   */
+  flourish(change, { reduced = false, burst = null } = {}) {
+    if (!change) return [];
+    const targets = this._targetsFor(change);
+    this.island.group.updateMatrixWorld(true);
+    for (const target of targets) {
+      const colour = target.kind === 'grotto' ? 0xbfe6ff : 0xffcf7a;
+      const glow = makeSprite(colour, reduced ? 0.75 : 0.95, 0.0);
+      glow.position.copy(this.island.group.worldToLocal(target.point.clone()));
+      this.group.add(glow);
+      this.glows.push({ sprite: glow, t: 0 });
+      if (!reduced) this.pulses.push({ ...target, t: 0, amount: SWELL[target.kind] ?? 0.12 });
+      burst?.(target.point.clone(), colour, !!reduced);
+    }
+    return targets;
+  }
+
+  /** The same flourish, for a single point in the world (the chest, say). */
+  flourishAt(point, { reduced = false, burst = null, colour = 0xfff2b0, object = null, amount = 0.16 } = {}) {
+    if (!point) return null;
+    this.island.group.updateMatrixWorld(true);
+    const glow = makeSprite(colour, reduced ? 0.8 : 1.05, 0.0);
+    glow.position.copy(this.island.group.worldToLocal(point.clone()));
+    this.group.add(glow);
+    this.glows.push({ sprite: glow, t: 0 });
+    if (object && !reduced) this.pulses.push({ object, kind: 'point', point, scale: object.scale.clone(), t: 0, amount });
+    burst?.(point.clone(), colour, !!reduced);
+    return point;
+  }
+
+  /** The world objects a change actually grew, newest of each kind. */
+  _targetsFor(change) {
+    const next = change.next;
+    const out = [];
+    const push = (object, kind) => {
+      if (!object) return;
+      const point = object.getWorldPosition(new THREE.Vector3());
+      point.y += LIFT[kind] ?? 0.3;
+      out.push({ object, kind, point, scale: object.scale.clone() });
+    };
+    for (const { kind } of change.kinds) {
+      if (kind === 'lantern') push(this.lanterns[next.lanterns - 1]?.cage, kind);
+      else if (kind === 'pennant') push(this.pennants[next.pennants - 1], kind);
+      else if (kind === 'paver') push(this.pavers[next.pavers - 1]?.holder, kind);
+      else if (kind === 'rim') push(this.rimStones[next.rim - 1], kind);
+      else if (kind === 'stone') push(this.stones.children[next.stones - 1], kind);
+      else if (kind === 'firefly') push(this.archFlies[next.fireflies - 1], kind);
+      else if (kind === 'flag') push(this.flags.find((f) => f.zone === change.flags[0])?.holder, kind);
+      else if (kind === 'bloom') push(this.beds.find((b) => b.zone === change.blooms[0])?.plant, kind);
+      else if (kind === 'grotto') push(this.grotto, kind);
+    }
+    return out;
+  }
+
   /** The veil nudges a child back until the grotto wakes; it never traps them. */
   constrain(position, onWhisper = null, time = 0) {
     if (this.open) return false;
@@ -672,6 +744,27 @@ export class HubGrowth {
   }
 
   update(dt, time) {
+    // The flourish: a mote fading out, and (unless motion is calmed) one swell.
+    for (let i = this.glows.length - 1; i >= 0; i--) {
+      const glow = this.glows[i];
+      glow.t += dt;
+      const k = Math.min(1, glow.t / 1.0);
+      glow.sprite.material.opacity = Math.sin(Math.PI * k) * 0.32;
+      if (k >= 1) {
+        this.group.remove(glow.sprite);
+        this.glows.splice(i, 1);
+      }
+    }
+    for (let i = this.pulses.length - 1; i >= 0; i--) {
+      const pulse = this.pulses[i];
+      pulse.t += dt;
+      const k = Math.min(1, pulse.t / 0.85);
+      pulse.object.scale.copy(pulse.scale).multiplyScalar(1 + Math.sin(Math.PI * k) * pulse.amount);
+      if (k >= 1) {
+        pulse.object.scale.copy(pulse.scale);
+        this.pulses.splice(i, 1);
+      }
+    }
     for (let i = 0; i < this.lanterns.length; i++) {
       const lantern = this.lanterns[i];
       if (!lantern.glow.visible) continue;

@@ -151,7 +151,16 @@ The arch is carved stone — plinth, banded shaft, capital, keystone with a star
 on each column, ivy and a seamed threshold — and a boulder outcrop closes its back, so it reads as a
 place from the walk-up path rather than a gate in a lawn. The grotto is shut until all thirteen are
 home: a shimmering veil covers its arch and walking at it stops the child 5.2 m out while Pip says how
-many keepsakes would wake it. At 13/13 the veil parts, stepping stones appear, and the grotto holds a
+many keepsakes would wake it.
+**The growth announces itself.** `growthChange(before, after)` in `hubBloom.js` diffs two `hubBloom()`
+results, so the words come from the same data as the geometry. When a find grows something, the new
+detail gets a warm mote of light, one soft swell of its scale (unless calm motion is on) and a small
+rising ribbon of sparkles; `audio.grow(stageIndex)` plays a four-note rise in that stage's key, distinct
+from the ordinary pickup; and Pip names what actually grew — one or two things, never a vague "it grew!"
+Below thirteen a new stage adds "The far lanterns are still sleeping.", a pointer, not a countdown.
+Waking the grotto keeps its own announcement instead of a second one. Resumed saves, reloads and
+duplicates never re-announce: only a find that crosses a count celebrates.
+ At 13/13 the veil parts, stepping stones appear, and the grotto holds a
 moonwell with rim stones and lily pads, two crystals, fireflies, ferns, mushrooms, a stone bench and a
 banded chest on a cut stone footing. Walking to the chest gives 30 sparkles, a banner, a burst and a
 Pip line, stored as `save.grotto` (only a literal `true` reopens it after a reload).
@@ -241,7 +250,10 @@ instead of falling off, and aim assist that snaps to the pad nearest the reticle
 
 Accessibility in place: all instructions voiced and repeatable, picture-first pads, forgiving
 interaction ranges, colour-independent pad states (ring shape/scale + flash), reduced camera motion
-(subtle bob), pause on blur.
+(subtle bob), pause on blur, and a **Calm motion** switch on the pause screen beside Sound. Calm motion
+follows the device's `prefers-reduced-motion` setting until a grown-up chooses otherwise; it removes the
+hub flourish's scale swell and sparkle burst (leaving a light mote) and is remembered across sessions
+(`starlight-hollow-calm-motion`).
 
 ## 7. Technology
 
