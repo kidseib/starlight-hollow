@@ -43,6 +43,8 @@ export const WORLD_PUZZLES = [
       { id: 'mud', glyph: { kind: 'word', text: 'mud', marker: '🟤' }, at: { x: 37.4, z: 11.4 } },
     ],
     answer: 'moss',
+    // The gate hides a real dell: a hedge ring with the arch as its only way in.
+    pocket: { x: 42.4, z: 18.8, r: 7 },
   },
 
   // ------------------------------------------------------- Tallybrook Falls --
@@ -93,11 +95,94 @@ export const WORLD_PUZZLES = [
     ],
     answer: 'frog',
   },
+
+  // --------------------------------------------------------- Pattern Peaks --
+  {
+    id: 'peaks-lift',
+    zone: 'peaks',
+    kind: 'pattern',
+    subject: 'patterns',
+    title: 'The Humming Lift',
+    at: { x: 34, z: 24 },
+    faceTo: { x: 0, z: 0 },
+    icon: '🎶',
+    instruction:
+      'Look at the shapes on the arch: moon, star, moon, star, moon. Which three shapes come next? Zap them in order, and the Humming Lift will carry you up.',
+    hint: 'The row goes moon, star, moon, star, moon. So next comes star, then moon, then star. Zap star, then moon, then star!',
+    success: 'Star, moon, star! The lift hums a happy note. Step on and ride up to the sky shelf!',
+    wrong: 'That shape is not next in the row. Look at the pattern again, then try.',
+    pattern: [
+      { kind: 'icon', text: '🌙' },
+      { kind: 'icon', text: '⭐' },
+      { kind: 'icon', text: '🌙' },
+      { kind: 'icon', text: '⭐' },
+      { kind: 'icon', text: '🌙' },
+    ],
+    sequence: ['star', 'moon', 'star'],
+    choices: [
+      { id: 'star', glyph: { kind: 'icon', text: '⭐' }, at: { x: 33.3, z: 18.0 } },
+      { id: 'moon', glyph: { kind: 'icon', text: '🌙' }, at: { x: 31.6, z: 20.5 } },
+      { id: 'sun', glyph: { kind: 'icon', text: '☀️' }, at: { x: 29.8, z: 22.9 } },
+      { id: 'leaf', glyph: { kind: 'icon', text: '🍃' }, at: { x: 28.1, z: 25.4 } },
+    ],
+    answer: 'star',
+    shelf: { x: 40.7, z: 28.7, r: 6 },
+  },
+
+  // -------------------------------------------------------- Pebblecount Cove --
+  {
+    id: 'cove-pebbles',
+    zone: 'cove',
+    kind: 'add',
+    subject: 'numbers',
+    title: 'The Great Shell',
+    at: { x: 32, z: 6 },
+    faceTo: { x: 0, z: 0 },
+    icon: '🐚',
+    instruction:
+      'Three pebbles sit on the round rock, and two more on the flat rock. How many pebbles altogether? Zap the stone with your answer.',
+    hint: 'Count every pebble: one, two, three, four, five. Five pebbles! Zap the stone with five.',
+    success: 'Five pebbles! The great shell heard you and creaked open. A little tidepool is waiting inside.',
+    wrong: 'Not that one yet. Count every pebble, on both rocks, then try again.',
+    pebbles: [3, 2],
+    choices: [
+      { id: '4', glyph: { kind: 'number', text: '4' }, at: { x: 30.0, z: 12.3 } },
+      { id: '5', glyph: { kind: 'number', text: '5' }, at: { x: 28.9, z: 13.9 } },
+      { id: '6', glyph: { kind: 'number', text: '6' }, at: { x: 27.8, z: 15.6 } },
+    ],
+    answer: '5',
+    pocket: { x: 36.3, z: 6.8, r: 4.4 },
+  },
+
+  // ---------------------------------------------------------- Lantern Hollow --
+  {
+    id: 'hollow-moon',
+    zone: 'hollow',
+    kind: 'word',
+    subject: 'words',
+    title: 'The Moonword',
+    at: { x: -18, z: 22 },
+    faceTo: { x: 0, z: 0 },
+    icon: '🌕',
+    instruction:
+      'A word is carved on the moonstone: mmm... ooo... nnn. Moon. Zap the stone that says moon, and the moth curtain will lift.',
+    hint: 'Sound it out with me: mmm... ooo... nnn... moon! Zap the stone that says moon.',
+    success: 'Moon! The moth curtain shivered and lifted. A little moon garden is open.',
+    wrong: 'Almost. Listen again: mmm... ooo... nnn... moon.',
+    veil: 'moths',
+    choices: [
+      { id: 'moon', glyph: { kind: 'word', text: 'moon', marker: '🌕' }, at: { x: -12.4, z: 21.4 } },
+      { id: 'moth', glyph: { kind: 'word', text: 'moth', marker: '🦋' }, at: { x: -15.7, z: 19.3 } },
+      { id: 'moss', glyph: { kind: 'word', text: 'moss', marker: '🌿' }, at: { x: -18.6, z: 16.1 } },
+    ],
+    answer: 'moon',
+    pocket: { x: -21.4, z: 26.2, r: 5.2 },
+  },
 ];
 
 export const PUZZLE_IDS = WORLD_PUZZLES.map((p) => p.id);
 
-export const PUZZLE_KINDS = ['word', 'count', 'sound'];
+export const PUZZLE_KINDS = ['word', 'count', 'sound', 'pattern', 'add'];
 
 export function puzzleFor(id) {
   return WORLD_PUZZLES.find((p) => p.id === id) ?? null;
@@ -139,21 +224,53 @@ export function activeChoices(puzzle, solved = false) {
  * answering, so the question gets smaller instead of repeating. The right stone
  * never dims, and nothing is ever hidden that could not be tapped.
  */
-export function dimmedChoices(puzzle, misses = 0, level = 'normal') {
+export function dimmedChoices(puzzle, misses = 0, level = 'normal', progress = 0) {
   if (!puzzle) return [];
   const threshold = narrowAfter(level);
-  const wrong = puzzle.choices.filter((c) => c.id !== puzzle.answer);
+  // A pattern sequence may still need a stone several steps from now, so the
+  // "wrong" list is everything not in the remaining sequence. That keeps every
+  // stone the child still needs, even one that has already been used.
+  const needed = new Set(
+    puzzle.sequence ? puzzle.sequence.slice(Math.max(0, progress)) : [puzzle.answer]
+  );
+  const wrong = puzzle.choices.filter((c) => !needed.has(c.id));
   if (!wrong.length) return [];
   // Gentle: one wrong stone lies down on the first miss. Normal: second miss.
-  // Stretch waits until the third. Each further miss dims one more, never the
-  // answer, and there is no state where the only stone left is the correct one
-  // being automatically "given" — the child still taps it.
+  // Stretch waits until the third. Each further miss dims one more, never a
+  // stone that is still needed, and the child still taps the answer.
   const count = Math.max(0, Math.min(wrong.length, misses - threshold + 1));
   return wrong.slice(0, count).map((c) => c.id);
 }
 
-export function choiceIsDim(puzzle, id, misses = 0, level = 'normal') {
-  return dimmedChoices(puzzle, misses, level).includes(id);
+export function choiceIsDim(puzzle, id, misses = 0, level = 'normal', progress = 0) {
+  return dimmedChoices(puzzle, misses, level, progress).includes(id);
+}
+
+/** How many shapes a pattern lift asks for. */
+export function patternLength(puzzle) {
+  return puzzle?.sequence?.length ?? 0;
+}
+
+/** The shape the pattern is waiting for right now, or null when finished. */
+export function patternStep(puzzle, progress = 0) {
+  if (!puzzle?.sequence) return null;
+  return puzzle.sequence[Math.max(0, progress)] ?? null;
+}
+
+export function patternComplete(puzzle, progress = 0) {
+  return patternLength(puzzle) > 0 && progress >= patternLength(puzzle);
+}
+
+/** One correct step advances the sequence; it never resets progress. */
+export function isSequenceCorrect(puzzle, progress, choiceId) {
+  return patternStep(puzzle, progress) === choiceId;
+}
+
+/** Every shape not needed by the rest of the sequence, for narrowing and tests. */
+export function remainingPatternChoices(puzzle, progress = 0) {
+  if (!puzzle?.sequence) return [];
+  const needed = new Set(puzzle.sequence.slice(Math.max(0, progress)));
+  return puzzle.choices.filter((c) => !needed.has(c.id)).map((c) => c.id);
 }
 
 /** True only for the stone the puzzle is waiting for. */
@@ -182,6 +299,8 @@ export function puzzleSkill(puzzle) {
     case 'word': return 'reading a word';
     case 'count': return 'counting a group';
     case 'sound': return 'matching a sound to its animal';
+    case 'pattern': return 'completing a pattern';
+    case 'add': return 'adding two groups';
     default: return 'problem solving';
   }
 }

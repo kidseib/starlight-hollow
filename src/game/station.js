@@ -431,7 +431,7 @@ export class Station {
 
   // --------------------------------------------------------------- update --
 
-  update(dt, time, camera, playerPos) {
+  update(dt, time, camera, playerPos, quiet = false) {
     this.time = time;
     this.feedbackCooldown = Math.max(0, this.feedbackCooldown - dt);
 
@@ -454,8 +454,10 @@ export class Station {
 
     if (!this.solved) {
       const dist = this.distanceTo(playerPos);
-      if (!this.active && dist < ACTIVATE_RADIUS) this.activate();
-      else if (this.active && dist > LEAVE_RADIUS) this.deactivate();
+      // A world puzzle is the closest thing to look at while a child is in its
+      // clearing; a sign nearby stays asleep instead of talking over it.
+      if (!this.active && !quiet && dist < ACTIVATE_RADIUS) this.activate();
+      else if (this.active && (dist > LEAVE_RADIUS || quiet)) this.deactivate();
     }
   }
 

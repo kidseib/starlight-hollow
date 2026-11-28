@@ -33,7 +33,10 @@ import { SecretGate } from '../world/gates.js';
 import { buildSleepingVeil } from '../world/props.js';
 import { dressLanternHollow, dressHollowNook, dressHollowPrize } from '../world/lanternHollow.js';
 import { HOLLOW, HOLLOW_LOOT, HOLLOW_GATES, hollowAwake, sanitizeHollowLoot } from './hollow.js';
-import { puzzlesInZone, sanitizePuzzles, isCorrect, dimmedChoices, successLine, wrongLine, PUZZLE_SPARKLES, PUZZLE_WAKE_RADIUS, PUZZLE_AIM_RANGE } from './worldPuzzles.js';
+import {
+  puzzlesInZone, sanitizePuzzles, isCorrect, isSequenceCorrect, patternComplete,
+  dimmedChoices, successLine, wrongLine, PUZZLE_SPARKLES, PUZZLE_WAKE_RADIUS, PUZZLE_AIM_RANGE,
+} from './worldPuzzles.js';
 import { buildPuzzleSite } from '../world/puzzleArt.js';
 import { HubGrowth } from '../world/growth.js';
 import { Garden } from '../world/garden.js';
@@ -128,6 +131,10 @@ export class Game {
     // World puzzles: stones to read, count and match, and what they open.
     this.puzzleSites = new Map();
     this.solvedPuzzles = new Set();
+    // Steps already entered on a pattern lift, this session only. A wrong shape
+    // never resets it; walking away and reloading starts the row fresh, which is
+    // the only state a child can lose and it costs nothing.
+    this.puzzleProgress = new Map();
     this.puzzleMisses = new Map();
     this._puzzleTold = new Set();
     this.aimPuzzle = null;
@@ -251,6 +258,8 @@ export class Game {
       for (const puzzle of puzzlesInZone(zone.id)) {
         blockers.push({ x: puzzle.at.x, z: puzzle.at.z, r: 8 });
         for (const choice of puzzle.choices) blockers.push({ x: choice.at.x, z: choice.at.z, r: 2.4 });
+        if (puzzle.pocket) blockers.push({ x: puzzle.pocket.x, z: puzzle.pocket.z, r: puzzle.pocket.r + 2 });
+        if (puzzle.shelf) blockers.push({ x: puzzle.shelf.x, z: puzzle.shelf.z, r: puzzle.shelf.r + 2 });
       }
       if (zone.kind === 'hub') {
         blockers.push({ x: 0, z: 4, r: 8 });
@@ -891,8 +900,18 @@ export class Game {
     this.hud.setZone(data.zone.name);
 
     const { island, zone } = data;
+    // The ground is the island — plus any puzzle surface underfoot. The lift
+    // deck and its sky shelf are real floors, so a child who rides up can walk
+    // around up there and step back down.
     this.player.setWorld(
-      (x, z) => island.groundAt(x, z),
+      (x, z) => {
+        let y = island.groundAt(x, z);
+        for (const def of puzzlesInZone(zone.id)) {
+          const top = this.puzzleSites.get(def.id)?.surfaceAt?.(x, z);
+          if (Number.isFinite(top)) y = Math.max(y, top);
+        }
+        return y;
+      },
       { x: zone.origin.x, z: zone.origin.z },
       zone.radius
     );
@@ -1186,7 +1205,12 @@ export class Game {
         const site = this.puzzleSites.get(def.id);
         if (!site) continue;
         const level = this._puzzleLevel(def);
-        const dim = dimmedChoices(def, this.puzzleMisses.get(def.id) ?? 0, level);
+        const dim = dimmedChoices(
+          def,
+          this.puzzleMisses.get(def.id) ?? 0,
+          level,
+          this.puzzleProgress.get(def.id) ?? 0
+        );
         for (const stone of site.choices) {
           if (dim.includes(stone.id)) continue;
           const point = stone.worldPoint();
@@ -1905,10 +1929,17 @@ export class Game {
     for (const def of puzzlesInZone(zone.id)) {
       const site = this.puzzleSites.get(def.id);
       if (!site) continue;
-      site.update(dt, time, this.camera, calm);
+      site.update(dt, time, this.camera, calm, this.player.position);
       if (this.solvedPuzzles.has(def.id)) {
         site.setReady(false);
         continue;
+      }
+      // A shut curtain is a real barrier: its hedge ring/valves keep a child
+      // outside the pocket until the word or sum is answered.
+      const fixed = site.blockPlayer?.(this.player.position);
+      if (fixed) {
+        this.player.position.x = fixed.x;
+        this.player.position.z = fixed.z;
       }
       const d = Math.hypot(
         this.player.position.x - (zone.origin.x + def.at.x),
@@ -1933,28 +1964,77 @@ export class Game {
     if (def.kind === 'sound') {
       this.timers.push({ t: 2.3, fn: () => this.audio.creatureCall(def.call) });
     }
+    if (def.kind === 'pattern' && def.sequence) {
+      // Three rising notes mirror the three shapes a child must enter.
+      def.sequence.forEach((_, i) => {
+        this.timers.push({ t: 2.1 + i * 0.55, fn: () => this.audio.chime(i) });
+      });
+    }
   }
 
   _answerPuzzle(def, site, stone) {
     if (!def || !site || !stone || this.solvedPuzzles.has(def.id)) return false;
+    if (def.sequence?.length) return this._answerPattern(def, site, stone);
     if (isCorrect(def, stone.id)) {
-      const misses = this.puzzleMisses.get(def.id) ?? 0;
-      this.learning = recordAttempt(this.learning, def.subject, { misses });
-      this.puzzleMisses.delete(def.id);
-      this.solvedPuzzles.add(def.id);
-      site.applySolved(true, !reducedMotion());
-      this.addSparkles(PUZZLE_SPARKLES, false);
-      this.audio.correct();
-      this.companion?.celebrate();
-      this.hud.showBanner(def.title, `${PUZZLE_SPARKLES} sparkles`, 3600);
-      const line = successLine(def);
-      this.hud.showBubble(line, def.icon);
-      this.voice.say(line);
-      this.fx?.fountain(site.centerWorld(), 0xffe6b0, 34);
-      this._save();
+      this._solvePuzzle(def, site);
       return true;
     }
+    this._wrongPuzzle(def, site, stone, 0);
+    return false;
+  }
 
+  /**
+   * One shape at a time. A correct step lights that socket and plays one note;
+   * a wrong one keeps every step already earned, so the row only ever grows.
+   */
+  _answerPattern(def, site, stone) {
+    const progress = this.puzzleProgress.get(def.id) ?? 0;
+    if (isSequenceCorrect(def, progress, stone.id)) {
+      const next = progress + 1;
+      this.puzzleProgress.set(def.id, next);
+      site.applyStep(next);
+      this.audio.chime(Math.min(4, next));
+      stone.setState('correct');
+      const thisStone = stone;
+      this.timers.push({
+        t: 0.45,
+        fn: () => {
+          if (!this.solvedPuzzles.has(def.id) && thisStone.state === 'correct') thisStone.setState('active');
+        },
+      });
+      if (patternComplete(def, next)) this._solvePuzzle(def, site);
+      return true;
+    }
+    this._wrongPuzzle(def, site, stone, progress);
+    return false;
+  }
+
+  /** The shared reward for any world puzzle, whatever it asked. */
+  _solvePuzzle(def, site) {
+    const misses = this.puzzleMisses.get(def.id) ?? 0;
+    this.learning = recordAttempt(this.learning, def.subject, { misses });
+    this.puzzleMisses.delete(def.id);
+    this.puzzleProgress.delete(def.id);
+    this.solvedPuzzles.add(def.id);
+    site.applySolved(true, !reducedMotion());
+    this.addSparkles(PUZZLE_SPARKLES, false);
+    this.audio.correct();
+    this.companion?.celebrate();
+    this.hud.showBanner(def.title, `${PUZZLE_SPARKLES} sparkles`, 3600);
+    const line = successLine(def);
+    this.hud.showBubble(line, def.icon);
+    this.voice.say(line);
+    this.fx?.fountain(site.centerWorld(), 0xffe6b0, 34);
+    this._save();
+    return true;
+  }
+
+  /**
+   * A wrong stone flickers, Pip repeats the question and the hint arrives by
+   * itself. After enough misses one wrong stone that is not needed any more
+   * lies down; progress is never lost.
+   */
+  _wrongPuzzle(def, site, stone, progress = 0) {
     const misses = (this.puzzleMisses.get(def.id) ?? 0) + 1;
     this.puzzleMisses.set(def.id, misses);
     this.audio.wrong();
@@ -1962,7 +2042,7 @@ export class Game {
     stone.setState('wrong');
     this.hud.showFeedback('Try again!', 'again');
     const level = this._puzzleLevel(def);
-    const dim = dimmedChoices(def, misses, level);
+    const dim = dimmedChoices(def, misses, level, progress);
     this.timers.push({
       t: 0.7,
       fn: () => {
@@ -1971,9 +2051,9 @@ export class Game {
         if (!dim.includes(stone.id)) stone.setState('active');
       },
     });
-    const last = def.choices
-      .filter((c) => c.id !== def.answer)
-      .every((c) => dim.includes(c.id));
+    const needed = new Set(def.sequence ? def.sequence.slice(progress) : [def.answer]);
+    const wrongChoices = def.choices.filter((c) => !needed.has(c.id));
+    const last = wrongChoices.length > 0 && wrongChoices.every((c) => dim.includes(c.id));
     this.voice.say(wrongLine(def, { last }));
     if (def.kind === 'sound') {
       this.timers.push({ t: 1.3, fn: () => this.audio.creatureCall(def.call) });
@@ -1988,7 +2068,6 @@ export class Game {
         if (def.kind === 'sound') this.audio.creatureCall(def.call);
       },
     });
-    return false;
   }
 
   _portalLocked(def) {
@@ -2228,6 +2307,7 @@ export class Game {
       gate.spot?.setObscured(!gate.isOpen);
     }
     this.solvedPuzzles = new Set(sanitizePuzzles(save.puzzles));
+    this.puzzleProgress.clear();
     for (const [id, site] of this.puzzleSites) {
       const wasSolved = this.solvedPuzzles.has(id);
       site.applySolved(wasSolved, false);
@@ -2324,7 +2404,14 @@ export class Game {
 
       const data = this.currentData;
       if (data) {
-        for (const station of data.stations) station.update(dt, time, this.camera, this.player.position);
+        const zonePuzzles = puzzlesInZone(data.zone.id);
+        const atPuzzle = zonePuzzles.some((p) => {
+          if (this.solvedPuzzles.has(p.id)) return false;
+          const px = data.zone.origin.x + p.at.x;
+          const pz = data.zone.origin.z + p.at.z;
+          return Math.hypot(this.player.position.x - px, this.player.position.z - pz) < 11;
+        });
+        for (const station of data.stations) station.update(dt, time, this.camera, this.player.position, atPuzzle);
         for (const portal of data.portals) {
           // A sleeping arch is dim and still: no swirl, no pulse, no beacon. The
           // bramble over it is the only thing that moves, and only a little.

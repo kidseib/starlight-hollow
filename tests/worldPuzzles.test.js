@@ -15,6 +15,11 @@ import {
   dimmedChoices,
   choiceIsDim,
   isCorrect,
+  patternStep,
+  patternLength,
+  patternComplete,
+  isSequenceCorrect,
+  remainingPatternChoices,
   successLine,
   wrongLine,
   puzzleSkill,
@@ -34,10 +39,13 @@ test.beforeEach(() => {
   });
 });
 
-test('three puzzles, three different kinds of knowing, all in real places', () => {
-  assert.equal(WORLD_PUZZLES.length, 3);
-  assert.equal(new Set(PUZZLE_IDS).size, 3);
+test('six puzzles, one in every world, and several kinds of knowing', () => {
+  assert.equal(WORLD_PUZZLES.length, 6);
+  assert.equal(new Set(PUZZLE_IDS).size, 6);
   assert.deepEqual([...new Set(WORLD_PUZZLES.map((p) => p.kind))].sort(), [...PUZZLE_KINDS].sort());
+  for (const zone of ZONES.filter((z) => z.kind !== 'hub')) {
+    assert.equal(puzzlesInZone(zone.id).length, 1, `${zone.id} has exactly one world challenge`);
+  }
   for (const puzzle of WORLD_PUZZLES) {
     const zone = ZONE_BY_ID[puzzle.zone];
     assert.ok(zone, `${puzzle.id} lives in a real zone`);
@@ -48,6 +56,7 @@ test('three puzzles, three different kinds of knowing, all in real places', () =
     assert.ok(choiceById(puzzle, puzzle.answer), `${puzzle.id}'s answer is one of its choices`);
     assert.equal(new Set(puzzle.choices.map((c) => c.id)).size, puzzle.choices.length, 'no duplicate stones');
     assert.ok(puzzle.instruction.length > 30, `${puzzle.id} explains itself in a sentence`);
+    assert.ok(['letters', 'words', 'numbers', 'patterns', 'memory'].includes(puzzle.subject));
   }
 });
 
@@ -73,6 +82,69 @@ test('the reading puzzle really asks to read, the counting really asks to count'
   assert.equal(sound.call, sound.answer);
   assert.ok(!sound.instruction.toLowerCase().includes(sound.answer), 'the animal is not named in the question');
   assert.match(sound.hint, /croak/i);
+});
+
+test('the pattern lift asks for the next shapes in order, and never loses a step', () => {
+  const lift = puzzleFor('peaks-lift');
+  assert.equal(lift.kind, 'pattern');
+  assert.equal(patternLength(lift), 3);
+  assert.equal(patternStep(lift, 0), 'star');
+  assert.equal(patternStep(lift, 1), 'moon');
+  assert.equal(patternStep(lift, 2), 'star');
+  assert.equal(patternStep(lift, 3), null);
+  assert.equal(isSequenceCorrect(lift, 0, 'star'), true);
+  assert.equal(isSequenceCorrect(lift, 1, 'star'), false);
+  assert.equal(isSequenceCorrect(lift, 1, 'moon'), true);
+  assert.equal(patternComplete(lift, 2), false);
+  assert.equal(patternComplete(lift, 3), true);
+
+  // The row on the arch really does continue into the answer.
+  const row = lift.pattern.map((g) => g.text);
+  assert.deepEqual(row, ['🌙', '⭐', '🌙', '⭐', '🌙']);
+  assert.deepEqual(lift.sequence, ['star', 'moon', 'star']);
+
+  // Narrowing only ever removes shapes that are not needed by the rest of the
+  // sequence — a stone already used earlier can never be dimmed.
+  assert.deepEqual(remainingPatternChoices(lift, 0).sort(), ['leaf', 'sun']);
+  assert.deepEqual(dimmedChoices(lift, 2, 'normal', 0), ['sun']);
+  assert.deepEqual(dimmedChoices(lift, 3, 'normal', 0), ['sun', 'leaf']);
+  for (let progress = 0; progress <= 3; progress++) {
+    for (let misses = 0; misses < 20; misses++) {
+      const dim = dimmedChoices(lift, misses, 'normal', progress);
+      for (const stillNeeded of lift.sequence.slice(progress)) {
+        assert.equal(dim.includes(stillNeeded), false, 'a needed shape never dims');
+      }
+    }
+  }
+});
+
+test('the cove shell asks a child to add two real groups of pebbles', () => {
+  const shell = puzzleFor('cove-pebbles');
+  assert.equal(shell.kind, 'add');
+  assert.deepEqual(shell.pebbles, [3, 2]);
+  assert.equal(Number(shell.answer), shell.pebbles[0] + shell.pebbles[1]);
+  assert.ok(shell.instruction.includes('Three pebbles') && shell.instruction.includes('two more'));
+  assert.ok(!shell.instruction.includes('five'), 'the sum is not spoken in the question');
+  assert.match(shell.hint, /one, two, three/, 'the hint counts all five');
+});
+
+test('every gate and lift promises a real place on its island', () => {
+  const grove = puzzleFor('grove-bramble');
+  assert.ok(grove.pocket, 'the bramble opens into a pocket');
+  const groveZone = ZONE_BY_ID.grove;
+  const pocketFromGate = Math.hypot(grove.pocket.x - grove.at.x, grove.pocket.z - grove.at.z);
+  assert.ok(pocketFromGate > 4 && pocketFromGate < 9, 'the pocket is just behind its gate');
+  assert.ok(Math.hypot(grove.pocket.x, grove.pocket.z) + grove.pocket.r < groveZone.radius - 2);
+
+  const lift = puzzleFor('peaks-lift');
+  assert.ok(lift.shelf, 'the lift reaches a shelf');
+  assert.ok(Math.hypot(lift.shelf.x, lift.shelf.z) + 3.4 < ZONE_BY_ID.peaks.radius - 2);
+  assert.notEqual(lift.shelf.x, lift.at.x, 'the shelf is somewhere else');
+
+  for (const id of ['cove-pebbles', 'hollow-moon']) {
+    const p = puzzleFor(id);
+    assert.ok(p.pocket, `${id} opens somewhere`);
+  }
 });
 
 test('each puzzle sits off the walking route and clear of signs and keepsakes', () => {
@@ -133,7 +205,7 @@ test('answering is exact, and lines are written for the puzzle in hand', () => {
     }
     assert.equal(successLine(puzzle), puzzle.success);
     assert.equal(wrongLine(puzzle), puzzle.wrong);
-    assert.match(puzzleSkill(puzzle), /reading|counting|matching/);
+    assert.match(puzzleSkill(puzzle), /reading|counting|matching|pattern|adding/);
   }
   assert.equal(isCorrect(puzzleFor('invented'), 'moss'), false);
 });
@@ -148,9 +220,9 @@ test('junk saves cannot invent a solved puzzle, and solved ids are kept once', (
 });
 
 test('solved puzzles survive a save, and a legacy save has none', () => {
-  writeSave({ sparkles: 12, puzzles: ['grove-bramble', 'words-path', 'invented'], solved: [], stars: {} });
+  writeSave({ sparkles: 12, puzzles: ['grove-bramble', 'words-path', 'peaks-lift', 'cove-pebbles', 'hollow-moon', 'invented'], solved: [], stars: {} });
   const save = loadSave();
-  assert.deepEqual(save.puzzles, ['grove-bramble', 'words-path']);
+  assert.deepEqual(save.puzzles, ['grove-bramble', 'words-path', 'peaks-lift', 'cove-pebbles', 'hollow-moon']);
 
   writeSave({ sparkles: 4, solved: [] });
   const legacy = loadSave();

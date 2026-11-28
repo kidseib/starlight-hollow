@@ -223,6 +223,8 @@ export const ZONES = [
       { kind: 'puff', species: 'Leaf Puff', color: '#a6f2a0', accent: '#4fc07a', x: -10, z: 28, fact: 'Leaf Puffs sleep inside flowers. Shhh!' },
       { kind: 'puff', species: 'Fuzzle Puff', color: '#ffe9a8', accent: '#f0a93c', x: 22, z: 26, fact: 'Fuzzle Puffs copy the sounds they hear. Try saying hello!' },
       { kind: 'puff', species: 'Violet Puff', color: '#d3b8ff', accent: '#9a6cf0', x: 6, z: -30, fact: 'Violet Puffs can bounce higher than a tree!' },
+      // Behind the sleepy bramble: a friend who only meets children who read.
+      { kind: 'puff', species: 'Bramble Puff', color: '#c9f08a', accent: '#6f9c4a', x: 43.2, z: 19.4, fact: 'A Bramble Puff naps in the quiet dell behind the bramble. It says hello to anyone who reads the word!' },
       { kind: 'grump', x: -30, z: 4 },
       { kind: 'grump', x: 30, z: -4 },
     ],
@@ -508,7 +510,7 @@ export const ZONES = [
     portals: [{ to: 'meadow', x: 0, z: 46, label: 'Sunbeam Meadow', icon: '🌻', color: 0xffd166, home: true }],
     creatures: [
       { kind: 'puff', species: 'Snow Puff', color: '#eaf6ff', accent: '#a8d4f0', x: -10, z: 30, fact: 'Snow Puffs are cold on the outside and warm on the inside.' },
-      { kind: 'puff', species: 'Star Puff', color: '#ffe9a8', accent: '#f0c04a', x: 24, z: 26, fact: 'Star Puffs twinkle when they are sleepy. Twinkle, twinkle!' },
+      { kind: 'puff', species: 'Star Puff', color: '#ffe9a8', accent: '#f0c04a', x: 22, z: 30, fact: 'Star Puffs twinkle when they are sleepy. Twinkle, twinkle!' },
       { kind: 'puff', species: 'Dream Puff', color: '#c9b8ff', accent: '#8f6cf0', x: 2, z: -32, fact: 'Dream Puffs hum lullabies to the flowers.' },
       { kind: 'grump', x: -32, z: 2 },
       { kind: 'grump', x: 32, z: -10 },
@@ -803,7 +805,9 @@ export const ZONES = [
       { kind: 'puff', species: 'Pebble Puff', color: '#ffd9a0', accent: '#e0a95c', x: -26, z: 6, fact: 'Pebble Puffs stack little stones into towers. Count them with me!' },
       { kind: 'puff', species: 'Shell Puff', color: '#b6fff0', accent: '#4ad0b8', x: 24, z: 26, fact: 'Shell Puffs can hear the sea inside their tummy. Whoosh!' },
       { kind: 'puff', species: 'Bubble Puff', color: '#c9e8ff', accent: '#6fb8e0', x: 4, z: -20, fact: 'Bubble Puffs blow numbers out of bubbles. Pop pop pop!' },
-      { kind: 'grump', x: 30, z: -2 },
+      // Inside the great shell: a tidepool friend for a child who adds.
+      { kind: 'puff', species: 'Tidepool Puff', color: '#b6fff0', accent: '#3fb8b0', x: 36.4, z: 6.4, fact: 'A Tidepool Puff counts the pearls in its shell every night. One, two, three, four!' },
+      { kind: 'grump', x: 39, z: -15 },
       { kind: 'grump', x: -30, z: -8 },
     ],
   },
