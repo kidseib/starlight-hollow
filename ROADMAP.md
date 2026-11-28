@@ -9,8 +9,8 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
    blank after reload, before/after screenshots. Carried over from iteration 6.
 2. **A grown-up corner on the pause screen** — what has been learned (letters, numbers, patterns,
    memory), so a parent can see progress without a dashboard.
-3. **A second sparkle sink: decorate the Star Tree** - the market gives sparkles
-   three uses; a small decoration shop keeps saving worthwhile afterwards.
+3. **Star Tree follow-ups** - a second ornament set and a small "which shape is
+   missing?" sign, so the workshop keeps giving after the first tree is full.
 4. **A real Windows playtest of the current beta** — both editions, narration with the network off,
    save and reopen, installer shortcut, uninstall.
 

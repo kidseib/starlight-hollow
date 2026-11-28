@@ -13,6 +13,7 @@ function decode(raw) {
       sparkles: Number.isSafeInteger(s.sparkles) && s.sparkles >= 0 ? s.sparkles : 0,
       stars: Object.fromEntries(Object.entries(record(s.stars) ? s.stars : {}).filter(([, v]) => v === true)),
       solved: ids(s.solved), scanned: ids(s.scanned), visited: ids(s.visited), upgrades: ids(s.upgrades),
+      shards: ids(s.shards), placed: ids(s.placed),
       ended: s.ended === true, zone: typeof s.zone === 'string' ? s.zone : 'meadow',
     };
   } catch { return null; }

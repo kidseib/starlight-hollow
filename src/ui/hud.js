@@ -23,6 +23,8 @@ export class HUD {
     this.crosshair = document.getElementById('crosshair');
     this.toastStack = document.getElementById('toast-stack');
     this.upgradeRow = document.getElementById('upgrade-row');
+    this.shardRow = null;
+    this.badgeRow = null;
     this.shop = document.getElementById('shop');
     this.shopItems = document.getElementById('shop-items');
     this.shopPurse = document.getElementById('shop-purse');
@@ -150,12 +152,25 @@ export class HUD {
     this.crosshair?.classList.toggle('is-soft', !hot);
   }
 
-  toast(text, icon = '✨') {
+  toast(text, icon = '\u2728', image = null) {
     if (!this.toastStack) return;
     const el = document.createElement('div');
     el.className = 'toast';
-    el.innerHTML = `<span>${icon}</span><span></span>`;
-    el.lastChild.textContent = text;
+    const badge = document.createElement('span');
+    if (image) {
+      const img = document.createElement('img');
+      img.src = image;
+      img.alt = '';
+      img.style.width = '26px';
+      img.style.height = '26px';
+      img.style.display = 'block';
+      badge.appendChild(img);
+    } else {
+      badge.textContent = icon;
+    }
+    const label = document.createElement('span');
+    label.textContent = text;
+    el.append(badge, label);
     this.toastStack.appendChild(el);
     setTimeout(() => {
       el.classList.add('out');
@@ -198,18 +213,63 @@ export class HUD {
     document.getElementById('ending')?.classList.add('hidden');
   }
 
+  /** A round gold chip holding a drawn picture. Emoji never carry meaning here. */
+  _chip(item, ringColor) {
+    const el = document.createElement('span');
+    el.className = 'upgrade-chip';
+    el.title = item.name ?? '';
+    if (ringColor) el.style.boxShadow = `0 0 0 3px ${ringColor}, 0 4px 12px rgba(38, 49, 79, 0.24)`;
+    if (item.image) {
+      const img = document.createElement('img');
+      img.src = item.image;
+      img.alt = item.name ?? '';
+      img.style.width = '26px';
+      img.style.height = '26px';
+      img.style.display = 'block';
+      el.appendChild(img);
+    } else {
+      el.textContent = item.icon ?? '';
+    }
+    return el;
+  }
+
+  _rowAfterUpgrades(key) {
+    if (this[key]) return this[key];
+    const row = document.createElement('div');
+    row.className = 'upgrade-row hidden';
+    row.id = key === 'shardRow' ? 'shard-row' : 'badge-row';
+    const parent = this.upgradeRow?.parentElement;
+    if (!parent) return null;
+    parent.insertBefore(row, this.upgradeRow.nextSibling);
+    this[key] = row;
+    return row;
+  }
+
   /** Small picture badges under the sparkle counter: what has been bought. */
   setUpgrades(items = []) {
     if (!this.upgradeRow) return;
     this.upgradeRow.innerHTML = '';
-    for (const item of items) {
-      const el = document.createElement('span');
-      el.className = 'upgrade-chip';
-      el.title = item.name;
-      el.textContent = item.icon;
-      this.upgradeRow.appendChild(el);
-    }
+    for (const item of items) this.upgradeRow.appendChild(this._chip(item));
     this.upgradeRow.classList.toggle('hidden', items.length === 0);
+  }
+
+  /** The shard pouch: one drawn picture per shape waiting to be hung. */
+  setShards(items = []) {
+    const row = this._rowAfterUpgrades('shardRow');
+    if (!row) return;
+    row.innerHTML = '';
+    row.setAttribute('aria-label', 'Star shards');
+    for (const item of items) row.appendChild(this._chip(item));
+    row.classList.toggle('hidden', items.length === 0);
+  }
+
+  /** Earned badges, e.g. the decorated Star Tree. */
+  setBadges(items = []) {
+    const row = this._rowAfterUpgrades('badgeRow');
+    if (!row) return;
+    row.innerHTML = '';
+    for (const item of items) row.appendChild(this._chip(item, 'rgba(255, 214, 102, 0.95)'));
+    row.classList.toggle('hidden', items.length === 0);
   }
 
   /**
@@ -242,7 +302,17 @@ export class HUD {
 
       const ico = document.createElement('span');
       ico.className = 'shop-ico';
-      ico.textContent = item.owned ? '⭐' : item.icon;
+      if (item.image) {
+        const img = document.createElement('img');
+        img.src = item.image;
+        img.alt = '';
+        img.style.width = '52px';
+        img.style.height = '52px';
+        img.style.display = 'block';
+        ico.appendChild(img);
+      } else {
+        ico.textContent = item.owned ? '\u2b50' : item.icon;
+      }
 
       const name = document.createElement('span');
       name.className = 'shop-name';

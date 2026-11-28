@@ -1,4 +1,4 @@
-Starlight Hollow 0.1.3-beta.1 - Windows x64 playtest
+Starlight Hollow 0.1.4-beta.1 - Windows x64 playtest
 
 Extract this ZIP before running either file. Choose one:
 - Starlight-Hollow-Portable.exe starts the game without installation.

@@ -85,6 +85,35 @@ sparkle counter and swap the stall jar's icon for a star. `purchase()` and
 `shopStatus()` are pure functions, so the rules are unit tested without a
 browser.
 
+### The Star Tree Workshop
+`src/game/workshop.js` + `src/world/ornaments.js`. The second use for sparkles and
+the reason to walk every island twice. Six ornaments, one shape each:
+
+| Shape | Where | Colour |
+|---|---|---|
+| Golden Star | Letterleaf Grove shard | gold |
+| Silver Moon | Tallybrook Falls shard | silver |
+| Blossom | Pattern Peaks shard | pink |
+| Song Bell | Storysong Glade shard | amber |
+| Sea Shell | Pebblecount Cove shard | peach |
+| Sky Lantern | Momo's market, 90 sparkles | mint |
+
+`shardSpot(zone)` picks a clear ring position from a per-island bearing, keeping
+away from the arrival arch, the portals and the sign plinths. Each `ShardField`
+beacon is an octahedral crystal in a gold cradle on a stone plinth, with a ground
+ring, drifting motes and a 13 m column of light; it chimes once when the player
+comes within 16 m and is collected by walking within 2.7 m. The HUD pouch shows
+one drawn picture per shape held.
+
+The tree carries two gold garlands at rows y = 3.3 and 4.55; six hooks hang from
+them on short cords, each with a dashed outline sprite of its shape. Aiming at a
+hook uses the same forgiving 0.24 rad cone as the market, and a zap reaches it
+with the blaster's homing bolt. `canPlace()`/`place()` are pure: an ornament must
+be held (a world shard or a bought market gift) and can only be hung once; a miss
+speaks the shape's name and island and costs nothing. `isComplete()` fires the
+payoff: canopy tint, sixteen coloured glows, a warm crown star, a HUD badge, a
+Momo + Pip speech chain and a banner. `save.shards` / `save.placed` persist it.
+
 ### Content format (`src/content.js`)
 Zones, portals, stations, pads, creatures and all spoken text are data. Pad kinds: `letter`
 (optional `marker` picture card), `number` (numeral + dot row), `word`, `dots`, `shape`, `icon`

@@ -16,9 +16,9 @@ test.beforeEach(() => {
   });
 });
 
-test('the market offers three distinct gifts a child can afford after one island', () => {
-  assert.equal(SHOP_ITEMS.length, 3);
-  assert.equal(new Set(SHOP_ITEMS.map((item) => item.id)).size, 3);
+test('the market offers four distinct gifts a child can afford after one island', () => {
+  assert.equal(SHOP_ITEMS.length, 4);
+  assert.equal(new Set(SHOP_ITEMS.map((item) => item.id)).size, 4);
   for (const item of SHOP_ITEMS) {
     assert.ok(Number.isInteger(item.price) && item.price > 0, `${item.id} needs a whole-number price`);
     assert.ok(item.icon && item.name && item.line && item.blurb, `${item.id} needs pictures and a spoken line`);
@@ -27,7 +27,8 @@ test('the market offers three distinct gifts a child can afford after one island
   // comfortably more than the cheapest gift.
   const oneIsland = 5 * 6 + 20;
   assert.ok(SHOP_ITEMS[0].price <= oneIsland);
-  assert.ok(SHOP_ITEMS[0].price < SHOP_ITEMS[1].price && SHOP_ITEMS[1].price < SHOP_ITEMS[2].price);
+  const prices = SHOP_ITEMS.map((item) => item.price);
+  assert.deepEqual(prices, [...prices].sort((a, b) => a - b), 'prices climb so saving has a shape');
 });
 
 test('buying a gift takes exactly its price and remembers it', () => {
@@ -64,7 +65,7 @@ test('unknown gifts are refused instead of throwing', () => {
 
 test('cards read as owned, ready or saving', () => {
   const status = shopStatus({ owned: ['magnet'], sparkles: 80 });
-  assert.deepEqual(status.map((item) => item.status), ['owned', 'ready', 'saving']);
+  assert.deepEqual(status.map((item) => item.status), ['owned', 'ready', 'saving', 'saving']);
   assert.equal(status[0].owned, true);
   assert.equal(status[2].affordable, false);
   assert.equal(status[0].icon, '🧲');
@@ -79,7 +80,7 @@ test('every gift can be collected in one shopping trip', () => {
   }
   const spent = SHOP_ITEMS.reduce((sum, item) => sum + item.price, 0);
   assert.equal(state.sparkles, 400 - spent);
-  assert.equal(state.owned.length, 3);
+  assert.equal(state.owned.length, 4);
 });
 
 test('bought gifts survive a save and reload, and old saves still open', () => {

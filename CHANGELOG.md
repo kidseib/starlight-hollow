@@ -3,6 +3,47 @@
 Every public Windows beta, newest first. Player-facing changes only; the development detail lives in
 `DEVELOPMENT_LOG.md` and `docs/ITERATIONS.md`.
 
+## 0.1.4-beta.1 — 2026-11-27
+
+**The Star Tree Workshop.** The Star Tree is now something to build, and sparkles
+have a second job. Five glowing star shards are hidden on the five adventure
+islands — a golden star in Letterleaf Grove, a silver moon in Tallybrook Falls, a
+pink blossom on Pattern Peaks, a song bell in Storysong Glade and a sea shell in
+Pebblecount Cove. Each sits on a little stone plinth, ringed with light, under a
+tall beam you can spot from across the island, and each sings a soft chime as you
+come close. Walk into one to pop it in your pouch.
+
+The pouch shows every shape as a picture under the sparkle counter. At the Star
+Tree, two gold garlands now wrap the trunk with six hooks, each carrying a dashed
+outline of the ornament that belongs there. Zap the outline that matches a shape
+you are carrying: the ornament pops onto the branch with a bounce and a happy
+line, and it is still there when you come back tomorrow. The sixth shape, a **Sky
+Lantern**, is sold by Momo for 90 sparkles, so the market and the tree feed each
+other.
+
+Hang all six and the tree changes for good: the leaves turn a luminous
+mint-gold, a garland of coloured lights gathers round the canopy and a warm star
+glows above it. A new gold badge appears beside your shards, Pip and Momo both
+say thank you, and the goal chip reads "The Star Tree is decorated" so you can
+stand and admire it.
+
+- Ornaments are modelled from the same shape painter that draws the pouch
+  pictures, so a shard, its outline and the finished ornament all read as one
+  object.
+- For grown-ups: shards and placements live in the existing v1 save (`shards`,
+  `placed`); saves from earlier betas open with an empty pouch. Zapping the wrong
+  outline costs nothing — the game names the shape and the island where it hides.
+- Also fixed: a zap aimed at a small target can no longer slip past it on a slow
+  frame, so aiming stays forgiving on older laptops.
+- Art pass: drawn market icons for every gift (no emoji cards), the stall counter
+  widened for four jars, a calmer shard beacon, and a two-by-two market grid.
+
+Verified with 26 tests (9 new for the workshop), a clean production build, and the
+whole loop played in the cloud browser: every shard collected, the Sky Lantern
+bought from Momo, all six ornaments hung by zapping the tree, the decorated tree
+and badge reached, and the result still there after a reload. A Windows playtest
+is still outstanding.
+
 ## 0.1.3-beta.1 - 2026-11-27
 
 **Momo's Wisp Market.** Sparkles finally have somewhere to go. Momo, a mossy

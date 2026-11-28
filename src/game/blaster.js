@@ -171,7 +171,10 @@ export class Blaster {
       p.glow.material.opacity = 0.75 + Math.sin(p.life * 30) * 0.2;
 
       let remove = false;
-      if (p.target && p.mesh.position.distanceTo(p.target) < 0.95) {
+      // On a slow frame the bolt can jump straight past a small target, so the
+      // arrival test also covers the distance travelled this frame.
+      const reach = p.target ? Math.max(0.95, p.speed * dt * 1.35) : 0.95;
+      if (p.target && p.mesh.position.distanceTo(p.target) < reach) {
         this.onHit?.(p.ref ?? p.target, p.mesh.position.clone());
         remove = true;
       }

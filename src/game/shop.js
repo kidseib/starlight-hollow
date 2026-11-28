@@ -10,6 +10,7 @@ import { glyphTexture, makeSprite } from '../world/textures.js';
 export const SHOP_ITEMS = [
   {
     id: 'magnet',
+    shape: 'magnet',
     icon: '🧲',
     name: 'Star Magnet',
     price: 40,
@@ -18,6 +19,7 @@ export const SHOP_ITEMS = [
   },
   {
     id: 'bell',
+    shape: 'bell',
     icon: '🔔',
     name: "Pip's Bell",
     price: 70,
@@ -25,7 +27,17 @@ export const SHOP_ITEMS = [
     line: "Pip's Bell! Pip will show you the next sign much sooner.",
   },
   {
+    id: 'lantern',
+    shape: 'lantern',
+    icon: '🏮',
+    name: 'Sky Lantern',
+    price: 90,
+    blurb: 'Hangs on the Star Tree',
+    line: 'The Sky Lantern! Hang it on the Star Tree with your other shapes.',
+  },
+  {
     id: 'rainbow',
+    shape: 'rainbow',
     icon: '🌈',
     name: 'Rainbow Blaster',
     price: 110,
@@ -277,10 +289,10 @@ export class MarketStall {
     this.group.add(footing);
 
     // Counter
-    const counter = new THREE.Mesh(new THREE.BoxGeometry(3.7, 0.85, 1.0), wood);
+    const counter = new THREE.Mesh(new THREE.BoxGeometry(4.1, 0.85, 1.0), wood);
     counter.position.set(0, 0.62, 0.5);
     this.group.add(counter);
-    const counterTop = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.14, 1.2), woodLight);
+    const counterTop = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.14, 1.2), woodLight);
     counterTop.position.set(0, 1.11, 0.5);
     this.group.add(counterTop);
     for (let i = -1; i <= 1; i++) {
@@ -371,9 +383,11 @@ export class MarketStall {
     this.group.add(signGlow);
     this.signGlow = signGlow;
 
-    // Three jars, one per gift. The icon inside each jar is the price tag a
-    // pre-reader can actually use.
-    const xs = [-1.05, 0, 1.05];
+    // One jar per gift, evenly spaced whatever the stock list becomes. The icon
+    // inside each jar is the price tag a pre-reader can actually use.
+    const span = 2.1;
+    const step = SHOP_ITEMS.length > 1 ? span / (SHOP_ITEMS.length - 1) : 0;
+    const xs = SHOP_ITEMS.map((_, i) => (i - (SHOP_ITEMS.length - 1) / 2) * step);
     SHOP_ITEMS.forEach((item, i) => {
       const jar = new THREE.Group();
       jar.position.set(xs[i], 1.18, 0.5);

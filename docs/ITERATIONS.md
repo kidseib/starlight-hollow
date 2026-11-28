@@ -4,6 +4,18 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 11 - The Star Tree Workshop
+
+- The Star Tree became a second progression system and a second sparkle sink. Five star shards hide on the five adventure islands (`SHARD_BEARING` in `shardSpot(zone)` keeps each in its own corner, clear of the arch, portals and signs); the sixth shape, a Sky Lantern, is Momo's 90-sparkle gift, so exploring and shopping feed the same goal.
+- Each shard is a beacon a pre-reader can find: crystal in a gold cradle on a stone plinth, ground ring, drifting motes and a column of light visible across the island, with a chime and a spoken hint at 16 m and pickup at 2.7 m. Pouch pictures appear under the sparkle counter.
+- The tree carries two gold garlands with six hooks, each showing a dashed outline of its shape. Zapping the matching outline hangs a 3D ornament with a pop, a line and a sparkle burst; a wrong outline costs nothing and names the shape and its island. `canPlace`/`place`/`isComplete` are pure and tested.
+- Completion changes the tree: mint-gold canopy wash, sixteen coloured glows, a warm crown star, a gold HUD badge, a Momo-then-Pip speech chain and a persistent "The Star Tree is decorated" goal. `save.shards` / `save.placed` persist; pre-iteration saves open with an empty pouch.
+- Art pass: `src/world/ornaments.js` paints every shape once and reuses it for pouch, market card, tree outline and 3D ornament; market cards for magnet/bell/rainbow are now drawn too, the stall counter widened for four jars and the panel grid became 2x2.
+- `tests/workshop.test.js` adds 9 cases (stock, purchase gating, single pickup, single placement, market ornament, completion, clear shard spots, save round trip). `node --test tests/*.test.js` -> 26 pass; `npm run build` -> exit 0.
+- Cloud browser evidence: five beacons collected, Sky Lantern bought (97 -> 7 sparkles), six ornaments hung by zapping outlines, decorated tree + badge + character reaction reached, and everything intact after a reload. Screenshots: `artifacts/r11-{beacon-final,shard-beacon,pouch,tree-hooks2,tree-four,market-lantern,tree-final}.png`.
+- Fixed during inspection: garlands clipping the octagonal trunk, ornaments floating and reading edge-on, undersized ornaments, an over-bright beacon, a patchwork decorated canopy, and a truncated pouch row. `blaster.js` now counts the frame's travel distance when testing arrival, which removes bolt tunnelling at low frame rates.
+- Not verified: real audio, a Windows run, pointer-lock clicking on real hardware, or a child playtest.
+
 ## Iteration 10 - Momo's Wisp Market
 
 - Sparkles were the one collectible with no use, so the hub gained a merchant: Momo, a lantern-snail with a striped stall at (11, 10) in Sunbeam Meadow. Zapping him opens a market that pauses the world; Esc or "All done" closes it.

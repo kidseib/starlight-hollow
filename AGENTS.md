@@ -35,6 +35,13 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   `save.upgrades` stores, so renaming one would take a purchased gift away. New
   gifts need a price, an icon, a spoken line and a real effect wired into the
   system they change.
+- The Star Tree Workshop lives in `src/game/workshop.js` (pure rules plus the
+  shard beacons and the six tree hooks) and `src/world/ornaments.js` (one shape
+  painter used for pouch pictures, market cards, tree outlines and the 3D
+  ornaments). `save.shards` holds collected shards, `save.placed` holds hung
+  ornaments; both default to empty so older saves keep working. Hook positions
+  follow the tapered trunk (`trunkRadius(y)`), so move a row only together with
+  that helper.
 - Verify with `node --test tests/*.test.js` and `npm run build`, then look at the change in the
   browser (`window.__starlight` exposes game, camera, scene, audio, voice and HUD).
 - Record every iteration in `docs/ITERATIONS.md` and `DEVELOPMENT_LOG.md`, and keep `CHANGELOG.md`

@@ -12,6 +12,8 @@ import { Player } from './player.js';
 import { Blaster } from './blaster.js';
 import { Companion } from './companion.js';
 import { MarketStall, SHOP_ITEMS, itemById, purchase, shopStatus } from './shop.js';
+import { ShardField, Workshop, ORNAMENTS, SHARD_IDS, collectShard, place, workshopStatus, isComplete } from './workshop.js';
+import { shapeDataUrl } from '../world/ornaments.js';
 import { loadSave, writeSave } from '../engine/save.js';
 import { clamp, damp, mulberry32 } from '../engine/utils.js';
 
@@ -55,6 +57,13 @@ export class Game {
     this.shopOpen = false;
     this._marketHinted = false;
     this.aimShop = null;
+    this.aimHook = null;
+    this.shards = new Set();
+    this.placed = new Set();
+    this.shardField = null;
+    this.workshop = null;
+    this._shardHinted = false;
+    this._images = new Map();
     this.transitioning = false;
     this.portalCooldown = 0;
     this.scanTimer = 0;
@@ -95,6 +104,7 @@ export class Game {
     this._buildWorld();
     this._load();
     this._applyUpgrades();
+    this._applyWorkshopState();
     this._enterZone(this.currentZoneId, true);
   }
 
@@ -212,6 +222,18 @@ export class Game {
       }
       void rng;
     }
+
+    // The Star Tree Workshop: five shards hidden around the islands and six
+    // empty hooks on the hub tree, one per shape.
+    this.shardField = new ShardField({ scene: this.scene, islands: this.islands, collected: [...this.shards] });
+    if (this.wishTree) {
+      this.workshop = new Workshop({
+        tree: this.wishTree,
+        placed: [...this.placed],
+        owned: [...this.upgrades],
+        shards: [...this.shards],
+      });
+    }
   }
 
   // -------------------------------------------------------------- lifecycle --
@@ -305,7 +327,7 @@ export class Game {
     this.audio.ui?.();
     const line = 'Welcome to my market! Your sparkles can buy my lovely gifts.';
     this.hud.showShop({
-      items: shopStatus({ owned: [...this.upgrades], sparkles: this.sparkleCount }),
+      items: this.marketItems(),
       sparkles: this.sparkleCount,
       line,
       handlers: {
@@ -347,22 +369,59 @@ export class Game {
     this.upgrades = new Set(result.owned);
     this.sparkleCount = result.sparkles;
     this.hud.setSparkles(this.sparkleCount);
-    this.hud.setUpgrades(SHOP_ITEMS.filter((it) => this.upgrades.has(it.id)));
+    this.hud.setUpgrades(
+      SHOP_ITEMS.filter((it) => this.upgrades.has(it.id)).map((it) => ({ ...it, image: this.shapeImage(it.shape) }))
+    );
     this.market?.setOwned(this.upgrades);
     this.market?.greet();
     this.audio.star?.();
     this.fx?.fountain(this.market.momoWorld(), 0xffc46b, 30);
-    this.hud.toast(result.item.name, result.item.icon);
+    this.hud.toast(result.item.name, result.item.icon, this.shapeImage(result.item.shape));
     this.hud.showBanner(result.item.name, result.item.blurb, 3200);
     this.voice.say(result.item.line);
     this._applyUpgrades();
-    this.hud.refreshShop({
-      items: shopStatus({ owned: [...this.upgrades], sparkles: this.sparkleCount }),
-      sparkles: this.sparkleCount,
-    });
+    this.hud.refreshShop({ items: this.marketItems(), sparkles: this.sparkleCount });
     this._saveDirty = true;
     this._save();
     return result;
+  }
+
+  /** A drawn picture for one shape, generated once per session. */
+  shapeImage(shape, { plate = false } = {}) {
+    if (!shape) return null;
+    const key = plate ? `${shape}:plate` : shape;
+    if (!this._images.has(key)) this._images.set(key, shapeDataUrl(shape, { plate }));
+    return this._images.get(key);
+  }
+
+  /** Ornament cards for the pouch and badges, with their pictures attached. */
+  ornamentItems({ includePlaced = true } = {}) {
+    return workshopStatus({ shards: [...this.shards], placed: [...this.placed], owned: [...this.upgrades] })
+      .filter((item) => includePlaced || !item.placed)
+      .map((item) => ({ ...item, image: this.shapeImage(item.shape, { plate: true }) }));
+  }
+
+  heldOrnaments() {
+    return this.ornamentItems({ includePlaced: false }).filter((item) => item.held);
+  }
+
+  marketItems() {
+    return shopStatus({ owned: [...this.upgrades], sparkles: this.sparkleCount }).map((item) => ({
+      ...item,
+      image: this.shapeImage(item.shape),
+    }));
+  }
+
+  _applyWorkshopState() {
+    this.shardField?.setCollected([...this.shards]);
+    if (this.workshop) {
+      this.workshop.setState({ shards: [...this.shards], owned: [...this.upgrades] });
+      this.workshop.setPlaced([...this.placed]);
+    }
+    this.hud.setShards(this.heldOrnaments());
+    this.hud.setBadges(
+      isComplete([...this.placed]) ? [{ name: 'Star Tree decorated', image: this.shapeImage('star') }] : []
+    );
   }
 
   /** Upgrades are read by the systems themselves, so they survive a reload. */
@@ -371,8 +430,95 @@ export class Game {
     this.sparkles.magnetRange = magnet ? 9.5 : 4.6;
     this.sparkles.magnetPull = magnet ? 3.6 : 2.5;
     this.blaster.setRainbow(this.hasUpgrade('rainbow'));
-    this.hud.setUpgrades(SHOP_ITEMS.filter((it) => this.upgrades.has(it.id)));
+    this.workshop?.setState({ shards: [...this.shards], owned: [...this.upgrades] });
+    this.hud.setUpgrades(
+      SHOP_ITEMS.filter((it) => this.upgrades.has(it.id)).map((it) => ({ ...it, image: this.shapeImage(it.shape) }))
+    );
     this.market?.setOwned(this.upgrades);
+  }
+
+  // ------------------------------------------------------- star tree workshop --
+
+  _collectShard(id) {
+    const result = collectShard({ shards: [...this.shards], placed: [...this.placed] }, id);
+    if (!result.ok) return result;
+    this.shards = new Set(result.shards);
+    this.shardField?.collect(id);
+    this.workshop?.setState({ shards: [...this.shards], owned: [...this.upgrades] });
+    this.hud.setShards(this.heldOrnaments());
+    this.audio.star();
+    this.companion?.celebrate();
+    const where = this.shardField?.worldPosition(id) ?? this.camera.position.clone();
+    this.fx.fountain(where, result.item.color, 44);
+    this.hud.showBanner('Star shard found!', `${this.shards.size} of ${SHARD_IDS.length}`, 4200);
+    this.hud.toast(`Found the ${result.item.name}`, null, this.shapeImage(result.item.shape));
+    this.voice.say(result.item.line);
+    this._updateGoal();
+    this._save();
+    return result;
+  }
+
+  _updateShards(dt, time) {
+    if (!this.shardField) return;
+    const { collected, near } = this.shardField.update(
+      dt,
+      time,
+      this.camera.position,
+      this.player.position,
+      this.currentZoneId
+    );
+    if (near && !this._shardHinted) {
+      this._shardHinted = true;
+      const line = 'A star shard is glowing nearby! Walk right into it.';
+      this.hud.showHint(line, 4200);
+      this.voice.say(line);
+    }
+    if (!near && !collected) this._shardHinted = false;
+    if (collected) this._collectShard(collected.id);
+  }
+
+  /** Zap the outline that matches the shard in the pouch to hang it. */
+  _hang(hook) {
+    const result = place(
+      { shards: [...this.shards], placed: [...this.placed], owned: [...this.upgrades] },
+      hook.id
+    );
+    if (!result.ok) {
+      const where = result.item?.market ? "Momo's market" : result.item?.island;
+      const line = result.reason === 'placed'
+        ? 'That shape is already hanging! Try one of the other outlines.'
+        : `You need the ${result.item?.name ?? 'other'} shard for that outline. It is hiding on ${where}.`;
+      this.voice.say(line);
+      this.hud.showHint(line, 4200);
+      this.audio.ui?.();
+      return result;
+    }
+    this.placed = new Set(result.placed);
+    this.workshop?.tryPlace(hook.id);
+    this.hud.setShards(this.heldOrnaments());
+    this.hud.toast(`${result.item.name} on the tree`, null, this.shapeImage(result.item.shape));
+    this.audio.star();
+    this.fx.fountain(hook.worldPosition.clone(), result.item.color, 50);
+    this.voice.say(result.item.placeLine);
+    this._updateGoal();
+    if (result.complete) this._completeWorkshop();
+    this._save();
+    return result;
+  }
+
+  _completeWorkshop() {
+    this.workshop?.decorate();
+    this.hud.setBadges([{ name: 'Star Tree decorated', image: this.shapeImage('star') }]);
+    this.hud.showBanner('The Star Tree is decorated!', 'Every shape is glowing', 6000);
+    this.audio.star();
+    this.fx.fountain(this.wishTreePosition.clone().setY(this.wishTreePosition.y + 8), 0xfff2b0, 90);
+    this.market?.greet();
+    this._sayThen([
+      { text: 'Oh! Look at the Star Tree! Every single shape is glowing!', face: '🐌' },
+      { text: 'You decorated the whole tree yourself. I will remember this forever!', face: '🐣' },
+    ]);
+    this.schedule(14, () => this.hud.showBanner('Star Tree decorated!', 'A brand new badge for you', 5200));
+    this._saveDirty = true;
   }
 
   _updateMarket(dt, time) {
@@ -590,7 +736,11 @@ export class Game {
     let goal = '';
     if (zone.kind === 'hub') {
       const count = this.starCount();
-      if (this.endingPlayed) goal = '✨ Explore the hollow with Pip';
+      const holding = this.heldOrnaments().length;
+      if (holding > 0) goal = '🪄 Hang your shard on the Star Tree';
+      else if (isComplete([...this.placed])) goal = '🌟 The Star Tree is decorated';
+      else if (this.placed.size > 0) goal = `🎀 ${this.placed.size} of ${ORNAMENTS.length} ornaments`;
+      else if (this.endingPlayed) goal = '✨ Explore the hollow with Pip';
       else if (count >= ZONE_STAR_ORDER.length) goal = '🌟 Visit the Star Tree!';
       else if (count === 0) goal = '🍃 Choose a glowing arch';
       else goal = `💖 ${count} of ${ZONE_STAR_ORDER.length} Starberries · keep exploring`;
@@ -643,10 +793,26 @@ export class Game {
     if (this.aimStation && this.aimStation !== bestStation) this.aimStation.highlight(null);
     if (bestStation) bestStation.highlight(bestPad);
 
+    // Six ornament hooks on the hub tree: zapping one hangs the matching shard.
+    let hookTarget = null;
+    if (this.workshop && this.currentZoneId === 'meadow') {
+      let hookAngle = 0.24;
+      for (const hook of this.workshop.aimCandidates()) {
+        const v = hook.worldPosition.clone().sub(camPos);
+        const dist = v.length();
+        if (dist > 15) continue;
+        const angle = v.normalize().angleTo(dir);
+        if (angle < hookAngle) {
+          hookAngle = angle;
+          hookTarget = hook;
+        }
+      }
+    }
+
     // Momo is a zap target too, but a sign in the middle of the view still wins.
     let shopAngle = 0.3;
     let shopTarget = null;
-    if (this.market?.group.visible && !bestPad) {
+    if (this.market?.group.visible && !bestPad && !hookTarget) {
       const v = this.market.momoWorld().sub(camPos);
       if (v.length() < 26) {
         const angle = v.normalize().angleTo(dir);
@@ -665,12 +831,17 @@ export class Game {
 
     this.aimStation = bestStation;
     this.aimPad = bestPad;
-    this.aimCreature = bestPad ? null : bestCreature;
-    this.hud.setCrosshairHot(!!(bestPad || this.aimCreature || this.aimShop));
+    this.aimHook = bestPad ? null : hookTarget;
+    this.aimCreature = bestPad || this.aimHook ? null : bestCreature;
+    this.hud.setCrosshairHot(!!(bestPad || this.aimCreature || this.aimShop || this.aimHook));
   }
 
   _fire() {
     if (this.transitioning) return;
+    if (this.aimHook) {
+      this.blaster.fire(this.aimHook.worldPosition.clone(), { type: 'hook', hook: this.aimHook });
+      return;
+    }
     if (this.aimShop) {
       this.blaster.fire(this.aimShop.momoWorld(), { type: 'momo' });
       return;
@@ -689,6 +860,10 @@ export class Game {
     this.fx.burst(position, { color: 0xfff2b0, count: 8, speed: 3, life: 0.5, size: 0.45 });
     if (ref?.type === 'momo') {
       this.openShop();
+      return;
+    }
+    if (ref?.type === 'hook') {
+      this._hang(ref.hook);
       return;
     }
     if (!ref) return;
@@ -883,6 +1058,8 @@ export class Game {
       scanned: [...this.scannedCreatures],
       visited: [...this.visited],
       upgrades: [...this.upgrades],
+      shards: [...this.shards],
+      placed: [...this.placed],
       ended: this.endingPlayed,
     });
   }
@@ -896,6 +1073,8 @@ export class Game {
     (save.scanned ?? []).forEach((k) => this.scannedCreatures.add(k));
     this.visited = new Set(save.visited ?? []);
     this.upgrades = new Set(save.upgrades ?? []);
+    this.shards = new Set(save.shards ?? []);
+    this.placed = new Set(save.placed ?? []);
     this.endingPlayed = save.ended && this.starCount() === ZONE_STAR_ORDER.length;
     if (this.islands.has(save.zone)) this.currentZoneId = save.zone;
 
@@ -923,6 +1102,7 @@ export class Game {
     this.hud.setStars(this.starCount(), ZONE_STAR_ORDER.length);
     this.hud.setSparkles(this.sparkleCount);
     this._applyUpgrades();
+    this._applyWorkshopState();
     this._refreshPortalBadges();
   }
 
@@ -941,6 +1121,7 @@ export class Game {
     this.sky.update(dt, this.camera, time);
     this._updateVisibility();
     this._updateWishTree(dt, time);
+    this.workshop?.update(dt, time, this.camera.position);
     this.fx.update(dt);
     this.blaster.update(dt, time);
 
@@ -974,6 +1155,7 @@ export class Game {
       const forward = this.player.forwardFlat();
       this.creatures.update(dt, time, this.camera.position, forward, this.currentZoneId);
       this.sparkles.update(dt, this.camera.position, time);
+      this._updateShards(dt, time);
       this._updateScan(dt);
 
       for (const [zoneId, berry] of Object.entries(this.starberries)) {

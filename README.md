@@ -4,7 +4,7 @@
 
 Starlight Hollow is an **in-development beta**. The current Windows build has a complete Starberry quest and a story ending; the larger game vision is still in progress.
 
-[Download the Windows x64 beta](https://github.com/kidseib/starlight-hollow/releases/download/v0.1.3-beta.1/Starlight-Hollow-Windows-x64.zip) · [Release notes](https://github.com/kidseib/starlight-hollow/releases/tag/v0.1.3-beta.1) · [Changelog](CHANGELOG.md) · [Report feedback](https://github.com/kidseib/starlight-hollow/issues/new)
+[Download the Windows x64 beta](https://github.com/kidseib/starlight-hollow/releases/download/v0.1.4-beta.1/Starlight-Hollow-Windows-x64.zip) · [Release notes](https://github.com/kidseib/starlight-hollow/releases/tag/v0.1.4-beta.1) · [Changelog](CHANGELOG.md) · [Report feedback](https://github.com/kidseib/starlight-hollow/issues/new)
 
 ## The adventure
 
@@ -23,7 +23,7 @@ The current game has **29 short signs** across the hub and islands, plus friendl
 
 ## Play the Windows beta
 
-1. [Download the ZIP](https://github.com/kidseib/starlight-hollow/releases/download/v0.1.3-beta.1/Starlight-Hollow-Windows-x64.zip) and extract it.
+1. [Download the ZIP](https://github.com/kidseib/starlight-hollow/releases/download/v0.1.4-beta.1/Starlight-Hollow-Windows-x64.zip) and extract it.
 2. Run **`Starlight-Hollow-Portable.exe`** to play without installing, or **`Starlight-Hollow-Setup.exe`** for a per-user installation.
 3. Open `START-HERE.txt` in the ZIP for the quick-start guide.
 
@@ -38,7 +38,7 @@ The beta targets **Windows 10/11 x64** with a WebGL-capable graphics driver. Bot
 | Pause | Esc |
 | Toggle sound | M |
 
-**Beta playtest focus:** Find the striped stall between the meadow landing spot and the Star Tree, zap Momo, and buy or refuse each gift; bought gifts should show as gold badges beside the sparkle counter and still be yours after reopening the game. Then answer a sign wrongly twice and check that a wrong choice fades to grey, leaving two choices and the message "Easier now!", while the right answer stays bright. Walk away and back to confirm every choice returns. Finish an island, take its Starberry, and check that its meadow arch now carries a small star. Also try R with mouse look locked and the repeat button in drag-to-look mode, check offline voice, save and reopen, the installer shortcut, and uninstall. [Send findings through GitHub Issues](https://github.com/kidseib/starlight-hollow/issues/new); please omit children's personal information.
+**Beta playtest focus:** Look for the tall beam of light on each island, walk into the shard under it, then take the shape back to the Star Tree and zap the dashed outline that matches it (the Sky Lantern is Momo's 90-sparkle gift). Hanging all six should decorate the tree, add a gold badge and make Pip and Momo celebrate, and the tree should still be decorated after reopening. Also find the striped stall between the meadow landing spot and the Star Tree, zap Momo, and buy or refuse each gift; bought gifts should show as gold badges beside the sparkle counter and still be yours after reopening the game. Then answer a sign wrongly twice and check that a wrong choice fades to grey, leaving two choices and the message "Easier now!", while the right answer stays bright. Walk away and back to confirm every choice returns. Finish an island, take its Starberry, and check that its meadow arch now carries a small star. Also try R with mouse look locked and the repeat button in drag-to-look mode, check offline voice, save and reopen, the installer shortcut, and uninstall. [Send findings through GitHub Issues](https://github.com/kidseib/starlight-hollow/issues/new); please omit children's personal information.
 
 The 0.1.3 beta ZIP's SHA-256 is `96bb7bd52216604b60e37ea4d671a8861eb85a0704344e957b9f3a2e468258b4`. Every release on the [releases page](https://github.com/kidseib/starlight-hollow/releases) also shows its ZIP's checksum.
 
