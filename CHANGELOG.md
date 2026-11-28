@@ -16,6 +16,11 @@ When the drift is empty it pops out a little ribboned bundle, and Pip keeps it s
   often as you like. The first bundle of each play session is worth a few sparkles.
 - Calm motion makes the leaves fly straight and holds the whisk still.
 
+**A moon with real phases.** The Moon Arbor's moon is no longer just a small ball: each wish carves a
+true crescent, then a half moon, then a gibbous, then a full round face, then a dark new moon with a
+cool halo, and the lanterns stay warm the whole way round. You can see the shape change from the
+garden path, and the fireflies you called stay where they are.
+
 **The moon keeps turning.** The Moon Arbor's moon now changes with every wish you make: full and
 round at first, then a little waning, then half, then a thin crescent, then a dark new moon with a cool
 blue halo, and round again. The lanterns stay cosy and warm the whole way round, and the fireflies you

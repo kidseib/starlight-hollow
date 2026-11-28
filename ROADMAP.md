@@ -45,9 +45,9 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
 
 - The Windows beta is unsigned; SmartScreen warns on first launch.
 - Speech depends on an installed English OS voice; subtitles are the fallback.
-- The arbor's moon keeps turning past the twelve-firefly flock, but at six metres a phase reads
-  quietly — a small sliver and a coloured halo rather than an unmistakable waxing shape. A moon that
-  physically waxes (a lit bead behind a mask) is still future work.
+- The arbor's moon is a stylised carve: the terminator is faked in the camera's frame, so the lit side
+  always faces the child and the dark side is flat indigo. That is deliberate for legibility at 5 m,
+  not an astronomical simulation.
 - Pip's garden and the arbor exist only in the meadow; the other islands have gathering but no place
   of their own for what it makes.
 - Cloud browser software rendering runs at roughly 4 fps, so timing-sensitive checks need polling

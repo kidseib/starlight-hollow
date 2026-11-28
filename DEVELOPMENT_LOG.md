@@ -5,6 +5,92 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 26 — A moon you can read from the path (2026-11-28)
+
+**Chosen because** iteration 25's own log recorded the honest limit: the phased moon was a shrinking,
+narrowing bead with a coloured halo, and at six metres it read as "a small moon", never as a crescent.
+The roadmap's top open note said the same. This iteration replaces the painted sliver with a real
+carved silhouette.
+
+**What changed**
+
+The bead is still one sphere at the same place under the arch, but it is now a `ShaderMaterial` lit
+from a direction that turns with the phase. In the camera's frame the light sits at `angle` from the
+viewer, so the visible lit hemisphere *is* the crescent, half or gibbous shape, with a soft terminator
+and a faint rim that keeps the dark side reading as a moon rather than a hole in the sky.
+
+- `MOON_PHASES` gains `angle` (0 full face, pi/2 exactly half, 3.05 new) and drops `width`; `scale` is
+  now a gentle 0.98–1.12 so size no longer has to carry the phase. New pure helper `phaseLight(angle)`
+  returns the light vector and the lit fraction `(1 + cos angle) / 2`, which is what the tests lock.
+- `src/world/garden.js` holds `MOON_VERT`/`MOON_FRAG`, a 48×32 sphere of radius 0.26, and per-phase
+  uniforms: `uLight` from `phaseLight`, `uLit` from `phase.glow`, `uGain` from `phase.bright`, a fixed
+  `uDark` (deep indigo) and `uRim` 0.07. The halo now follows the lit fraction (scale 1.05 + lit·0.75,
+  opacity 0.28 + lit·0.22) and slides 0.05 toward the lit edge, so it never floats off the shape.
+- The halo's per-frame breathing had been overwriting the phase opacity with a flat 0.8; it now
+  breathes around a stored `_moonHalo`. Under `reducedMotion()` nothing moves: the carve is static and
+  the glow holds its value.
+- `Hud.toast` also keeps at most three cards now, so a fast run of lights or wishes cannot build a wall
+  of toasts.
+
+**Three passes, changing method when a look failed**
+
+1. A dark occluding sphere in front of the bead (iteration 25's first try) read as an eyeball and was
+   rejected again for the same reason.
+2. A shader-lit sphere at radius 0.17 was geometrically right but at 5.4 m the crescent was ~5 px and
+   read as a dark blob.
+3. Radius 0.26 with a wider crescent (`angle` 1.95, 37% lit), a much softer rim (0.16 → 0.07) and a
+   lighter dark side gave the unmistakable shapes captured below. The first shader pass also blew the
+   full moon into a white blob; `uGain` was brought down from 2.2 to 1.05 and the halo dimmed to fix it.
+
+**Verified by playing** (1280×720, 16:9, same authenticated page)
+
+- **Leafwhisk gathering:** 6 petals in the grove, 6 sun puffs in the falls, 6 mote lanterns in the
+  words, patches regrown between rounds → basket `🌸9 🌾8 ✨8`, chip updated.
+- **Nine real gifts filled the bed** 3/3/3, each with exactly one family chime, one toast, one bubble
+  and one spoken line; the "garden is full" hint came as words only.
+- **Six more woke the arbor:** five family chimes with rising light, then one `audio.arbor()` and the
+  wake line with **no** family chime; six lanterns, the moth, full moon.
+- **Five real wishes** past the last lantern, one after another with the moon carved each time:
+  full (`uLight` 0,0,1 · gain 1.05 · halo 0.42), gibbous (0.78,0,0.62 · 1.08 · 0.38), half (1,0,0 ·
+  1.0 · 0.33), crescent (0.93,0,−0.37 · 0.98 · 0.29), new (0.09,0,−1 · 0.75 · 0.24). Each wish fired
+  exactly one `audio.wish()`, one "A wish for the arbor!" toast and one phase line; forty idle frames
+  afterwards produced no further audio, voice or toast events.
+- **No-op silence:** with the bed full, the arbor awake and an empty basket, a zap produced one bubble
+  and one line and changed nothing.
+- **Reload** restored `arbor 6 / wishes 14 / new moon` with the same light vector, six lit lanterns, the
+  moth and the full twelve-firefly constellation; **legacy save** booted at 15 sparkles with arbor 0,
+  an empty basket and a hidden chip; **zero console or page errors**.
+- **Calm motion:** crescent, halo 0.35, light vector unchanged before and after 30 frames, moth parked,
+  six lights still on.
+- **Controls:** keyboard (3.43 m, jump 0.96 m, switch, hold, pause/resume), mouse (0.32 rad, one bolt,
+  switch), emulated touch (2.59 m, 0.31 rad, one bolt, jump 0.88 m), injected gamepad (2.21 m,
+  0.54 rad yaw, 0.29 rad pitch, A 1.12 m, X zap, B switch, Start pause/resume).
+- **Untouched systems:** Leafwhisk gather still stocks the basket and shows the chip, a bolt still wakes
+  a crystal, and the per-subject difficulty table still reads `auto`. The scanning gaze aimed at the
+  meadow's listening stone but did not cross its 0.7 s dwell inside the sampled 0.7 s window; that code
+  is untouched by this iteration and was proved in earlier ones.
+
+**Captures** (1280×720): `iter26-basket.png`, `iter26-full-garden.png`, `iter26-overflow.png`,
+`iter26-arbor-awake.png`, `iter26-walk-{full,gibbous,half,crescent,new}.png`,
+`iter26-near-{full,gibbous,half,crescent,new}.png`, `iter26-calm.png`, `iter26-calm-near.png`,
+`iter26-reload.png`, `iter26-legacy.png`.
+
+**Tests and build:** `node --test tests/*.test.js` 80 pass — the phase table, the monotonic lit
+fractions (full 1, gibbous 0.6–0.95, half exactly 0.5, crescent 0.3–0.45, new < 0.02), the light
+vectors at 0 and pi, the cycle wrap, the sanitiser cap and the once-per-gift path are all locked;
+`npm run build` exit 0.
+
+**Open**
+
+- The moon is stylised: the terminator is faked in view space, so the lit side always faces the child's
+  camera. That is deliberate for legibility, but it is not an astronomical simulation, and the dark
+  side is a flat indigo with no maria.
+- The crescent now sits at 37% lit so it reads at walking distance; a true thin sliver would be more
+  accurate but mud at 5 m.
+- The garden and arbor remain meadow-only; the grotto veil still reads as a pane.
+- Android/controller hardware and a Windows build remain unverified; GitHub push is still blocked on a
+  user credential.
+
 ## Iteration 25 — The moon keeps turning, and the loop played for real (2026-11-28)
 
 **Chosen because** iteration 24 left one flat note in its own log: past twelve fireflies the arbor still

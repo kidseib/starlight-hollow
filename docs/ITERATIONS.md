@@ -4,6 +4,15 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 26 - A carved moon
+
+- **The moon is geometry now.** The bead is a 48-segment sphere with a `ShaderMaterial` lit from `MOON_PHASES[i].angle` in the camera's frame, so the visible lit hemisphere really is a crescent, half or gibbous with a soft terminator and a faint rim. `phaseLight(angle)` (pure) returns the light vector and the lit fraction; `uLit`/`uGain`/`uRim` carry the colour, brightness and edge light. `width` is gone; `scale` only varies 0.98–1.12.
+- **Calibrated by playing.** Radius 0.26, crescent angle 1.95 (37% lit), rim 0.16 → 0.07, gain 2.2 → 1.05, halo opacity now tracks the lit fraction (0.28 + lit·0.22) and slides toward the lit edge. The per-frame halo breathing no longer overwrites the phase value.
+- **Toasts capped at three.** `Hud.toast` drops the oldest card past three, so quick lights or wishes cannot stack a wall.
+- **Proof:** Leafwhisk gathering (9/8/8), nine real gifts filling the bed, six waking the arbor, five real wishes carving full → gibbous → half → crescent → new, each with exactly one wish sound, toast and line; no events on idle frames; silent no-op; reload (6/14/new), legacy boot, calm motion hold, and keyboard/mouse/touch/pad all reaching every verb.
+- **Tests/build:** 80 pass, build exit 0. Captures `artifacts/iter26-*.png`.
+- **Not verified:** real Android/controller hardware, Windows build; GitHub push blocked on a user credential.
+
 ## Iteration 25 - The moon turns, and the loop is played
 
 - **Post-cap wishes now change the arbor.** `MOON_PHASES` in `src/game/gifts.js` (full, waning, half, crescent, new); `moonPhase(wishes)`; each wish moves the bead one step, shrinking and narrowing it (`scale`, `width`) and recolouring and spreading its halo (`glow`), with a matching `lamp` tint. `WISH_CAP` 999 is a sanitiser only; the firefly flock still stops at twelve so the constellation stays legible. Copy lives in the phase data, not `game.js`.

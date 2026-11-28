@@ -15,9 +15,39 @@ import {
   WISH_MAX,
   arborStage,
   moonPhase,
+  phaseLight,
   wishCount,
   sanitizeGifts,
 } from '../game/gifts.js';
+
+// The arbor's moon is a sphere lit from a direction that turns with the phase.
+// Seen head-on, the lit hemisphere *is* the crescent, half or gibbous shape, so
+// the silhouette is carved by the geometry and the terminator stays soft - no
+// dark disc in front, which read as an eyeball from the path.
+const MOON_VERT = `
+  varying vec3 vLitNormal;
+  void main() {
+    vLitNormal = normalize(normalMatrix * normal);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }`;
+
+const MOON_FRAG = `
+  uniform vec3 uLight;
+  uniform vec3 uLit;
+  uniform vec3 uDark;
+  uniform float uGain;
+  uniform float uSoft;
+  uniform float uRim;
+  varying vec3 vLitNormal;
+  void main() {
+    vec3 n = normalize(vLitNormal);
+    float facing = dot(n, normalize(uLight));
+    float lit = smoothstep(-uSoft, uSoft, facing);
+    // A faint edge light keeps the dark side reading as a moon, not a hole in the sky.
+    float rim = pow(1.0 - abs(n.z), 2.2);
+    vec3 col = mix(uDark, uLit * uGain, lit) + uLit * uRim * rim;
+    gl_FragColor = vec4(col, 1.0);
+  }`;
 
 const mat = (color, opts = {}) =>
   new THREE.MeshStandardMaterial({
@@ -454,19 +484,31 @@ export class Garden {
       this.arborLights.push({ hang, cage, glow });
     }
 
-    // The moon bead under the arch: dim while the arbor sleeps, bright when awake.
-    const moonCord = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 0.3, 3), mat(0x5d4632));
-    moonCord.position.set(0, 1.98, 0);
+    // The moon under the arch: dim while the arbor sleeps, and a carved phase
+    // once the wishes start turning it.
+    const moonCord = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 0.22, 3), mat(0x5d4632));
+    moonCord.position.set(0, 1.9, 0.16);
     this.arborGroup.add(moonCord);
     this.arborMoon = new THREE.Mesh(
-      new THREE.SphereGeometry(0.145, 10, 8),
-      mat(0xffe9b0, { roughness: 0.3, emissive: 0xffcf6a, emissiveIntensity: 0.3, transparent: true, opacity: 0.96 })
+      new THREE.SphereGeometry(0.26, 48, 32),
+      new THREE.ShaderMaterial({
+        uniforms: {
+          uLight: { value: new THREE.Vector3(0, 0, 1) },
+          uLit: { value: new THREE.Color(0xfff4d6) },
+          uDark: { value: new THREE.Color(0x322e5c) },
+          uGain: { value: 2.2 },
+          uSoft: { value: 0.06 },
+          uRim: { value: 0.07 },
+        },
+        vertexShader: MOON_VERT,
+        fragmentShader: MOON_FRAG,
+        fog: false,
+      })
     );
-    this.arborMoon.scale.set(1, 0.82, 0.5);
-    this.arborMoon.position.set(0, 1.78, 0);
+    this.arborMoon.position.set(0, 1.72, 0.16);
     this.arborGroup.add(this.arborMoon);
-    this.arborMoonGlow = makeSprite(0xffe2a0, 1.9, 0.08);
-    this.arborMoonGlow.position.set(0, 1.78, 0);
+    this.arborMoonGlow = makeSprite(0xffe2a0, 2.2, 0.08);
+    this.arborMoonGlow.position.set(0, 1.72, 0.14);
     this.arborGroup.add(this.arborMoonGlow);
 
     // The moon moth that moves in when the arbor wakes: four soft wings, a
@@ -550,13 +592,17 @@ export class Garden {
       light.glow.material.opacity = lit ? (calm ? 0.55 : 0.8) : 0;
     });
     const awake = stage >= ARBOR_MAX;
-    this.arborMoonGlow.material.opacity = awake ? 0.9 : 0.06 + stage * 0.035;
+    const light = phaseLight(phase.angle);
+    this._moonHalo = awake ? 0.28 + light.lit * 0.22 : 0.06 + stage * 0.035;
+    this.arborMoonGlow.material.opacity = this._moonHalo;
+    const moon = this.arborMoon.material.uniforms;
+    moon.uLight.value.set(light.x, 0, light.z).normalize();
+    moon.uLit.value.setHex(phase.glow);
+    moon.uGain.value = awake ? phase.bright : 0.6 + stage * 0.07;
+    this.arborMoon.scale.setScalar(phase.scale);
     this.arborMoonGlow.material.color.setHex(phase.glow);
-    this.arborMoon.material.color.setHex(phase.glow);
-    this.arborMoon.material.emissive.setHex(phase.glow);
-    this.arborMoon.material.emissiveIntensity = awake ? phase.bright : 0.25 + stage * 0.08;
-    this.arborMoon.scale.set(phase.scale * phase.width, phase.scale * 0.82, phase.scale * 0.5);
-    this.arborMoonGlow.scale.setScalar(1.1 + phase.scale * 0.95);
+    this.arborMoonGlow.scale.setScalar(1.05 + light.lit * 0.75);
+    this.arborMoonGlow.position.x = light.x * 0.05;
     this.moth.visible = awake;
     this.mothGlow.visible = awake;
     this.mothGlow.material.opacity = awake ? 0.35 : 0;
@@ -740,7 +786,9 @@ export class Garden {
     // The arbor: lights breathe, the moth hovers, the fireflies drift.
     const arborLit = (this.arborStage ?? 0) > 0;
     if (arborLit) {
-      this.arborMoonGlow.material.opacity = (this.arborStage >= ARBOR_MAX ? 0.8 : 0.06 + this.arborStage * 0.035)
+      // The halo breathes around the phase's own brightness; the carve itself
+      // never moves, so the moon is the same shape calm or not.
+      this.arborMoonGlow.material.opacity = (this._moonHalo ?? 0.3)
         * (calm ? 1 : 0.92 + Math.sin(time * 1.3) * 0.1);
     }
     if (this.moth.visible) {

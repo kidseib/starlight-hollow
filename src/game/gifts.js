@@ -50,11 +50,9 @@ export const WISH_CAP = 999;
 export const ARBOR_NAME = 'the Moon Arbor';
 
 /**
- * The arbor's moon as it turns, one step per wish. The bead swells and shrinks
- * with `scale` and narrows to a sliver with `width` - a round bead shrinking only
- * read as "a small moon", never as a crescent - and takes `glow`, which also
- * colours and spreads the halo: cream, gold, amber, rose, then blue for the dark
- * moon, and the lanterns take
+ * The arbor's moon as it turns, one step per wish. `angle` is where its light
+ * comes from (0 full face, pi dark), and `glow` colours both the lit face and the
+ * halo: cream, gold, amber, rose, then blue for the dark moon, and the lanterns take
  * and the halo spreads with it. The lanterns stay honey-warm the whole way round
  * (a blue lamp read as "the lanterns went out" at gameplay distance, so the
  * colour change lives on the moon's own halo instead). A silhouette swap was
@@ -64,25 +62,37 @@ export const ARBOR_NAME = 'the Moon Arbor';
 export const MOON_PHASES = [
   {
     id: 'full', name: 'a full moon', line: 'The moon is full and round. That is my favourite shape!',
-    glow: 0xfff4d6, lamp: 0xffa93d, bright: 2.4, scale: 1.16, width: 1,
+    glow: 0xffefc4, lamp: 0xffa93d, bright: 1.05, scale: 1.12, angle: 0,
   },
   {
     id: 'gibbous', name: 'a waning moon', line: 'The moon is getting smaller. It still smiles, mind you.',
-    glow: 0xffd98f, lamp: 0xffa235, bright: 2.1, scale: 1.06, width: 0.93,
+    glow: 0xffd98f, lamp: 0xffa235, bright: 1.08, scale: 1.08, angle: 0.9,
   },
   {
     id: 'half', name: 'a half moon', line: 'A half moon! Look, it is exactly half asleep.',
-    glow: 0xffb45e, lamp: 0xff9a2c, bright: 1.8, scale: 0.96, width: 0.78,
+    glow: 0xffb45e, lamp: 0xff9a2c, bright: 1, scale: 1.04, angle: 1.5708,
   },
   {
-    id: 'crescent', name: 'a crescent moon', line: 'A crescent moon - a little silver boat above my garden.',
-    glow: 0xff9a7a, lamp: 0xff8f26, bright: 1.55, scale: 0.86, width: 0.46,
+    id: 'crescent', name: 'a crescent moon', line: 'A crescent moon - a little rose-gold boat above my garden.',
+    glow: 0xff9a7a, lamp: 0xff8f26, bright: 0.98, scale: 1, angle: 1.95,
   },
   {
     id: 'new', name: 'a new moon', line: 'The moon has gone dark. It is only hiding - the lanterns will keep us cosy.',
-    glow: 0x9fd8ff, lamp: 0xffa93d, bright: 0.5, scale: 0.62, width: 0.3,
+    glow: 0x9fd8ff, lamp: 0xffa93d, bright: 0.75, scale: 0.98, angle: 3.05,
   },
 ];
+
+/**
+ * Where the moon's light comes from, in the camera's own frame, and how much of
+ * the disc it leaves bright. The sphere is lit from `angle` away from the viewer:
+ * 0 is a full face, pi/2 exactly half, and pi the dark side. The visible lit
+ * fraction is (1 + cos angle) / 2, so the shape a child sees really is the
+ * crescent/half/gibbous carved by the geometry rather than a painted-on sliver.
+ */
+export function phaseLight(angle) {
+  const a = Number.isFinite(angle) ? angle : 0;
+  return { x: Math.sin(a), z: Math.cos(a), lit: (1 + Math.cos(a)) / 2 };
+}
 
 export const GIFT_SPOTS = [
   { kind: 'petal', id: 'posy-bed', label: 'the posy bed', icon: '🌸', max: GIFT_MAX },

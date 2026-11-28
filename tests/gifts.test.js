@@ -12,6 +12,7 @@ import {
   WISH_MAX,
   MOON_PHASES,
   moonPhase,
+  phaseLight,
   WISH_CAP,
   WISH_TOAST,
   BASKET_MAX,
@@ -216,16 +217,24 @@ test('arbor state is clamped, and its copy is distinct from every other line', (
   for (const phase of MOON_PHASES) {
     assert.ok(phase.line.length > 20 && /[.!]$/.test(phase.line), 'a phase line reads as a spoken sentence');
     assert.ok(Number.isFinite(phase.glow) && Number.isFinite(phase.bright), 'a phase has a glow and a brightness');
-    assert.ok(Number.isFinite(phase.lamp) && phase.scale > 0 && phase.scale < 1.5, 'a phase has a lamp colour and a size');
+    assert.ok(Number.isFinite(phase.lamp) && phase.scale > 0.9 && phase.scale < 1.2, 'a phase has a lamp colour and a readable size');
     assert.ok(phase.lamp % 256 < 128, 'the lanterns stay honey-warm in every phase');
-    if (phase.id === 'new') assert.ok(phase.bright < 1 && phase.scale < 0.7, 'the new moon goes small and dark');
-    else assert.ok(phase.scale > 0.8, 'the lit moon stays big enough to read at gameplay distance');
+    assert.ok(phase.angle >= 0 && phase.angle <= Math.PI, 'a phase light comes from somewhere on the near-to-far arc');
+    if (phase.id === 'new') assert.ok(phase.angle > 2.8, 'the new moon is almost fully dark');
   }
   assert.equal(moonPhase(0).id, 'full', 'the arbor wakes under a full moon');
-  assert.equal(new Set(MOON_PHASES.map((p) => p.scale)).size, MOON_PHASES.length, 'every phase has its own size');
   assert.equal(new Set(MOON_PHASES.map((p) => p.glow)).size, MOON_PHASES.length, 'every phase has its own halo colour');
-  assert.equal(new Set(MOON_PHASES.map((p) => p.width)).size, MOON_PHASES.length, 'every phase has its own silhouette');
-  assert.ok(MOON_PHASES.find((p) => p.id === 'crescent').width < 0.6, 'the crescent really narrows to a sliver');
+
+  // The lit face is carved by the geometry: the fractions must fall in order, and
+  // exactly half at the quarter, so the shape a child sees is a real phase.
+  const litByPhase = Object.fromEntries(MOON_PHASES.map((p) => [p.id, phaseLight(p.angle).lit]));
+  assert.equal(litByPhase.full, 1);
+  assert.ok(litByPhase.gibbous > 0.6 && litByPhase.gibbous < 0.95, 'a gibbous moon is more than half lit');
+  assert.ok(Math.abs(litByPhase.half - 0.5) < 0.002, 'the half moon is exactly half lit');
+  assert.ok(litByPhase.crescent > 0.3 && litByPhase.crescent < 0.45, 'a crescent is a clear lit sliver, not a hairline');
+  assert.ok(litByPhase.new < 0.02, 'the new moon shows almost no lit face');
+  assert.equal(phaseLight(0).z, 1, 'the full moon is lit from the viewer');
+  assert.equal(phaseLight(Math.PI).z, -1, 'the new moon is lit from behind');
   assert.notEqual(moonPhase(1).glow, moonPhase(0).glow, 'the first wish changes the lantern colour');
   assert.equal(moonPhase(MOON_PHASES.length).id, moonPhase(0).id, 'the moon cycles back to full');
   assert.ok(MOON_PHASES.includes(moonPhase(WISH_CAP + 5)), 'a wild value still picks a real phase');

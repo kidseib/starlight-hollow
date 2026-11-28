@@ -259,10 +259,13 @@ gift to the arbor instead, choosing whichever family the basket actually holds. 
   legible, but the wishes never do — `wishCount` sanitises to `WISH_CAP` (999) only so a wild save
   cannot overflow.
 - Each wish also turns the moon one step through `MOON_PHASES`: full, waning, half, crescent, new, then
-  round again. The bead shrinks (`scale`) and narrows (`width`) until the crescent is a real sliver, its
-  halo changes colour and spread (`glow` — cream, gold, amber, rose, blue), and the lanterns warm or cool
-  a shade with `lamp`. The fireflies, the six lights and the moth stay exactly as they were, so the
-  place stays readable while the sky keeps changing. There is no counter in the HUD, no refusal for
+  round again. The moon is a sphere lit by a shader from `phase.angle` in the camera's frame, so the
+  lit hemisphere *is* the carved shape with a soft terminator and a faint rim: at `angle` 0 the whole
+  face is bright, at pi/2 exactly half, at 1.95 a clear crescent, at 3.05 a dark disc. `phaseLight()`
+  turns the angle into the light vector and the lit fraction; `glow` colours the lit face and halo
+  (cream, gold, amber, rose, blue), `bright` is the shader gain, `lamp` warms the lanterns a shade, and
+  `scale` only nudges the size. The fireflies, the six lights and the moth stay exactly as they were, so
+  the place stays readable while the sky keeps changing. There is no counter in the HUD, no refusal for
   being full, and nothing is lost by ignoring it.
 - An empty basket is the only refusal, and it answers with `ARBOR_EMPTY` (which families count) and
   nothing else — no sound, no particles, nothing spent. `Hud.toast` refreshes a repeated line rather
@@ -271,7 +274,8 @@ gift to the arbor instead, choosing whichever family the basket actually holds. 
   discovered by doing what a child already does.
 
 `save.arbor` (0–6) and `save.wishes` (0–`WISH_CAP`) are sanitised on load and default to zero, so a
-legacy save wakes to a sleeping arbor and a full moon. Under `reducedMotion()` the lantern glow is steady, the moth holds a
+legacy save wakes to a sleeping arbor and a full moon. The shader never animates the shape: the light vector
+only changes when a wish arrives, so `reducedMotion()` has nothing to still. Under `reducedMotion()` the lantern glow is steady, the moth holds a
 fixed hover with its wings open and the fireflies stop orbiting.
 
 ### Controls on every device

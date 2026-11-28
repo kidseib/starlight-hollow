@@ -237,6 +237,8 @@ export class HUD {
     label.textContent = text;
     el.append(badge, label);
     this.toastStack.appendChild(el);
+    // Three at a time is a feed; more than that is a wall.
+    while (this.toastStack.children.length > 3) this.toastStack.firstElementChild?.remove();
     this._toastEl = el;
     this._toastText = text;
     this._restartToast(el);

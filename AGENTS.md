@@ -82,9 +82,13 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   wish) so a basket can never fill with nowhere to go. `wishCount` sanitises to `WISH_CAP` and must not
   clamp at `WISH_MAX`: the firefly flock stops at twelve for legibility, the wishes do not. Every wish
   must also change something visible: `MOON_PHASES` + `moonPhase(wishes)` carry that, and the phase copy
-  belongs in the data, never hardcoded in `game.js`. Keep the lanterns honey-warm in every phase (a cool
-  lamp read as "the lights went out"), carry the phase on the bead's size, silhouette and halo colour,
-  and keep the pure-copy/sanitised-rules split. Keep one sound per event — family chime for a light,
+  belongs in the data, never hardcoded in `game.js`. The moon is a sphere lit by a shader from
+  `phase.angle` in the camera's frame (`MOON_VERT`/`MOON_FRAG` in `src/world/garden.js`, `phaseLight()`
+  in `gifts.js`): the carved crescent/half/gibbous is the lit hemisphere, so never go back to a dark disc
+  in front of the bead (it reads as an eyeball) or to a bead that only shrinks (it reads as a small
+  ball). Keep the lanterns honey-warm in every phase (a cool lamp read as "the lights went out"), tie the
+  halo's scale and opacity to the lit fraction and nudge it toward the lit edge, and keep the
+  pure-copy/sanitised-rules split. Keep one sound per event — family chime for a light,
   `audio.arbor()` for the waking, `audio.wish()` for a wish — plus one toast and one Pip line.
   An empty basket is the only refusal: answer with `ARBOR_EMPTY` or `GIFT_EMPTY` and nothing else (no
   sound, no particles, nothing spent). Keep the leaf drift out of the basket (`BUNDLE_KINDS` is
