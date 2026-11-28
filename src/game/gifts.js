@@ -8,6 +8,12 @@
 // child owns (the bundle stays in the basket), an empty basket is answered with
 // a friendly pointer rather than a scold, and none of this touches sparkles,
 // stars, keepsakes or the grotto.
+//
+// When all three spots are full, the garden's bare Moon Arbor takes over: the
+// same aim-and-zap puts a light on it, six lights wake it and a moon moth moves
+// in, and every gift after that becomes a wish that calls one more firefly. The
+// arbor never refuses a gift for being too full, so gathering never ends in a
+// basket with nowhere to go.
 
 /** The families that leave something in the basket. Leaves stay a celebration. */
 export const BUNDLE_KINDS = ['petal', 'dust', 'mote'];
@@ -25,6 +31,14 @@ export const BASKET_MAX = 9;
 
 /** Each spot in Pip's garden takes one bundle per stage. */
 export const GIFT_MAX = 3;
+
+/** The arbor behind the bed takes six lights before it wakes. */
+export const ARBOR_MAX = 6;
+
+/** Waking the arbor invites a moon moth; each wish after that calls a firefly. */
+export const WISH_MAX = 12;
+
+export const ARBOR_NAME = 'the Moon Arbor';
 
 export const GIFT_SPOTS = [
   { kind: 'petal', id: 'posy-bed', label: 'the posy bed', icon: '🌸', max: GIFT_MAX },
@@ -70,6 +84,53 @@ export function basketTotal(bundles) {
 export function canGive(gifts, kind) {
   if (!BUNDLE_KINDS.includes(kind)) return false;
   return sanitizeGifts(gifts)[kind] < GIFT_MAX;
+}
+
+/** True once every spot has all it wants, so gifts move to the arbor. */
+export function allSpotsFull(gifts) {
+  const placed = sanitizeGifts(gifts);
+  return BUNDLE_KINDS.every((kind) => placed[kind] >= GIFT_MAX);
+}
+
+const clamp = (value, max) => {
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(max, n);
+};
+
+export function arborStage(raw) {
+  return clamp(raw, ARBOR_MAX);
+}
+
+export function wishCount(raw) {
+  return clamp(raw, WISH_MAX);
+}
+
+/**
+ * Spend one bundle on the Moon Arbor, which never turns a gift away. Before it
+ * wakes each gift hangs one light (`stage` 1..`ARBOR_MAX`, the last one `woke`);
+ * after that each gift is a `wish` that calls another firefly. Returns fresh
+ * objects, and an empty basket is still the only refusal.
+ */
+export function giveArbor(bundles, arbor, wishes, kind) {
+  const shelf = sanitizeBundles(bundles);
+  const stage = arborStage(arbor);
+  const lights = wishCount(wishes);
+  const base = { bundles: shelf, arbor: stage, wishes: lights, stage, woke: false, wish: false };
+  if (!BUNDLE_KINDS.includes(kind)) return { ...base, ok: false, reason: 'unknown' };
+  if (shelf[kind] <= 0) return { ...base, ok: false, reason: 'empty' };
+  shelf[kind] -= 1;
+  if (stage < ARBOR_MAX) {
+    const next = stage + 1;
+    return {
+      ok: true, reason: null, bundles: shelf, arbor: next, wishes: lights,
+      stage: next, woke: next === ARBOR_MAX, wish: false,
+    };
+  }
+  return {
+    ok: true, reason: null, bundles: shelf, arbor: stage,
+    wishes: Math.min(WISH_MAX, lights + 1), stage, woke: false, wish: true,
+  };
 }
 
 /**
@@ -139,6 +200,35 @@ export const BASKET_HINT = {
   dust: 'A warm sun puff! My garden bowl would love that.',
   mote: 'A glowing mote lantern! My garden post has room for it.',
 };
+
+/** Spoken once when the last spot fills, so the arbor is never a secret. */
+export const ARBOR_HINT =
+  'My garden is full! Look at the bare arbor behind it — one more gift and it will wake.';
+
+/** What Pip says as the arbor takes each light, then the line when it wakes. */
+export const ARBOR_LINES = [
+  'A light for the arbor! It has been waiting for someone to fill it.',
+  'Two little lights. The arbor is waking up.',
+  'Halfway! I can hear the arbor humming.',
+  'Four lights! The moths are watching from the trees.',
+  'One more light and the whole arbor will be glowing.',
+  'The Moon Arbor is awake! A moon moth has come to live with us.',
+];
+
+/** An empty basket at the arbor: any family will do, so say so. */
+export const ARBOR_EMPTY =
+  'The arbor loves any bundle — a posy, a sun puff or a mote lantern. Gather one and come back.';
+
+export const ARBOR_TOAST = ['A light for the arbor!', '🌙'];
+export const ARBOR_WAKE_TOAST = ['The Moon Arbor is awake!', '🦋'];
+export const WISH_TOAST = ['A wish for the arbor!', '🌠'];
+
+/** After it wakes, the arbor keeps taking gifts as wishes, one firefly each. */
+export const WISH_LINES = [
+  'A wish for the arbor! The moon moth carries it up.',
+  'Another wish — a firefly came to keep it.',
+  'The arbor is full of little lights. There is always room for one more.',
+];
 
 /** A spot's stored stage, for the world and the HUD. */
 export function giftStage(gifts, kind) {

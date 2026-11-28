@@ -9,7 +9,7 @@
 import * as THREE from 'three';
 import { makeSprite } from './textures.js';
 import { reducedMotion } from '../engine/motion.js';
-import { GIFT_MAX, sanitizeGifts } from '../game/gifts.js';
+import { ARBOR_MAX, GIFT_MAX, WISH_MAX, arborStage, wishCount, sanitizeGifts } from '../game/gifts.js';
 
 const mat = (color, opts = {}) =>
   new THREE.MeshStandardMaterial({
@@ -26,7 +26,7 @@ const mat = (color, opts = {}) =>
 const PETAL_PINKS = [0xff6fae, 0xff8fc4, 0xe84b8f, 0xffa8cf, 0xffc44f];
 
 export class Garden {
-  constructor({ island, position, yaw = 0, fx = null, gifts = null }) {
+  constructor({ island, position, yaw = 0, fx = null, gifts = null, arbor = 0, wishes = 0 }) {
     this.island = island;
     this.fx = fx;
     this.group = new THREE.Group();
@@ -43,12 +43,14 @@ export class Garden {
     this._buildPosies();
     this._buildBowl();
     this._buildLanterns();
+    this._buildArbor();
 
     this.group.traverse((o) => {
       if (o.isMesh) o.castShadow = false;
     });
 
     this.setGifts(gifts);
+    this.setArbor(arbor, wishes);
   }
 
   // ------------------------------------------------------------- scenery ----
@@ -370,6 +372,208 @@ export class Garden {
     }
   }
 
+
+  // ---------------------------------------------------------------- arbor ----
+
+  /**
+   * The Moon Arbor behind the bed: bare posts and unlit paper lanterns from the
+   * first frame, so a child can see there is more garden to grow into. When all
+   * three spots are full, gifts hang its lights; six wake it and a moon moth
+   * moves in; after that each gift is a wish that calls another firefly.
+   */
+  _buildArbor() {
+    const wood = mat(0x8a6a4e, { roughness: 0.92 });
+    const darkWood = mat(0x6d4f38, { roughness: 0.95 });
+    this.arborGroup = new THREE.Group();
+    this.arborGroup.position.set(0, 0, -1.95);
+    this.group.add(this.arborGroup);
+
+    for (const side of [-1, 1]) {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.095, 1.75, 6), wood);
+      post.position.set(side * 1.55, 0.87, 0);
+      this.arborGroup.add(post);
+      const foot = new THREE.Mesh(new THREE.DodecahedronGeometry(0.17, 0), mat(0xcbbfa6, { roughness: 0.95 }));
+      foot.scale.set(1.1, 0.6, 1.1);
+      foot.position.set(side * 1.55, 0.07, 0);
+      this.arborGroup.add(foot);
+
+      // Honeysuckle climbing each post: a few leaves, never a bare pole.
+      for (let i = 0; i < 4; i++) {
+        const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.16, 3), mat(0x5f9b4a, { emissive: 0x1f4d16, emissiveIntensity: 0.28 }));
+        leaf.position.set(side * 1.55 + (i % 2 ? 0.09 : -0.09), 0.42 + i * 0.34, 0.03);
+        leaf.rotation.z = (i % 2 ? -1 : 1) * 0.7;
+        this.arborGroup.add(leaf);
+      }
+    }
+
+    // A gentle arch: a half torus squashed so its rise is about half a metre.
+    const arch = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.062, 6, 22, Math.PI), wood);
+    arch.position.set(0, 1.7, 0);
+    arch.scale.set(1, 0.3, 1);
+    this.arborGroup.add(arch);
+    for (const side of [-1, 1]) {
+      const cap = new THREE.Mesh(new THREE.DodecahedronGeometry(0.1, 0), darkWood);
+      cap.position.set(side * 1.55, 1.72, 0);
+      this.arborGroup.add(cap);
+    }
+
+    // Six paper lanterns hanging along the arch, dark until a gift lights them.
+    this.arborLights = [];
+    for (let i = 0; i < ARBOR_MAX; i++) {
+      const a = Math.PI * ((i + 0.5) / ARBOR_MAX);
+      const x = Math.cos(a) * 1.36;
+      const y = 1.68 + Math.sin(a) * 0.36 - 0.19;
+      const hang = new THREE.Group();
+      hang.position.set(x, y, 0);
+      const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 0.16, 3), mat(0x5d4632));
+      cord.position.y = 0.13;
+      hang.add(cord);
+      const cage = new THREE.Mesh(
+        new THREE.SphereGeometry(0.115, 8, 6),
+        mat(0x9a8f7b, { roughness: 0.45, emissive: 0x000000, emissiveIntensity: 0.02, transparent: true, opacity: 0.8 })
+      );
+      cage.scale.y = 1.2;
+      hang.add(cage);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.055, 0.035, 6), darkWood);
+      cap.position.y = 0.14;
+      hang.add(cap);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.125, 0.013, 4, 10), darkWood);
+      ring.rotation.x = Math.PI / 2;
+      hang.add(ring);
+      const glow = makeSprite(0xffc46b, 0.95, 0);
+      hang.add(glow);
+      this.arborGroup.add(hang);
+      this.arborLights.push({ hang, cage, glow });
+    }
+
+    // The moon bead under the arch: dim while the arbor sleeps, bright when awake.
+    const moonCord = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 0.3, 3), mat(0x5d4632));
+    moonCord.position.set(0, 1.98, 0);
+    this.arborGroup.add(moonCord);
+    this.arborMoon = new THREE.Mesh(
+      new THREE.SphereGeometry(0.11, 8, 6),
+      mat(0xffe9b0, { roughness: 0.3, emissive: 0xffcf6a, emissiveIntensity: 0.3, transparent: true, opacity: 0.95 })
+    );
+    this.arborMoon.scale.set(1, 0.82, 0.5);
+    this.arborMoon.position.set(0, 1.78, 0);
+    this.arborGroup.add(this.arborMoon);
+    this.arborMoonGlow = makeSprite(0xffe2a0, 1.9, 0.08);
+    this.arborMoonGlow.position.set(0, 1.78, 0);
+    this.arborGroup.add(this.arborMoonGlow);
+
+    // The moon moth that moves in when the arbor wakes: four soft wings, a
+    // banded body and feathered feelers, small enough to read as a creature.
+    this.moth = new THREE.Group();
+    const wingMat = mat(0xb49cf0, { roughness: 0.6, emissive: 0x6a4fbd, emissiveIntensity: 0.4, transparent: true, opacity: 0.95 });
+    const makeMothWing = (side, upper) => {
+      const pivot = new THREE.Group();
+      const wing = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6), wingMat);
+      wing.scale.set(0.16, 0.02, upper ? 0.2 : 0.12);
+      wing.position.x = side * (upper ? 0.15 : 0.11);
+      wing.position.z = upper ? -0.02 : 0.05;
+      pivot.add(wing);
+      pivot.userData.side = side;
+      return pivot;
+    };
+    this.mothWings = [
+      makeMothWing(-1, true), makeMothWing(1, true),
+      makeMothWing(-1, false), makeMothWing(1, false),
+    ];
+    this.moth.add(...this.mothWings);
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.035, 0.14, 4, 6), mat(0xf0e6d2, { roughness: 0.6 }));
+    body.rotation.x = Math.PI / 2;
+    this.moth.add(body);
+    for (let i = 0; i < 3; i++) {
+      const band = new THREE.Mesh(new THREE.TorusGeometry(0.036, 0.008, 4, 8), mat(0x8a7bb8));
+      band.rotation.x = Math.PI / 2;
+      band.position.z = -0.04 + i * 0.045;
+      this.moth.add(band);
+    }
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.045, 7, 6), mat(0xf6eddc, { emissive: 0x9b87d8, emissiveIntensity: 0.3 }));
+    head.position.z = 0.1;
+    this.moth.add(head);
+    for (const side of [-1, 1]) {
+      const feeler = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.004, 0.13, 3), mat(0x8a7bb8));
+      feeler.position.set(side * 0.025, 0.05, 0.16);
+      feeler.rotation.set(-0.6, 0, side * 0.45);
+      this.moth.add(feeler);
+    }
+    // Two soft eye-spots, so the wings read as wings at a glance.
+    for (const side of [-1, 1]) {
+      const spot = new THREE.Mesh(new THREE.CircleGeometry(0.045, 8), mat(0x5b4794, { emissive: 0x2c1f52, emissiveIntensity: 0.35 }));
+      spot.rotation.x = -Math.PI / 2;
+      spot.position.set(side * 0.17, 0.006, -0.02);
+      this.moth.add(spot);
+    }
+    this.moth.scale.setScalar(1.25);
+    this.moth.position.set(0, 1.24, 0.7);
+    this.moth.visible = false;
+    this.mothGlow = makeSprite(0xe6dcff, 1.0, 0);
+    this.mothGlow.position.set(0, 1.24, 0.68);
+    this.mothGlow.visible = false;
+    this.arborGroup.add(this.mothGlow);
+    this.arborGroup.add(this.moth);
+
+    // Fireflies called by wishes after the arbor wakes.
+    this.fireflies = [];
+    for (let i = 0; i < WISH_MAX; i++) {
+      const fly = makeSprite(0xffe6a0, 0.11, 0);
+      fly.visible = false;
+      this.arborGroup.add(fly);
+      this.fireflies.push(fly);
+    }
+  }
+
+  setArbor(rawStage = 0, rawWishes = 0) {
+    const stage = arborStage(rawStage);
+    const wishes = wishCount(rawWishes);
+    const calm = reducedMotion();
+    this.arborStage = stage;
+    this.wishLights = wishes;
+    this.arborLights.forEach((light, i) => {
+      const lit = i < stage;
+      light.cage.material.color.setHex(lit ? 0xffb347 : 0x9a8f7b);
+      light.cage.material.emissive.setHex(lit ? 0xff7a12 : 0x000000);
+      light.cage.material.emissiveIntensity = lit ? 2.6 : 0.02;
+      light.cage.material.opacity = lit ? 0.96 : 0.8;
+      light.glow.material.opacity = lit ? (calm ? 0.55 : 0.8) : 0;
+    });
+    const awake = stage >= ARBOR_MAX;
+    this.arborMoonGlow.material.opacity = awake ? 0.9 : 0.06 + stage * 0.035;
+    this.arborMoon.material.emissiveIntensity = awake ? 1.9 : 0.25 + stage * 0.08;
+    this.moth.visible = awake;
+    this.mothGlow.visible = awake;
+    this.mothGlow.material.opacity = awake ? 0.35 : 0;
+    this.mothWings[0].rotation.z = calm ? 0.35 : 0.6;
+    this.mothWings[1].rotation.z = -(calm ? 0.35 : 0.6);
+    this.fireflies.forEach((fly, i) => {
+      const on = i < wishes;
+      fly.visible = on;
+      fly.material.opacity = on ? 0.72 : 0;
+      fly.userData.base = i;
+    });
+    this._calmArbor = calm;
+  }
+
+  /** World point for the arbor's own little burst. */
+  arborPoint() {
+    return this.group.localToWorld(new THREE.Vector3(0, 1.6, -1.9));
+  }
+
+  arborFlourish() {
+    if (!this.fx) return;
+    const calm = reducedMotion();
+    this.fx.burst(this.arborPoint(), {
+      color: 0xffe2a0,
+      count: calm ? 6 : 26,
+      speed: calm ? 1.1 : 3.4,
+      life: calm ? 0.9 : 1.2,
+      size: calm ? 0.4 : 0.6,
+      gravity: -1.2,
+      up: 1.6,
+    });
+  }
+
   // --------------------------------------------------------------- stages ---
 
   setGifts(raw) {
@@ -383,8 +587,8 @@ export class Garden {
     this.butterfly.userData.visible = gifts.petal > 0;
 
     const warm = gifts.dust;
-    this.bowlGlow.material.opacity = warm === 0 ? 0 : 0.22 + warm * 0.16;
-    this.bowlGlow.scale.setScalar(0.8 + warm * 0.28);
+    this.bowlGlow.material.opacity = warm === 0 ? 0 : 0.14 + warm * 0.09;
+    this.bowlGlow.scale.setScalar(0.62 + warm * 0.16);
     for (const coal of this.coals) {
       coal.material.color.setHex(warm > 0 ? 0xd97f36 : 0x6b5a4a);
       coal.material.emissive.setHex(warm > 0 ? 0xff5a10 : 0x000000);
@@ -517,10 +721,45 @@ export class Garden {
       const a = time * 0.5 + i * 1.3;
       mote.position.set(-1.0 + i * 0.5 + Math.cos(a) * 0.18, 0.6 + Math.sin(time * 0.9 + i) * 0.14, 0.1 + Math.sin(a) * 0.16);
     });
+    // The arbor: lights breathe, the moth hovers, the fireflies drift.
+    const arborLit = (this.arborStage ?? 0) > 0;
+    if (arborLit) {
+      this.arborMoonGlow.material.opacity = (this.arborStage >= ARBOR_MAX ? 0.8 : 0.06 + this.arborStage * 0.035)
+        * (calm ? 1 : 0.92 + Math.sin(time * 1.3) * 0.1);
+    }
+    if (this.moth.visible) {
+      const flap = calm ? 0.3 : 0.18 + Math.abs(Math.sin(time * 5.5)) * 0.55;
+      this.mothWings.forEach((wing) => {
+        wing.rotation.z = wing.userData.side * -flap;
+      });
+      if (calm) {
+        this.moth.position.set(0, 1.24, 0.7);
+        this.moth.rotation.set(0, 0, 0);
+      } else {
+        this.moth.position.set(Math.sin(time * 0.45) * 0.3, 1.24 + Math.sin(time * 1.1) * 0.06, 0.7 + Math.cos(time * 0.4) * 0.08);
+        this.moth.rotation.y = Math.sin(time * 0.6) * 0.4;
+      }
+      if (this.mothGlow) {
+        this.mothGlow.position.set(this.moth.position.x, this.moth.position.y, this.moth.position.z - 0.02);
+        this.mothGlow.material.opacity = calm ? 0.3 : 0.3 + Math.sin(time * 2.2) * 0.08;
+      }
+    }
+    this.fireflies.forEach((fly, i) => {
+      if (!fly.visible) return;
+      const a = i * 1.7;
+      if (calm) {
+        fly.position.set(Math.cos(a) * 1.2, 0.9 + (i % 4) * 0.22, -1.95 + Math.sin(a) * 0.5);
+        return;
+      }
+      const t = time * (0.35 + (i % 3) * 0.08) + a;
+      fly.position.set(Math.cos(t) * (1.05 + (i % 3) * 0.16), 0.85 + Math.sin(time * 0.9 + i) * 0.25 + (i % 4) * 0.14, -1.95 + Math.sin(t) * 0.45);
+      fly.material.opacity = 0.55 + Math.sin(time * 3 + i * 2) * 0.18;
+    });
+
     // A slow warm pulse on the bowl, and the lanterns breathe with it.
     if (!calm && warm > 0) {
       const pulse = 0.9 + Math.sin(time * 1.5) * 0.12;
-      this.bowlGlow.scale.setScalar((0.8 + warm * 0.28) * pulse);
+      this.bowlGlow.scale.setScalar((0.62 + warm * 0.16) * pulse);
     }
   }
 }

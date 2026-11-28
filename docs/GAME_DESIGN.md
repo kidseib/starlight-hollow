@@ -226,7 +226,8 @@ Three spots, one per family, each accepting `GIFT_MAX` (3) gifts:
 Giving uses the existing bolt verb: aim at a spot (a forgiving 0.2 rad inside 6.5 m) and zap. The
 rules are pure in `src/game/gifts.js` — `giveGift(bundles, gifts, kind)` returns fresh objects plus an
 `ok` flag and, on refusal, `reason: 'full' | 'empty'`. A refusal costs nothing, plays no sound and
-draws no particles; only Pip's spoken line explains it. A success spends exactly one bundle, plays
+draws no particles; only Pip's spoken line explains it. Once every spot is full the gift goes to the
+Moon Arbor instead (below), so the refusal path only appears for an empty basket. A success spends exactly one bundle, plays
 `audio.give(kind)` (a distinct sound per family), toasts, speaks one of three per-stage lines, grows
 the spot, and saves immediately.
 
@@ -239,6 +240,32 @@ older saves boot with an empty basket and an empty garden.
 Everything here obeys calm motion: with reduced motion the butterfly rests, the flames disappear
 (the bowl keeps its steady glow and coals), the embers hold still, and the motes stop orbiting. The
 setting is read every frame, so it also settles a garden that is already warm.
+
+### The Moon Arbor (overflow)
+
+Behind the bed stands a second authored structure from the first visit: two vine-clad posts, a low
+arch and six paper lanterns that hang dark, with a dim moon bead at the centre. It is what the garden
+grows into, and it exists so a bundle is never spare.
+
+Once `allSpotsFull(gifts)` is true, `_giveGift` stops looking at which spot was zapped and hands the
+gift to the arbor instead, choosing whichever family the basket actually holds. `giveArbor` in
+`src/game/gifts.js` is the rule set:
+
+- Each of the first `ARBOR_MAX` (6) gifts hangs one lantern. The sixth reports `woke`: `audio.arbor()`
+  plays (instead of the family chime), the toast is "The Moon Arbor is awake!", and a moon moth moves
+  in under the arch and stays.
+- Every gift after that is a wish: `audio.wish()`, a wish toast and line, and one more firefly around
+  the arbor up to `WISH_MAX` (12). At the cap the gift is still spent and still plays its light and
+  sound; it just does not add another firefly. There is no counter in the HUD and no refusal for
+  being full.
+- An empty basket is the only refusal, and it answers with `ARBOR_EMPTY` (which families count) and
+  nothing else — no sound, no particles, nothing spent.
+- The last spot filling speaks `ARBOR_HINT` once, 2.2 s after that gift's own line, so the arbor is
+  discovered by doing what a child already does.
+
+`save.arbor` (0–6) and `save.wishes` (0–12) are sanitised on load and default to zero, so a legacy
+save wakes to a sleeping arbor. Under `reducedMotion()` the lantern glow is steady, the moth holds a
+fixed hover with its wings open and the fireflies stop orbiting.
 
 ### Controls on every device
 `src/engine/input.js` is the single source of movement, look and zapping; `src/game/controls.js` is the

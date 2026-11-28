@@ -5,6 +5,95 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 24 — The Moon Arbor: no bundle is ever spare (2026-11-28)
+
+**Chosen because** iteration 23 finished Pip's garden and left one honest hole in its own notes:
+nine gifts fill the three spots, and after that a child's bundle had nowhere to go. The roadmap's top
+item was to remove that dead end. This iteration makes the bed a milestone instead of a wall.
+
+**The design, and why it beat the alternatives**
+
+The garden grows one further authored stage of itself: a bare **Moon Arbor** behind the bed, visible
+from the first visit, that takes the overflow. Six gifts hang its lanterns, the sixth wakes it and a
+moon moth moves in to live there; after that every gift becomes a **wish** that calls another firefly,
+and the arbor keeps accepting gifts forever.
+
+- *Feeding a feature in each world* would have spread the same art and audio work across five islands,
+  duplicated the gift rules five times, and still left a basket with nowhere to go once those were
+  full. It also would not have fixed the dead end, only moved it.
+- *Turning bundles into sparkles* would have made gathering a currency, which the tools rule forbids.
+- *A Momo errand* would need the shop economy and would read as a purchase.
+- The arbor keeps the one verb a child already knows (aim at the garden, zap), the one place, the
+  existing sounds and save shape, and turns "the garden is full" into the best moment instead of the
+  last one. Its wishes accept every family, so a petal gathered anywhere is always spendable, and
+  nothing is displayed as a number.
+
+**Changed**
+
+- `src/game/gifts.js` — `ARBOR_MAX` (6), `WISH_MAX` (12), `ARBOR_NAME`, `allSpotsFull`,
+  `arborStage`/`wishCount` sanitisers, `giveArbor(bundles, arbor, wishes, kind)` (returns fresh
+  objects; each gift before waking adds one light and reports `woke` on the sixth; every gift after is
+  a `wish` that adds a firefly, still accepted and still spent at the cap; the empty basket is the only
+  refusal), plus all the copy: `ARBOR_HINT`, six `ARBOR_LINES`, `ARBOR_TOAST`, `ARBOR_WAKE_TOAST`,
+  `WISH_TOAST`, three `WISH_LINES`, `ARBOR_EMPTY`.
+- `src/world/garden.js` — `_buildArbor()`: two vine-clad posts on stone feet, a squashed half-torus
+  arch, six dark paper lanterns hanging along it, a dim moon bead at the centre, and the moon moth
+  (four soft wings with eye-spots, a banded body, feathered feelers) plus twelve firefly sprites.
+  `setArbor(stage, wishes)`, `arborPoint()` and `arborFlourish()` (a warm burst, gentler under calm),
+  and an `update` where the lantern glow breathes, the moth hovers and flaps on four pivots and the
+  fireflies drift — all held still under `reducedMotion()`. The bowl's halo was also cut back; it was
+  flooding the frame and hiding the arbor behind it.
+- `src/game/game.js` — `arbor`, `wishes`, `_arborTold`; the garden is built with them; `_giveGift`
+  hands every gift to the arbor once `allSpotsFull`, choosing whichever family the basket actually
+  holds; `_giveArbor` spends one, redraws, bursts, and picks exactly one sound per event (the family
+  chime for a light, `audio.arbor()` for the waking, `audio.wish()` for a wish) plus one toast and one
+  Pip line; the last spot filling speaks `ARBOR_HINT` once, 2.2 s later; `_load`/`_save` carry both
+  keys and a resumed save does not re-explain the arbor.
+- `src/engine/audio.js` — `arbor()` (a low warm swell with a shimmer) and `wish()` (a small rising
+  sparkle), both distinct from `give`, `collect`, `star` and `grow`.
+- `src/engine/save.js` — `arbor` and `wishes` decoded through the sanitisers, so a legacy save boots
+  with a sleeping arbor.
+
+**Verified** (true 1280×720 16:9 page in the same authenticated context)
+
+- **Art, inspected at gameplay size and fixed three times.** First pass: the arch sat against the
+  bright sky, so its cream lanterns vanished, and the "moth" was a pale blob that read as a cloud.
+  Second pass: lowered the whole arbor so its lights hang against the fence and trees, made unlit
+  lanterns dark paper and lit ones warm amber with a halo, calmed the bowl's over-bright glow that was
+  swallowing the frame. Third pass: rebuilt the moth with four soft lavender wings, eye-spots, a banded
+  body and feelers, gave the moon bead a gold glow, and added a lantern cap and cord per light.
+  Captures: `artifacts/iter24-full-bed.png` (all three spots full, arbor asleep), `iter24-arbor-3.png`
+  (three lights), `iter24-arbor-awake.png` (six lights, moth, burst), `iter24-wish.png` (a wish and its
+  firefly), `iter24-calm.png`, `iter24-reload.png`, `iter24-legacy.png`.
+- **One sound, one toast, one line per event, instrumented.** Six gifts: five `audio.give(petal)` with
+  “A light for the arbor! 🌙” and the per-stage line, then the sixth with **no** `audio.give`, one
+  `audio.arbor()`, “The Moon Arbor is awake! 🦋” and the waking line — 18 calls for 6 gifts, no
+  duplicates. The next gift: one `audio.wish()`, one “A wish for the arbor! 🌠” and one wish line, with
+  `wishes` 0 → 1 and one firefly visible.
+- **No-op is silent.** With an empty basket the arbor answered with exactly one spoken line
+  (“The arbor loves any bundle…”), no sound, no toast, no change to `arbor`, `wishes` or the basket.
+- **Persistence.** Reload restored `arbor: 6`, `wishes: 1`, all six lanterns lit, the moth present and
+  one firefly, with no line repeated. A legacy save (`{zone, sparkles:15, stars, visited}`) booted at
+  15 sparkles with `arbor: 0`, `wishes: 0`, an empty basket, a hidden chip and no page errors; the
+  garden's own state was not invented and the save file was left as written.
+- **Calm motion.** With `reducedMotion()` on, the lantern glow stops breathing, the moth sits at a
+  fixed point with wings held open, and the fireflies stop orbiting; all six lights and the moth stay.
+- **Controls, all four devices.** Keyboard: W 3.43 m, Space 0.96 m, Q switched tool, E held the
+  trigger, Escape paused and resumed. Mouse: look 0.32 rad, click fired one bolt, right-click switched.
+  Emulated touch: stick 2.59 m, look 0.32 rad, zap fired one bolt, tool button switched, jump 0.83 m.
+  Injected gamepad: left stick 2.59 m, right stick 0.54 rad yaw and 0.29 rad pitch, A 0.80 m, X zapped,
+  B switched, Start paused and resumed.
+- **Tests and build:** `node --test tests/*.test.js` 80 pass (the arbor's six lights, the wish path,
+  the cap, the empty refusal, sanitisers, copy and save round-trip are new); `npm run build` exit 0.
+
+**Open**
+
+- After twelve fireflies the arbor still takes wishes and answers with light and sound, but stops
+  adding new lights. Nothing is lost or nagged; it is simply the end of the visible growth.
+- There is still one garden, in the meadow. Other islands have gathering but no place of their own.
+- Android/controller hardware and a Windows build remain unverified; GitHub push is still blocked on a
+  user credential.
+
 ## Iteration 23 — Pip's garden: a use for every bundle (2026-11-28)
 
 **Chosen because** iteration 22 made petals, sun puffs and mote lanterns gatherable in every world,

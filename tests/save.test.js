@@ -13,7 +13,8 @@ test('malformed fields cannot break game initialization', () => {
   writeSave({solved:{}, scanned:'bad', visited:[1,'cove','cove'], stars:{cove:true,grove:'false'},sparkles:-1,ended:'yes'});
   assert.deepEqual(loadSave(), {solved:[],scanned:[],visited:['cove'],stars:{cove:true},sparkles:0,upgrades:[],shards:[],placed:[],
     learning:emptyReport(), difficulty:sanitizeDifficulty(null), secrets:[], grotto:false,
-    bundles:{petal:0,dust:0,mote:0}, gifts:{petal:0,dust:0,mote:0}, ended:false, zone:'meadow'});
+    bundles:{petal:0,dust:0,mote:0}, gifts:{petal:0,dust:0,mote:0}, arbor:0, wishes:0,
+    ended:false, zone:'meadow'});
 });
 test('learning progress and grown-up settings survive a reload', () => {
   let learning = emptyReport();
@@ -54,6 +55,16 @@ test('learning progress and grown-up settings survive a reload', () => {
   writeSave({ sparkles: 4, bundles: ['petal'], gifts: 'lots' });
   assert.deepEqual(loadSave().bundles, { petal: 0, dust: 0, mote: 0 });
   assert.deepEqual(loadSave().gifts, { petal: 0, dust: 0, mote: 0 });
+  // The Moon Arbor round-trips, clamped to its six lights and twelve fireflies.
+  writeSave({ sparkles: 4, arbor: 4, wishes: 7 });
+  assert.equal(loadSave().arbor, 4);
+  assert.equal(loadSave().wishes, 7);
+  writeSave({ sparkles: 4, arbor: 99, wishes: -3 });
+  assert.equal(loadSave().arbor, 6);
+  assert.equal(loadSave().wishes, 0);
+  writeSave({ sparkles: 4, arbor: 'lots', wishes: 99 });
+  assert.equal(loadSave().arbor, 0);
+  assert.equal(loadSave().wishes, 12);
   // Junk in the new fields is thrown away rather than trusted.
   writeSave({ sparkles: 1, learning: { letters: { attempts: 'lots' } }, difficulty: { letters: 'impossible', extra: 'gentle' } });
   assert.deepEqual(loadSave().learning.letters, { attempts: 0, firstTry: 0, misses: 0 });

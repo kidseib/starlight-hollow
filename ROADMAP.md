@@ -5,16 +5,16 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
 
 ## Now (next two iterations)
 
-1. **A second thing to spend bundles on** — Pip's garden takes nine gifts and is meant to fill; after
-   that the basket has nowhere to go. A small repeatable use (a birdbath that fills, a window box at
-   the market, bundles for Momo) would keep later gatherings worth doing without gating anything.
-2. **Secrets behind a small puzzle** — every find is still a walk-in; two could sit behind a leaf
+1. **Secrets behind a small puzzle** — every find is still a walk-in; two could sit behind a leaf
    drift you scatter or a crystal you ring, so exploration and the reacting scenery meet. The
    Leafwhisk now gives the drifts a second verb, so a vacuum-only nook is possible too.
-3. **A grotto veil that reads as fabric** — it is a glow and a translucent sheet today; woven ribbons
+2. **A grotto veil that reads as fabric** — it is a glow and a translucent sheet today; woven ribbons
    or drifting motes in the arch would sell "asleep" better.
-4. **A keepsake worth finding further out** — the meadow's three are close to the path; one grove or
+3. **A keepsake worth finding further out** — the meadow's three are close to the path; one grove or
    peaks find could need a jump or a gadget so the last keepsake feels like a journey.
+4. ~~**A second thing to spend bundles on**~~ — done in iteration 24: a full bed hands every further
+   gift to the Moon Arbor, six lights wake it and a moon moth moves in, and wishes keep accepting
+   bundles forever.
 5. ~~**A use for what the whisk gathers**~~ — done in iteration 23: petals, sun puffs and mote lanterns
    each grow their own spot in Pip's garden on the meadow path.
 6. ~~**A second use for the Leafwhisk beyond leaves**~~ — done in iteration 22: petals, dust and glow
@@ -45,7 +45,9 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
 
 - The Windows beta is unsigned; SmartScreen warns on first launch.
 - Speech depends on an installed English OS voice; subtitles are the fallback.
-- Pip's garden is finite (three gifts per spot) and exists only in the meadow; once every spot is full,
-  a gathered bundle has nowhere to go. Nothing is lost or nagged, but it stops mattering (roadmap 1).
+- The Moon Arbor accepts gifts forever, but stops adding fireflies after twelve; later wishes still
+  spend the bundle and still play their light and sound, they just do not grow the constellation.
+- Pip's garden and the arbor exist only in the meadow; the other islands have gathering but no place
+  of their own for what it makes.
 - Cloud browser software rendering runs at roughly 4 fps, so timing-sensitive checks need polling
   rather than fixed waits.

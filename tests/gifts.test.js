@@ -3,6 +3,15 @@ import assert from 'node:assert/strict';
 import {
   BUNDLE_KINDS,
   BUNDLE_NAMES,
+  ARBOR_MAX,
+  ARBOR_HINT,
+  ARBOR_EMPTY,
+  ARBOR_LINES,
+  ARBOR_TOAST,
+  ARBOR_WAKE_TOAST,
+  WISH_MAX,
+  WISH_LINES,
+  WISH_TOAST,
   BASKET_MAX,
   GIFT_MAX,
   GIFT_SPOTS,
@@ -17,6 +26,10 @@ import {
   sanitizeGifts,
   basketTotal,
   canGive,
+  allSpotsFull,
+  arborStage,
+  wishCount,
+  giveArbor,
   giveGift,
   giftStage,
 } from '../src/game/gifts.js';
@@ -117,4 +130,86 @@ test('the basket counts only the three gift families, and the garden sits in the
   for (const station of meadow.stations) assert.ok(clear(station.x, station.z, 6), 'clear of a sign');
   for (const curio of meadow.curios ?? []) assert.ok(clear(curio.x, curio.z, 5), 'clear of a curio');
   assert.ok(Math.hypot(GARDEN.x, GARDEN.z) < meadow.radius * 0.9, 'the garden is on the island');
+});
+
+test('the arbor takes every gift once the bed is full and never turns one away', () => {
+  assert.equal(allSpotsFull(emptyGifts()), false);
+  assert.equal(allSpotsFull({ petal: GIFT_MAX, dust: GIFT_MAX - 1, mote: GIFT_MAX }), false);
+  assert.equal(allSpotsFull({ petal: GIFT_MAX, dust: GIFT_MAX, mote: GIFT_MAX }), true);
+
+  // Six lights, one per gift, the sixth waking the arbor.
+  let bundles = { petal: 9, dust: 0, mote: 0 };
+  let arbor = 0;
+  let wishes = 0;
+  for (let i = 1; i <= ARBOR_MAX; i++) {
+    const step = giveArbor(bundles, arbor, wishes, 'petal');
+    assert.equal(step.ok, true);
+    assert.equal(step.reason, null);
+    assert.equal(step.bundles.petal, 9 - i);
+    assert.equal(step.arbor, i);
+    assert.equal(step.stage, i);
+    assert.equal(step.woke, i === ARBOR_MAX);
+    assert.equal(step.wish, false);
+    bundles = step.bundles;
+    arbor = step.arbor;
+    wishes = step.wishes;
+  }
+  assert.equal(arbor, ARBOR_MAX);
+
+  // Awake, every further gift is a wish: still spent, still accepted, one firefly.
+  const first = giveArbor(bundles, arbor, wishes, 'petal');
+  assert.equal(first.ok, true);
+  assert.equal(first.wish, true);
+  assert.equal(first.woke, false);
+  assert.equal(first.arbor, ARBOR_MAX);
+  assert.equal(first.wishes, 1);
+  assert.equal(first.bundles.petal, 9 - ARBOR_MAX - 1);
+
+  // Past the last firefly it still accepts and still spends — never a dead end.
+  const full = giveArbor({ petal: 1 }, ARBOR_MAX, WISH_MAX, 'petal');
+  assert.equal(full.ok, true);
+  assert.equal(full.wish, true);
+  assert.equal(full.wishes, WISH_MAX);
+  assert.equal(full.bundles.petal, 0);
+
+  // An empty basket is the only refusal, and it changes nothing.
+  const empty = giveArbor({ petal: 0 }, 2, 3, 'petal');
+  assert.equal(empty.ok, false);
+  assert.equal(empty.reason, 'empty');
+  assert.equal(empty.arbor, 2);
+  assert.equal(empty.wishes, 3);
+  assert.equal(empty.bundles.petal, 0);
+
+  const unknown = giveArbor({ petal: 1 }, 1, 0, 'crystal');
+  assert.equal(unknown.ok, false);
+  assert.equal(unknown.reason, 'unknown');
+  assert.equal(unknown.bundles.petal, 1);
+
+  // Caller objects are never mutated.
+  const start = { petal: 2 };
+  giveArbor(start, 0, 0, 'petal');
+  assert.equal(start.petal, 2);
+});
+
+test('arbor state is clamped, and its copy is distinct from every other line', () => {
+  assert.equal(arborStage(-4), 0);
+  assert.equal(arborStage('3'), 3);
+  assert.equal(arborStage(99), ARBOR_MAX);
+  assert.equal(arborStage(undefined), 0);
+  assert.equal(wishCount(99), WISH_MAX);
+  assert.equal(wishCount('2.9'), 2);
+  assert.equal(wishCount(null), 0);
+
+  assert.equal(ARBOR_LINES.length, ARBOR_MAX);
+  for (const line of ARBOR_LINES) assert.ok(line.length > 12 && line.endsWith('.'), 'an arbor line is a spoken sentence');
+  assert.ok(ARBOR_LINES[ARBOR_MAX - 1].includes('awake'), 'the last arbor line is the waking');
+  for (const [text, icon] of [ARBOR_TOAST, ARBOR_WAKE_TOAST, WISH_TOAST]) {
+    assert.ok(text.length > 4 && icon, 'each arbor toast has words and an icon');
+  }
+  for (const line of WISH_LINES) assert.ok(line.length > 10 && line.endsWith('.'));
+  assert.ok(ARBOR_HINT.includes('arbor'), 'the hint names the arbor');
+  assert.ok(ARBOR_EMPTY.includes('arbor') && ARBOR_EMPTY.length > 30, 'the empty pointer names the arbor and every family');
+
+  const flat = [...ARBOR_LINES, ...WISH_LINES, ...BUNDLE_KINDS.flatMap((k) => GIFT_LINES[k])];
+  assert.equal(new Set(flat).size, flat.length, 'no shared copy between garden lines');
 });

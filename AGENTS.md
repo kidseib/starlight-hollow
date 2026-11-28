@@ -73,15 +73,20 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   shrinks, and must live in `src/content.js` so every themed world has at least one. The
   suction cone must stay forgiving (`SUCTION_RANGE` 7.5 m, `SUCTION_COS` 0.88) and every suction
   animation must straighten under `reducedMotion()`.
-- Pip's garden is the only place a gathered bundle is spent: rules in `src/game/gifts.js` (pure:
-  `giveGift`, `canGive`, `sanitizeBundles`/`sanitizeGifts`, `GIFT_MAX`, `BASKET_MAX`, every line),
-  art in `src/world/garden.js`, placement in `GARDEN` (`src/content.js`), save keys `bundles` and
-  `gifts`. Never spend a bundle on a refusal (full spot, empty basket) and never make one of those
-  refusals play a sound or a particle — Pip's line is the whole answer. Keep the leaf drift out of the
-  basket (`BUNDLE_KINDS` is petal/dust/mote only) and keep the basket chip hidden while it is empty.
-  The bed is optional scenery: never gate a sign, a keepsake or the Star Tree on it. Every new
-  animation here must stop under `reducedMotion()`, including one that is already running when the
-  setting changes, so read `reducedMotion()` inside `Garden.update` rather than only in `setGifts`.
+- Pip's garden and its Moon Arbor are the only places a gathered bundle is spent: rules in
+  `src/game/gifts.js` (pure: `giveGift`, `giveArbor`, `allSpotsFull`, `canGive`,
+  `sanitizeBundles`/`sanitizeGifts`, `arborStage`/`wishCount`, `GIFT_MAX`, `ARBOR_MAX`, `WISH_MAX`,
+  every line), art in `src/world/garden.js`, placement in `GARDEN` (`src/content.js`), save keys
+  `bundles`, `gifts`, `arbor` and `wishes`. A full bed must never refuse: `_giveGift` routes to the
+  arbor once `allSpotsFull`, and the arbor must keep accepting gifts after it wakes (each one is a
+  wish) so a basket can never fill with nowhere to go. Keep one sound per event — family chime for a
+  light, `audio.arbor()` for the waking, `audio.wish()` for a wish — plus one toast and one Pip line.
+  An empty basket is the only refusal: answer with `ARBOR_EMPTY` or `GIFT_EMPTY` and nothing else (no
+  sound, no particles, nothing spent). Keep the leaf drift out of the basket (`BUNDLE_KINDS` is
+  petal/dust/mote only) and keep the basket chip hidden while it is empty. The garden is optional
+  scenery: never gate a sign, a keepsake or the Star Tree on it. Every animation here must stop under
+  `reducedMotion()`, including one already running when the setting changes, so read
+  `reducedMotion()` inside `Garden.update` rather than only in `setGifts`.
 - The hub's growth from keepsakes is pure data in `src/game/hubBloom.js` and 3D in
   `src/world/growth.js`: one lantern per find, a flag per island with a find, a bed per completed
   island, plus the staged counts that keep the meadow changing the whole way (`pavers`, `pennants`,

@@ -16,6 +16,13 @@ When the drift is empty it pops out a little ribboned bundle, and Pip keeps it s
   often as you like. The first bundle of each play session is worth a few sparkles.
 - Calm motion makes the leaves fly straight and holds the whisk still.
 
+**The Moon Arbor.** When Pip's flower bed, sun bowl and lantern post are all full, look behind
+them: there is an arbor waiting, with six paper lanterns hanging dark. Every bundle you bring after
+the garden is full hangs one light, and when the sixth goes up the arbor wakes — a moon moth moves in
+and lives there, fluttering under the arch. After that the arbor takes your gifts as wishes: each one
+sends up a firefly to join the little constellation. It never says no and never fills up, so gathering
+always has somewhere to go, and nothing is ever counted at you.
+
 **Pip's garden.** Everything you whisk now has somewhere to go. On the meadow path, just off the
 lantern row, Pip has been digging a little garden with three spots: a flower bed, a stone bowl and a
 lantern post. Aim at one and zap, and the bundle in your basket becomes something you can see: posies

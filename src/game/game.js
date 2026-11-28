@@ -48,6 +48,18 @@ import {
   GIFT_TOAST,
   BASKET_HINT,
   BUNDLE_KINDS,
+  ARBOR_MAX,
+  allSpotsFull,
+  arborStage,
+  giveArbor,
+  wishCount,
+  ARBOR_HINT,
+  ARBOR_EMPTY,
+  ARBOR_LINES,
+  ARBOR_TOAST,
+  ARBOR_WAKE_TOAST,
+  WISH_TOAST,
+  WISH_LINES,
   BUNDLE_NAMES,
   BASKET_MAX,
   GIFT_MAX,
@@ -119,6 +131,11 @@ export class Game {
     this.garden = null;
     this.aimGift = null;
     this._basketTold = false;
+    // The Moon Arbor behind the bed: six lights wake it, then each gift is a wish
+    // that calls a firefly, so a full garden still has somewhere for a bundle.
+    this.arbor = 0;
+    this.wishes = 0;
+    this._arborTold = false;
     this.shards = new Set();
     this.placed = new Set();
     this.shardField = null;
@@ -377,6 +394,8 @@ export class Game {
           yaw: Math.atan2(GARDEN.faceTo.x - GARDEN.x, GARDEN.faceTo.z - GARDEN.z),
           fx: this.fx,
           gifts: this.gifts,
+          arbor: this.arbor,
+          wishes: this.wishes,
         });
       }
       void rng;
@@ -1200,6 +1219,15 @@ export class Game {
    */
   _giveGift(slot) {
     if (!slot) return;
+    // A full bed hands every further gift to the arbor behind it, whichever
+    // family the child happens to have in the basket.
+    if (allSpotsFull(this.gifts)) {
+      const kind = this.bundles[slot.kind] > 0
+        ? slot.kind
+        : BUNDLE_KINDS.find((k) => this.bundles[k] > 0) ?? slot.kind;
+      this._giveArbor(kind);
+      return;
+    }
     const result = giveGift(this.bundles, this.gifts, slot.kind);
     if (!result.ok) {
       const line = result.reason === 'full' ? GIFT_FULL[slot.kind] : GIFT_EMPTY[slot.kind];
@@ -1220,6 +1248,62 @@ export class Game {
     const lines = GIFT_LINES[slot.kind] ?? [];
     const line = lines[Math.min(lines.length - 1, Math.max(0, result.stage - 1))];
     if (line) {
+      this.hud?.showBubble(line, '🐣');
+      this.voice?.say(line);
+    }
+    // The last spot filling is the one moment the arbor needs explaining.
+    if (allSpotsFull(this.gifts) && !this._arborTold) {
+      this._arborTold = true;
+      this.schedule(2.2, () => {
+        this.hud?.showBubble(ARBOR_HINT, '🐣');
+        this.voice?.say(ARBOR_HINT);
+      });
+    }
+    this._save();
+  }
+
+  /**
+   * A gift for the Moon Arbor. It never turns one away: six lights wake it and a
+   * moon moth moves in, then each gift is a wish that calls one more firefly.
+   */
+  _giveArbor(kind) {
+    const result = giveArbor(this.bundles, this.arbor, this.wishes, kind);
+    if (!result.ok) {
+      const line = ARBOR_EMPTY;
+      if (line) {
+        this.hud?.showBubble(line, '🐣');
+        this.voice?.say(line);
+      }
+      return;
+    }
+    this.bundles = result.bundles;
+    this.arbor = result.arbor;
+    this.wishes = result.wishes;
+    this.garden?.setArbor(this.arbor, this.wishes);
+    this.garden?.arborFlourish();
+    // One sound per event: a light keeps its family's chime, the waking gets the
+    // arbor's own low swell and a wish gets its rising sparkle.
+    if (!result.woke && !result.wish) this.audio?.give(kind);
+    this.hud?.setBundles(this.bundles);
+
+    if (result.woke) {
+      const [text, icon] = ARBOR_WAKE_TOAST;
+      this.hud?.toast(text, icon);
+      this.audio?.arbor();
+      const line = ARBOR_LINES[ARBOR_MAX - 1];
+      this.hud?.showBubble(line, '🐣');
+      this.voice?.say(line);
+    } else if (result.wish) {
+      const [text, icon] = WISH_TOAST;
+      this.hud?.toast(text, icon);
+      this.audio?.wish();
+      const line = WISH_LINES[(Math.max(1, this.wishes) - 1) % WISH_LINES.length];
+      this.hud?.showBubble(line, '🐣');
+      this.voice?.say(line);
+    } else {
+      const [text, icon] = ARBOR_TOAST;
+      this.hud?.toast(text, icon);
+      const line = ARBOR_LINES[Math.min(ARBOR_LINES.length - 1, Math.max(0, result.stage - 1))];
       this.hud?.showBubble(line, '🐣');
       this.voice?.say(line);
     }
@@ -1654,6 +1738,8 @@ export class Game {
       placed: [...this.placed],
       bundles: this.bundles,
       gifts: this.gifts,
+      arbor: this.arbor,
+      wishes: this.wishes,
       learning: this.learning,
       difficulty: this.difficulty,
       secrets: this.secrets,
@@ -1679,7 +1765,12 @@ export class Game {
     this.grottoTaken = save.grotto === true;
     this.bundles = sanitizeBundles(save.bundles);
     this.gifts = sanitizeGifts(save.gifts);
+    this.arbor = arborStage(save.arbor);
+    this.wishes = wishCount(save.wishes);
     this.garden?.setGifts(this.gifts);
+    this.garden?.setArbor(this.arbor, this.wishes);
+    // A resumed save already has the arbor, so do not explain it again.
+    this._arborTold = this.arbor > 0;
     for (const spot of this.secretSpots) spot.setFound(this.secrets.includes(spot.secret.id));
     this.discoveryShelf?.refresh(this.secrets);
     for (const cairn of this.cairns.values()) cairn.refresh(this.secrets);

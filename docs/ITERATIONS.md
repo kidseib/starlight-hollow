@@ -4,6 +4,17 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 24 - The Moon Arbor
+
+- **The dead end closed:** once all three garden spots are full, a zap at the garden sends the gift to a **Moon Arbor** behind the bed — two vine-clad posts, an arch and six paper lanterns, visible and unlit from the first visit. Rules in `src/game/gifts.js` (`allSpotsFull`, `giveArbor`, `ARBOR_MAX` 6, `WISH_MAX` 12), art in `src/world/garden.js` (`_buildArbor`, `setArbor`, `arborFlourish`).
+- **Six lights wake it:** each gift hangs one light (family chime, “A light for the arbor!”, one per-stage line); the sixth plays the new `audio.arbor()` swell, toasts “The Moon Arbor is awake!” and a moon moth moves in.
+- **Wishes forever:** every gift after that is a wish — new `audio.wish()`, “A wish for the arbor!”, a firefly per wish up to twelve; the arbor never refuses for being full, so a bundle always has somewhere to go. An empty basket is the only refusal and answers with words alone.
+- **Any family, any spot:** the overflow picks whichever bundle the basket actually holds, and the last spot filling speaks `ARBOR_HINT` once, so the arbor is never a secret.
+- **Save:** `arbor` and `wishes` are sanitised and default to zero; legacy saves boot with a sleeping arbor.
+- **Calm motion:** glow steady, moth still with wings held open, fireflies fixed; the setting is read every frame.
+- **Evidence:** five chime/light calls then one wake (no double-fire, no family chime on the wake), one wish call with firefly 0→1, silent empty refusal, reload restoring 6/1 with six lit lanterns and the moth, legacy save at 15 sparkles, keyboard/mouse/touch/pad all reaching walk, look, zap, switch, jump, hold and pause/resume. 80 tests pass, build exit 0. Screenshots `artifacts/iter24-*`.
+- **Not verified:** Android/controller hardware, Windows build. GitHub push still blocked on a user credential.
+
 ## Iteration 23 - Pip's garden
 
 - **A place for every bundle:** `src/game/gifts.js` (pure rules, lines, sanitisers) and `src/world/garden.js` (art) add one authored bed on the meadow path with three spots — a posy bed for petals, a stone sun bowl for dust, a lantern post for motes — each accepting three gifts. Placement is `GARDEN` in `src/content.js`.

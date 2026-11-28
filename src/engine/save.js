@@ -2,7 +2,7 @@
 // readable checkpoint separately so interrupted/corrupt writes are recoverable.
 import { sanitizeReport, sanitizeDifficulty } from '../game/progress.js';
 import { sanitizeSecrets } from '../game/secrets.js';
-import { sanitizeBundles, sanitizeGifts } from '../game/gifts.js';
+import { sanitizeBundles, sanitizeGifts, arborStage, wishCount } from '../game/gifts.js';
 
 const KEY = 'starlight-hollow-save-v1';
 const BACKUP = `${KEY}-backup`;
@@ -21,6 +21,7 @@ function decode(raw) {
       learning: sanitizeReport(s.learning), difficulty: sanitizeDifficulty(s.difficulty),
       secrets: sanitizeSecrets(s.secrets), grotto: s.grotto === true,
       bundles: sanitizeBundles(s.bundles), gifts: sanitizeGifts(s.gifts),
+      arbor: arborStage(s.arbor), wishes: wishCount(s.wishes),
       ended: s.ended === true, zone: typeof s.zone === 'string' ? s.zone : 'meadow',
     };
   } catch { return null; }

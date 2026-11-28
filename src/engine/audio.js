@@ -296,6 +296,22 @@ export class GameAudio {
     this.noise({ dur: 0.18, gain: 0.03, freq: 2400, q: 0.9, at: 0.01 });
   }
 
+  /** The arbor waking: a low warm swell with a shimmer on top. */
+  arbor() {
+    this.tone({ freq: 98, to: 147, type: 'sine', dur: 1.1, gain: 0.13, attack: 0.08, echo: 0.35 });
+    [293.7, 392, 493.9].forEach((freq, i) => {
+      this.tone({ freq, type: 'triangle', dur: 0.9, gain: 0.055 - i * 0.01, at: 0.12 + i * 0.12, echo: 0.5 });
+    });
+    this.noise({ dur: 0.6, gain: 0.03, freq: 5200, q: 1.4, at: 0.1 });
+  }
+
+  /** A wish: a small rising sparkle that ends high and soft. */
+  wish() {
+    this.tone({ freq: 880, to: 1318.5, type: 'sine', dur: 0.35, gain: 0.06, echo: 0.4 });
+    this.tone({ freq: 1568, type: 'sine', dur: 0.3, gain: 0.035, at: 0.14, echo: 0.55 });
+    this.noise({ dur: 0.18, gain: 0.012, freq: 7000, q: 1.6, at: 0.05 });
+  }
+
   /** Switching tools: two small clicks, like a latch. */
   tool() {
     this.tone({ freq: 659, to: 659, type: 'square', dur: 0.05, gain: 0.035 });
