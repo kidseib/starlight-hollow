@@ -5,74 +5,67 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
-## Iteration 10 - Momo's Wisp Market (2026-11-27)
+## Iteration 11 — The Star Tree Workshop (2026-11-27)
 
-**Chosen because** sparkles were the only collectible with no use: a child
-gathered hundreds and could never do anything with them. The market turns that
-number into three abilities, and gives the hub a place worth walking to.
+**Chosen because** iteration 10 gave sparkles a sink but the Star Tree itself was still scenery, and
+the islands had no reason to be revisited once their signs were solved.
 
 **Changed**
 
-- `src/game/shop.js` (new): gift data, `shopStatus()` and `purchase()` as pure
-  functions, plus `MarketStall` - striped stall, glass jars, lanterns, and Momo
-  the lantern-snail with blinking eyestalks, a breathing shell and a shy smile.
-- `src/ui/hud.js`, `index.html`, `src/style.css`: market panel with picture
-  cards, purse, owned/ready/saving states, a shake for "not yet", and gold
-  upgrade badges under the sparkle counter.
-- `src/game/game.js`: market spawn from a `MARKET` constant in the hub, Momo as
-  an aim and zap target, `openShop`/`closeShop`/`buyItem`, `_applyUpgrades()` and
-  `_updateMarket` (including the first nudge when a child comes within 10 m), plus
-  the state branch that lets the world wait while shopping.
-- Effects wired into the systems themselves: `SparkleManager.magnetRange` and
-  `magnetPull`, the companion-hint wait in `_updateCompanionHint`, and
-  `Blaster.setRainbow()` (sRGB hues so the bolts are not pastel).
-- `src/engine/save.js`: `upgrades` saved and sanitised; older saves load with an
-  empty list, so the v1 key is untouched.
-- `src/world/props.js`: the altar under the Star Tree rebuilt - mossy footing,
-  stone drum, gold band, lit top and five rune lights - replacing the plain
-  grey cylinder every player walks up to.
-- `tests/shop.test.js`: 8 cases for prices, affordability, duplicates, unknown
-  ids, card states and saved upgrades. The Windows workflow now runs that file
-  too.
+- `src/game/workshop.js` (new): `ORNAMENTS` (five world shards + the market Sky Lantern),
+  `workshopStatus`, `collectShard`, `canPlace`, `place`, `isComplete`, `shardSpot`, plus `ShardField`
+  (plinth, cradle, crystal, ground ring, motes, 13 m light column, chime at 16 m, pickup at 2.7 m)
+  and `Workshop` (two gold garlands on the tapered trunk, six hooks with dashed outline sprites,
+  pop animation, completion decoration).
+- `src/world/ornaments.js` (new): one shape painter for star/moon/flower/bell/shell/lantern (plus
+  magnet and rainbow for market cards), `shapeDataUrl` for the pouch and cards,
+  `shapeOutlineTexture` for the tree hints, `createOrnamentMesh` for the hanging 3D ornaments.
+- `src/game/game.js`: shard/placed sets, hook aiming inside the existing aim cone, zap-to-hang,
+  collection chime + banner + pouch refresh, completion speech chain (Momo then Pip), goal text,
+  save/load, `marketItems()` with drawn pictures, shard pouch refresh on purchase.
+- `src/game/shop.js`: fourth gift (`lantern`, 90 sparkles, `shape: 'lantern'`), jar spacing now
+  derived from `SHOP_ITEMS.length`, drawn shapes for magnet/bell/rainbow, wider counter.
+- `src/engine/save.js`: `shards` and `placed` in the decode whitelist; old saves default to `[]`.
+- `src/ui/hud.js`: `setShards`/`setBadges` picture rows, drawn card icons, optional toast image.
+- `src/style.css`: market grid is two-by-two now that there are four gifts.
+- `src/game/blaster.js`: arrival test includes the frame's travel distance, so a homing bolt cannot
+  tunnel past a small target at 3–4 fps.
+- `tests/workshop.test.js` (new, 9 cases) covers stock, market gating, single pickup, single
+  placement, market ornament without a shard, set completion, shard placement clear of arches and
+  signs, and the save round trip. `tests/shop.test.js` and `tests/save.test.js` updated for four
+  gifts and the two new save fields.
 
-**Verified**
+**Checked**
 
-- `node --test tests/*.test.js` -> 17 pass, 0 fail. `npm run build` -> exit 0.
-- Cloud browser, real render loop: walked to the stall, crosshair went hot,
-  a queued zap opened the market (`state === 'shop'`, purse 9, three cards
-  saving); clicking the magnet card shook it and charged nothing; after
-  collecting sparkles all three gifts were bought for 40 + 70 + 110, cards turned
-  owned, chips appeared, jars switched to stars and the banner named each gift.
-- Effects measured: a sparkle placed 8.09 m away drifted to 4.27 m (default pull
-  radius is 4.6 m, so only the magnet could have moved it); the bolt colour
-  changed on the next zap; the HUD showed all three badges.
-- Saved, reloaded: `upgrades: ['magnet','bell','rainbow']`, magnet range 9.5,
-  rainbow on, jars sold, badges redrawn. No page errors in the runs that
-  recorded them.
-- Screenshots: `artifacts/r10-market-approach.png`, `-stall.png`, `-panel.png`,
-  `-owned.png`, `-after-reload.png`, `artifacts/r10-altar.png`.
+- `node --test tests/*.test.js` → 26 pass, 0 fail. `npm run build` → exit 0.
+- Cloud browser, real render loop: all five beacons found and collected (pouch showed five drawn
+  pictures), Momo's market showed four drawn cards and the Sky Lantern was bought for 90 sparkles
+  (purse 97 → 7), five ornaments hung by zapping their outlines from the meadow path, and the sixth
+  completed the set: canopy went luminous mint, sixteen coloured glows and a crown star appeared, the
+  badge and "The Star Tree is decorated" goal showed, and Momo then Pip spoke. After a reload the
+  six ornaments, the decoration, the badge and the pouch state were all still correct.
+- Screenshots: `artifacts/r11-beacon-final.png`, `r11-shard-beacon.png`, `r11-pouch.png`,
+  `r11-tree-hooks2.png`, `r11-tree-four.png`, `r11-market-lantern.png`, `r11-tree-final.png`.
+- Fixed while inspecting: garlands clipped through the octagonal trunk (radii now clear the flat
+  faces), ornaments floated beside the trunk and read edge-on (now flush and facing the path),
+  ornaments were too small (scale 1.45), the shard beacon was blown out (calmer glow and column), the
+  decorated canopy turned patchwork (single mint-gold wash), and the pouch row carried a text label
+  and overlapped the zone chip (pictures only, plated icons).
 
 **Open**
 
-- Audible narration, real pointer-lock clicking and both Windows executables
-  were not exercised here; the cloud browser renders at about 4 fps.
-- The market has exactly three gifts and no rotation; a child who buys all three
-  runs out of things to save for.
-- Speech still needs a local English Windows voice.
-
-**Next actions**
-
-1. Ship 0.1.3-beta.1 through the Windows workflow and verify the public ZIP.
-2. A second use for sparkles - decorating the Star Tree - so saving continues
-   after the three gifts.
-3. Finish the long-standing pattern-sign wrong/right evidence.
+- Audible narration, real pointer-lock clicking on Windows, both Windows executables and a child
+  playtest are still unverified. At ~3–4 fps in the cloud browser one of six hook zaps needed a
+  second attempt; on 60 fps hardware the homing bolt reaches the same target in a few frames.
+  The Sky Lantern is the only sparkle-gated ornament, so a child who owns every gift has one target
+  fewer to save for.
 
 ---
 
 ## Iteration 9 — Gentler second chances (2026-11-27)
 
 **Chosen because** the game's weakest moment for a five-year-old was failing the same question
-twice: the prompt repeated, the hint arrived, but the question itself stayed exactly as hard.
+ twice: the prompt repeated, the hint arrived, but the question itself stayed exactly as hard.
 
 **Changed**
 
