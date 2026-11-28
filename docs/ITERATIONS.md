@@ -125,7 +125,7 @@ screenshot fixed the harness (the game's look code was correct).
 **Verified**
 
 - Walked to both signs with W: plates at the standard 2.1 scale / 5.4 height, centred and readable,
-  prompts voiced, four pads spaced 21 %–79 % of the screen.
+  prompts voiced, four pads spaced 21 %–79% of the screen.
 - Solved sign 1 with real mouse presses: wrong pad → "Start again!", flashing pad, repeated prompt;
   ⭐→🌸→🌙 → "You did it!", solved plinth, "1 of 5 signs solved".
 - Reload restored the solved sign plus all five zones' stars, sockets, berries and friend.

@@ -33,8 +33,6 @@ stand and admire it.
 - For grown-ups: shards and placements live in the existing v1 save (`shards`,
   `placed`); saves from earlier betas open with an empty pouch. Zapping the wrong
   outline costs nothing — the game names the shape and the island where it hides.
-- Also fixed: a zap aimed at a small target can no longer slip past it on a slow
-  frame, so aiming stays forgiving on older laptops.
 - Art pass: drawn market icons for every gift (no emoji cards), the stall counter
   widened for four jars, a calmer shard beacon, and a two-by-two market grid.
 

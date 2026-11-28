@@ -65,7 +65,7 @@ the islands had no reason to be revisited once their signs were solved.
 ## Iteration 9 — Gentler second chances (2026-11-27)
 
 **Chosen because** the game's weakest moment for a five-year-old was failing the same question
-twice: the prompt repeated, the hint arrived, but the question itself stayed exactly as hard.
+ twice: the prompt repeated, the hint arrived, but the question itself stayed exactly as hard.
 
 **Changed**
 

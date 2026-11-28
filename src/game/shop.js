@@ -249,7 +249,7 @@ function solid(color, opts = {}) {
 }
 
 /**
- * A wooden stall with a striped awning, three glass jars and Momo — a mossy
+ * A wooden stall with a striped awning, four glass jars and Momo — a mossy
  * lantern-snail with a glowing spiral shell. Built from primitives like the
  * rest of the world, but sculpted for a clear silhouette: low body, tall
  * eyestalks, one big warm shell.
