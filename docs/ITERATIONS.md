@@ -4,6 +4,17 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 13 - Discovery is the reward
+
+- Added a reason to wander that has nothing to do with signs: five hand-placed hidden hollows (`src/game/secrets.js`), three in Sunbeam Meadow and two in Letterleaf Grove. Nothing marks them from a distance; a mossy stone ring, a gold cradle and a warm glow that only wakes within 12 m is all a child gets.
+- Finding one takes no input at all: walk within 2.1 m and it is yours. The reward is layered - the object rises and turns with two particle bursts, `audio.star()`, a banner naming it, a Pip line, ten sparkles and a companion cheer - and it is permanent.
+- Every find becomes a trophy on the new Discovery Shelf (`src/world/discoveries.js`) on the meadow path: a mossy plinth with five dishes and a gold rim, where the egg, lantern, chime, book and mushroom grow in and then breathe gently. The HUD gained a drawn gold-diamond chip reading `N/5` that turns gold when the set is complete.
+- `save.secrets` holds found ids, sanitised to known ids on load; pre-iteration saves open with an empty list and `0/5`.
+- Small interaction pass: sparkle pickups now climb a short rising run of notes and bounce the sparkle chip, so sweeping up a row sounds like a tune rather than repeated beeps.
+- `tests/secrets.test.js` (7 cases) covers stock, reward shape, off-centre placement, single-pay discovery, the count/completion readout, and save sanitising; `tests/save.test.js` gained `secrets` round-trip and old-save cases. `node --test tests/*.test.js` -> 43 pass; `npm run build` -> exit 0.
+- Browser evidence: two finds by proximity (sparkles 42 -> 62, chip 0/5 -> 2/5, two shelf trophies, banner and Pip line, saved), reload kept both, a pre-iteration save opened at 0/5 with an empty shelf. Screenshots inspected: `artifacts/r13-nest2.png`, `artifacts/r13-shelf2.png`. The first shelf shot showed the egg blending into the grass, so a gold cradle and slightly larger item were added.
+- Not verified: Windows, real audio, a child playtest. Four islands still have no secrets.
+
 ## Iteration 12 - Questions that resize themselves
 
 - Adaptive difficulty is now per subject and per child. `src/game/progress.js` keeps a small tally for letters, words, numbers, patterns and memory (`attempts`, `firstTry`, `misses`); `subjectOfStation` files a sign by its `learn` label, then its type, then its pad kinds, then its island, so every sign belongs to exactly one subject.

@@ -26,6 +26,8 @@ import {
   totalAttempts,
 } from './progress.js';
 import { renderProgressPanel } from '../ui/progressPanel.js';
+import { discover, sanitizeSecrets, collectionStatus, secretsForZone } from './secrets.js';
+import { SecretSpot, DiscoveryShelf } from '../world/discoveries.js';
 import { clamp, damp, mulberry32 } from '../engine/utils.js';
 
 // Momo's Wisp Market: one stall in the hub, on the path between the landing
@@ -63,6 +65,13 @@ export class Game {
     this.visited = new Set();
     this.solvedStations = new Set();
     this.scannedCreatures = new Set();
+    // Hidden discoveries: ids already found, the caches in the world, and the
+    // shelf in the meadow where the trophies live.
+    this.secrets = [];
+    this.secretSpots = [];
+    this.discoveryShelf = null;
+    this.pickupStreak = 0;
+    this.pickupStreakTimer = 0;
     this.sparkleCount = 0;
     this.stars = {};
     this.upgrades = new Set();
@@ -94,7 +103,15 @@ export class Game {
     this.fx = new FX(scene, 1200);
     this.sky = new SkySystem(scene);
     this.sparkles = new SparkleManager(scene, this.fx, audio);
-    this.sparkles.onCollect = () => this.addSparkles(1, false);
+    // Sparkles answer back: a short rising run while a child keeps collecting,
+    // so sweeping up a row of them sounds like a little tune instead of a beep.
+    this.sparkles.onCollect = () => {
+      this.addSparkles(1, false);
+      this.pickupStreak = Math.min(this.pickupStreak + 1, 8);
+      this.pickupStreakTimer = 0.9;
+      this.audio?.chime(this.pickupStreak - 1);
+      this.hud?.pulseSparkles();
+    };
     this.creatures = new CreatureManager(scene, this.fx, audio);
     this.creatures.onGift = () => this.addSparkles(1, true);
 
@@ -226,6 +243,22 @@ export class Game {
         this.marketZoneId = zone.id;
       }
 
+      // Hidden hollows, one per authored secret on this island.
+      for (const secret of secretsForZone(zone.id)) {
+        const spot = new SecretSpot({
+          scene: this.scene,
+          position: new THREE.Vector3(
+            zone.origin.x + secret.at.x,
+            island.heightAtLocal(secret.at.x, secret.at.z),
+            zone.origin.z + secret.at.z
+          ),
+          secret,
+          found: this.secrets.includes(secret.id),
+        });
+        spot.zoneId = zone.id;
+        this.secretSpots.push(spot);
+      }
+
       this.islands.set(zone.id, { zone, island, portals, stations, sky: skyDecor });
 
       if (zone.kind === 'hub') {
@@ -236,6 +269,19 @@ export class Game {
         this.wishTree = tree;
         this.wishTree.moteBases = tree.motes.map((m) => m.sprite.position.clone());
         this.wishTreePosition = new THREE.Vector3(zone.origin.x, zone.origin.y + gy, zone.origin.z + 4);
+
+        // The Discovery Shelf sits on the path between the landing spot and the
+        // market, so every trophy collected anywhere is visible on the way past.
+        this.discoveryShelf = new DiscoveryShelf({
+          scene: this.scene,
+          position: new THREE.Vector3(
+            zone.origin.x + 6.4,
+            island.heightAtLocal(6.4, 21.5),
+            zone.origin.z + 21.5
+          ),
+          yaw: Math.atan2(-6.4, 8.5),
+          found: this.secrets,
+        });
       }
       void rng;
     }
@@ -966,6 +1012,45 @@ export class Game {
     }
   }
 
+  /** Walk near a hidden hollow and it is yours. No button, no question. */
+  _updateSecrets(dt, time) {
+    this.pickupStreakTimer = Math.max(0, this.pickupStreakTimer - dt);
+    if (this.pickupStreakTimer === 0) this.pickupStreak = 0;
+    for (const spot of this.secretSpots) {
+      if (spot.zoneId !== this.currentZoneId) continue;
+      spot.update(dt, time, this.camera.position);
+      if (!spot.found && this.state === 'play' && spot.distanceTo(this.player.position) < 2.1) {
+        this._findSecret(spot);
+      }
+    }
+    this.discoveryShelf?.update(dt, time);
+  }
+
+  _findSecret(spot) {
+    const result = discover(this.secrets, spot.secret.id);
+    if (!result.ok) return false;
+    this.secrets = result.found;
+    spot.take();
+    const secret = result.secret;
+    const pos = spot.group.position.clone().setY(spot.group.position.y + 0.4);
+    this.fx?.burst(pos, { color: secret.color, count: 26, speed: 4.2, life: 1.1, size: 0.55, gravity: -1.6 });
+    this.fx?.burst(pos, { color: 0xfff2b0, count: 12, speed: 1.6, life: 1.4, size: 0.8, gravity: 0.4 });
+    this.audio?.star();
+    this.addSparkles(secret.sparkles, false);
+    const status = collectionStatus(this.secrets);
+    this.hud?.setDiscoveries(status.count, status.total);
+    this.hud?.showBanner(secret.name, 'A hidden treasure!', 3600);
+    this.hud?.showBubble(secret.hidden, '🐣');
+    this.voice?.say(secret.hidden);
+    this.companion?.celebrate();
+    this.discoveryShelf?.refresh(this.secrets);
+    this._save();
+    if (status.complete) {
+      this.hud?.showHint('You found every hidden treasure in the Hollow!', 4200);
+    }
+    return true;
+  }
+
   _checkPortals() {
     if (this.transitioning || this.portalCooldown > 0) return;
     const data = this.currentData;
@@ -1113,6 +1198,7 @@ export class Game {
       placed: [...this.placed],
       learning: this.learning,
       difficulty: this.difficulty,
+      secrets: this.secrets,
       ended: this.endingPlayed,
     });
   }
@@ -1130,6 +1216,11 @@ export class Game {
     this.placed = new Set(save.placed ?? []);
     this.learning = save.learning ?? emptyReport();
     this.difficulty = save.difficulty ?? sanitizeDifficulty(null);
+    this.secrets = sanitizeSecrets(save.secrets);
+    for (const spot of this.secretSpots) spot.setFound(this.secrets.includes(spot.secret.id));
+    this.discoveryShelf?.refresh(this.secrets);
+    const found = collectionStatus(this.secrets);
+    this.hud.setDiscoveries(found.count, found.total);
     this.endingPlayed = save.ended && this.starCount() === ZONE_STAR_ORDER.length;
     if (this.islands.has(save.zone)) this.currentZoneId = save.zone;
 
@@ -1212,6 +1303,7 @@ export class Game {
       this.sparkles.update(dt, this.camera.position, time);
       this._updateShards(dt, time);
       this._updateScan(dt);
+      this._updateSecrets(dt, time);
 
       for (const [zoneId, berry] of Object.entries(this.starberries)) {
         if (berry.state === 'collected') {

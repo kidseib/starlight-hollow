@@ -5,6 +5,50 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 13 — Discovery is the reward (2026-11-28)
+
+**Chosen because** every reward in the game hung off a sign. A child who just wanted to wander
+could walk the whole meadow and get sparkles, but nothing that said *you noticed something*.
+
+**Changed**
+
+- `src/game/secrets.js` (new, pure): five `SECRETS` (three in the hub, two in Letterleaf Grove),
+  `discover`, `sanitizeSecrets`, `collectionStatus`, `secretsForZone`, `TROPHY_KINDS`.
+- `src/world/discoveries.js` (new): `trophyMesh()` (egg, lantern, chime, book, mushroom — one
+  silhouette each), `SecretSpot` (mossy stone hollow, gold cradle, warm glow that only wakes up
+  within 12 m, pop-and-rise reveal, a kept star once found) and `DiscoveryShelf` (mossy plinth, five
+  shallow dishes, gold rim, trophies that grow in and breathe).
+- `src/game/game.js`: caches spawned per island at `island.heightAtLocal`, a 2.1 m walk-in find with
+  no button, reward (sparkles, two particle bursts, `audio.star()`, banner, Pip line, companion
+  cheer), shelf refresh, save; `_updateSecrets` also runs the pickup streak timer.
+- Juice pass: sparkle pickups play a rising run on `audio.chime()` and bounce the sparkle chip.
+- `src/ui/hud.js` + `index.html` + `src/style.css`: `setDiscoveries()` and a drawn gold-diamond chip
+  (`0/5`, gold when full) — no emoji, no text-only label.
+- `src/engine/save.js`: `secrets` in the decode whitelist, sanitised to known ids only.
+- `tests/secrets.test.js` (7 cases); `tests/save.test.js` extended for `secrets`.
+
+**Checked**
+
+- `node --test tests/*.test.js` → 43 pass, 0 fail. `npm run build` → exit 0.
+- Cloud browser: found the Snuggle Nest and the Root Lantern by walking into them (no button),
+  sparkles 42 → 62, chip `0/5` → `2/5`, two trophies on the shelf, banner and Pip line shown, and
+  `secrets` in `localStorage`. Reload → both still found, chip `2/5`, two trophies. A pre-iteration
+  save (no `secrets` key) boots with `0/5`, zero trophies, learning zero and difficulty auto.
+- Screenshots inspected at gameplay size: `artifacts/r13-nest2.png` (nest behind the stall with its
+  gold cradle), `artifacts/r13-shelf2.png` (shelf with the egg and lantern, market and tree behind).
+  First pass looked flat — the egg blended into the grass — so a gold cradle and a 1.12 scale were
+  added before the second shot.
+- Bug found while testing: the Root Lantern's first position sat almost on the tree (1.9 m from the
+  centre); moved to (-2.8, -6.2) so it reads as a hidden spot and the placement test holds.
+
+**Open**
+
+- Only the hub and Letterleaf Grove have secrets; the other four islands have none yet.
+- Nothing was verified on Windows, the chimes were not listened to on real audio, and no child has
+  played it. Pushing to GitHub is still blocked on a user credential (workspace has no remote).
+
+---
+
 ## Iteration 12 — Questions that resize themselves (2026-11-28)
 
 **Chosen because** the only scaffold was per-sign: a child who struggled with letters got

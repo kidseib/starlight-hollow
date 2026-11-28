@@ -5,6 +5,22 @@ Every public Windows beta, newest first. Player-facing changes only; the develop
 
 ## Unreleased — next beta
 
+**Hidden treasures, and a shelf that fills up.** Five small secrets are tucked
+away in the hollow: behind Momo's stall, around the back of the Star Tree, beside
+the far arch, and in two quiet corners of Letterleaf Grove. Nothing points at
+them — you find them by wandering. Each one answers with a puff of colour, a
+chime, a line from Pip and ten sparkles.
+
+- What you find stays found: each secret becomes a small trophy on the new
+  **Discovery Shelf** between the landing spot and the market, and a gold counter
+  beside your sparkles reads `2/5`. Both come back exactly as they were when you
+  reopen the game, and older saves simply start at `0/5`.
+- Collecting sparkles now answers back: sweeping up a row plays a little rising
+  run of notes and bounces the sparkle counter, so picking things up feels like
+  music rather than a single beep.
+- The treasures are the first of their kind; more corners are planned for the
+  other islands.
+
 **A grown-up corner, and questions that resize themselves.** Pausing the game now
 opens a small panel under the pause card. For each of the five subjects — letters
 and sounds, words and rhymes, numbers and counting, patterns and shapes, memory

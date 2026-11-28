@@ -1,6 +1,7 @@
 // The primary key stays compatible with earlier adventures. Keep the previous
 // readable checkpoint separately so interrupted/corrupt writes are recoverable.
 import { sanitizeReport, sanitizeDifficulty } from '../game/progress.js';
+import { sanitizeSecrets } from '../game/secrets.js';
 
 const KEY = 'starlight-hollow-save-v1';
 const BACKUP = `${KEY}-backup`;
@@ -17,6 +18,7 @@ function decode(raw) {
       solved: ids(s.solved), scanned: ids(s.scanned), visited: ids(s.visited), upgrades: ids(s.upgrades),
       shards: ids(s.shards), placed: ids(s.placed),
       learning: sanitizeReport(s.learning), difficulty: sanitizeDifficulty(s.difficulty),
+      secrets: sanitizeSecrets(s.secrets),
       ended: s.ended === true, zone: typeof s.zone === 'string' ? s.zone : 'meadow',
     };
   } catch { return null; }

@@ -114,6 +114,19 @@ speaks the shape's name and island and costs nothing. `isComplete()` fires the
 payoff: canopy tint, sixteen coloured glows, a warm crown star, a HUD badge, a
 Momo + Pip speech chain and a banner. `save.shards` / `save.placed` persist it.
 
+### Hidden discoveries
+`src/game/secrets.js` (pure) + `src/world/discoveries.js` (geometry). Five authored hollows — three in
+the hub, two in Letterleaf Grove — reward wandering with no educational objective attached. There is
+no prompt, no marker and no input: walking within 2.1 m is the whole interaction, because a child who
+stops exploring can still stumble into one.
+
+Each `SecretSpot` is a mossy stone ring with a gold cradle and one trophy inside (egg, lantern, chime,
+book, mushroom), lit by a glow that only brightens inside 12 m. Finding it pops the object up and
+away with two particle bursts, `audio.star()`, a banner, a Pip line, ten sparkles and a companion
+cheer. Every find is a permanent trophy on the **Discovery Shelf** — a mossy plinth with five dishes
+on the meadow path — so the hub visibly fills up, and the HUD chip `#chip-discoveries` reads `N/5`.
+`save.secrets` stores the ids and is sanitised to known secrets on load.
+
 ### Learning progress & adaptive difficulty
 `src/game/progress.js` (pure) + `src/ui/progressPanel.js` (pause screen). Five subjects —
 letters/sounds, words/rhymes, numbers/counting, patterns/shapes, memory/listening — are tallied

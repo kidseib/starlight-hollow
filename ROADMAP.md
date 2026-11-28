@@ -5,8 +5,9 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
 
 ## Now (next two iterations)
 
-1. **Finish the in-browser evidence for pattern signs** — wrong answer, correct answer, filled
-   blank after reload, before/after screenshots. Carried over from iteration 6.
+1. **Secrets for the other four islands** — the hub and Letterleaf Grove have five hollows and a
+   filling shelf; Tallybrook Falls, Pattern Peaks, Storysong Glade and Pebblecount Cove have none,
+   so the second half of the game still has nothing to find off the path.
 2. **Grown-up corner follow-ups** — it now shows per-subject tallies and difficulty buttons; next
    comes a short list of the signs last met, so a parent can see *what* was hard, not just how many.
 3. **Star Tree follow-ups** - a second ornament set and a small "which shape is

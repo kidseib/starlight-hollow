@@ -137,6 +137,28 @@ export class HUD {
     }
   }
 
+  /** Bounce the sparkle chip, used when a pickup lands so it reads instantly. */
+  pulseSparkles() {
+    this.sparkleChip ||= document.getElementById('chip-sparkles');
+    if (!this.sparkleChip) return;
+    this.sparkleChip.classList.remove('pulse');
+    void this.sparkleChip.offsetWidth;
+    this.sparkleChip.classList.add('pulse');
+  }
+
+  setDiscoveries(count, total) {
+    this.discoveryCount ||= document.getElementById('discovery-count');
+    this.discoveryChip ||= document.getElementById('chip-discoveries');
+    if (!this.discoveryCount) return;
+    const text = `${count}/${total}`;
+    if (this.discoveryCount.textContent === text) return;
+    this.discoveryCount.textContent = text;
+    this.discoveryChip.classList.toggle('is-full', total > 0 && count >= total);
+    this.discoveryChip.classList.remove('pulse');
+    void this.discoveryChip.offsetWidth;
+    this.discoveryChip.classList.add('pulse');
+  }
+
   setStars(count, total = 5) {
     this.starSlots?.forEach((el, i) => {
       el.textContent = i < count ? '★' : '☆';

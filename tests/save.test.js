@@ -12,7 +12,7 @@ test('old saves keep progress and default to the meadow', () => {
 test('malformed fields cannot break game initialization', () => {
   writeSave({solved:{}, scanned:'bad', visited:[1,'cove','cove'], stars:{cove:true,grove:'false'},sparkles:-1,ended:'yes'});
   assert.deepEqual(loadSave(), {solved:[],scanned:[],visited:['cove'],stars:{cove:true},sparkles:0,upgrades:[],shards:[],placed:[],
-    learning:emptyReport(), difficulty:sanitizeDifficulty(null), ended:false, zone:'meadow'});
+    learning:emptyReport(), difficulty:sanitizeDifficulty(null), secrets:[], ended:false, zone:'meadow'});
 });
 test('learning progress and grown-up settings survive a reload', () => {
   let learning = emptyReport();
@@ -30,6 +30,11 @@ test('learning progress and grown-up settings survive a reload', () => {
   writeSave({ sparkles: 1, solved: ['grove-a'] });
   assert.deepEqual(loadSave().learning, emptyReport());
   assert.deepEqual(loadSave().difficulty, sanitizeDifficulty(null));
+  // Hidden treasures survive, and only real ones.
+  writeSave({ sparkles: 2, secrets: ['meadow-nest', 'invented-secret', 'meadow-nest'] });
+  assert.deepEqual(loadSave().secrets, ['meadow-nest']);
+  writeSave({ sparkles: 2 });
+  assert.deepEqual(loadSave().secrets, []);
   // Junk in the new fields is thrown away rather than trusted.
   writeSave({ sparkles: 1, learning: { letters: { attempts: 'lots' } }, difficulty: { letters: 'impossible', extra: 'gentle' } });
   assert.deepEqual(loadSave().learning.letters, { attempts: 0, firstTry: 0, misses: 0 });

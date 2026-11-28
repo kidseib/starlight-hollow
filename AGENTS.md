@@ -42,6 +42,10 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   ornaments; both default to empty so older saves keep working. Hook positions
   follow the tapered trunk (`trunkRadius(y)`), so move a row only together with
   that helper.
+- Hidden discoveries live in `src/game/secrets.js` (data + rules) and `src/world/discoveries.js`
+  (the hollow and the shelf). Finding one is proximity only — never add a button, prompt or marker,
+  and never charge or punish a second visit. `save.secrets` holds found ids and is sanitised to
+  known secrets; adding a secret means adding it to `SECRETS`, which the shelf and tests both read.
 - Adaptive difficulty lives in `src/game/progress.js` (pure) and is set only from the pause
   screen's grown-up corner (`src/ui/progressPanel.js`). Keep it per subject: `subjectOfStation`
   files a sign, `levelFor` chooses Gentle/Just right/Stretch, and `narrowAfter`/`hintDelay` are the
