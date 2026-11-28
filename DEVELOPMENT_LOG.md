@@ -45,13 +45,20 @@ the repo had no Android project at all.
   wall-clock FPS is not representative of a real GPU.
 - Live browser after the merges: no console or page errors; meadow, Grove portal and puzzle sites
   render with their actors, text plaques and merged decorations intact.
-- Windows: electron-builder `--win nsis portable` + `desktop/bundle.mjs`; see build receipt below.
-- Android: Gradle `assembleDebug`; see build receipt below.
+- Windows: built on the `windows-latest` runner of `windows-beta.yml` (electron-builder
+  `--win nsis portable` + `desktop/bundle.mjs`); the workflow verified the three ZIP entries and read
+  every entry for CRC errors.
+- Android: built on the `ubuntu-latest` runner of the same workflow with JDK 21 and
+  `./gradlew assembleDebug`.
 - **Not checked:** real Windows or Android hardware, device audio/speech, a physical controller, or a
   child playtest. The Android APK is debug-signed and sideload-only.
 
-**Open:** publish the source again (the GitHub `main` is still the 0.1.4 workshop commit), device
-testing, Play Store signing/AAB, and the remaining roadmap items.
+**Published:** source pushed to `main` (merge commit `bfa9b8497f3ee723075ad188d1f759ef435122e8`);
+  release `v0.1.5-beta.1` published from workflow run 46122319930 with the Windows ZIP
+  (223,375,998 bytes, SHA-256 `b9faa5f95bcdf5fa71c36d3dac54bdf3791fc7d5026ea630fe604b430ab5bde8`)
+  and the Android APK (4,392,738 bytes, SHA-256
+  `004cf1b70335c4bf87244068fa9559f85dfd3bf27e3112d87163b1586ad35d2a`). **Open:** device testing,
+  Play Store signing/AAB, and the remaining roadmap items.
 
 ---
 

@@ -18,6 +18,11 @@ MSAA is off on touch devices, where high-DPI screens hide the jaggies and the fi
 Capacitor. Touch controls, the adaptive resolution and reduced-motion setting are unchanged. This is
 a debug-signed sideload build, not a Play Store upload; it has not run on a physical phone yet.
 
+[Download 0.1.5-beta.1](https://github.com/kidseib/starlight-hollow/releases/tag/v0.1.5-beta.1) —
+`Starlight-Hollow-Windows-x64.zip` (portable EXE, installer and `START-HERE.txt`) and
+`Starlight-Hollow-Android-beta.apk`. Both are built by the `windows-beta.yml` workflow from commit
+`bfa9b84`; the release notes carry the sizes and SHA-256 checksums.
+
 **Words and numbers that move the world.** Six places now answer to what a child knows, not to a
 sign. They are built into the islands as real things, not floating questions, and every one can be
 re-read, re-heard and tried again forever.
