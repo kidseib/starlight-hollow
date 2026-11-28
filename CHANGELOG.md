@@ -16,6 +16,11 @@ When the drift is empty it pops out a little ribboned bundle, and Pip keeps it s
   often as you like. The first bundle of each play session is worth a few sparkles.
 - Calm motion makes the leaves fly straight and holds the whisk still.
 
+**Two secret doors.** Two of the Hollow's hidden keepsakes now sleep behind a little door you open
+with a tool you already carry: hold the Leafwhisk at a curtain of sleepy leaves and sip it away in the
+grove, or ring a frost bell with a bolt in the peaks and watch the veil melt. Both doors stay open
+once you have opened them, and Pip tells you which tool each one wants.
+
 **A moon with real phases.** The Moon Arbor's moon is no longer just a small ball: each wish carves a
 true crescent, then a half moon, then a gibbous, then a full round face, then a dark new moon with a
 cool halo, and the lanterns stay warm the whole way round. You can see the shape change from the

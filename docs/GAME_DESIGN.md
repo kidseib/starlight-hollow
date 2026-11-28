@@ -333,6 +333,26 @@ soft glow sprites. Follows at a damped offset, flaps faster while moving, spins 
 creature keys, visited zones, owned market gifts (`upgrades`), ended flag. Restores solved stations, socket lights, creature
 friendships and any finished-but-uncollected island berry. New checkpoints resume at the current island’s safe spawn. Legacy saves without a zone start in the meadow. A previous local checkpoint backs up unreadable JSON; malformed fields are normalized. Pending pickups flush on pause or page exit when the browser allows it.
 
+### Doors that ask for a tool
+
+Two of the thirteen hidden hollows are not a walk-in. Both are built from the same scenery language as
+their island, and both name their tool out loud the first time a child walks up:
+
+- **The sleepy drift** (Letterleaf Grove, the storybook). Two bent boughs, a woven arch, a mossy mound
+  and a curtain of leaves with a few already turned warm. Holding the Leafwhisk at it sips the leaves
+  away into the whisk; the curtain thins as it goes, so a child who stops halfway sees progress and can
+  come back.
+- **The frost bell** (Pattern Peaks, the star chart). Two frosted stones and a lintel with a crystal
+  hanging from a gold band, and a veil of soft frost between them. One bolt rings the bell; the veil
+  melts and the doorway is open.
+
+The rules are pure data: each gate sits 2.1–4.5 m in front of its hollow, names its `kind`, its `at`
+offset and the one line Pip says when it opens. While a door is shut the hollow behind it is hidden
+(the little object, its glow and its marker), so the door is the only thing to look at. Opening is
+one-way and saved: `gates` is a sanitised list of ids, a legacy save opens every door shut, and
+revisiting an opened door is silent. There is no counter, no toast, no reward gate and no way to fail:
+walking away mid-sip only leaves the curtain thinner for next time.
+
 ## 5. Presentation
 
 - **Art**: low-poly rounded primitives, flat-ish palettes per island, additive glow sprites, no

@@ -5,6 +5,81 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 27 — Two doors that ask for a tool (2026-11-28)
+
+**Chosen because** the roadmap's first open item said every find was still a walk-in: exploration
+and the reacting scenery never met. The brief for this iteration asked for a whole second unlockable
+world gated behind arbor progress; the persistent docs record the smaller, higher-priority item
+first, so this iteration delivers that one — two keepsakes that sleep behind a door the child has to
+open with a gadget they already own — and leaves the new-world brief on the roadmap.
+
+**What changed**
+
+- `SECRETS` now carries an optional `gate` on two of the thirteen finds. `grove-book` (the quiet end
+  of the grove) sits behind a **drift**: a curtain of leaves strung between two boughs and a woven
+  arch, which the Leafwhisk sips away. `peaks-chart` (the far ridge) sits behind a **frost bell**: two
+  frosted stones and a lintel with a crystal hanging from it; one bolt rings it and the veil melts.
+- New `src/world/gates.js` builds both doors from the same boughs, flat-shaded leaves, weathered
+  stones and frost as the rest of the island: a mossy mound so the curtain grows out of the ground,
+  hanging vines with leaf tips, warm turned leaves among the green, four soft sheets as the frost veil
+  (not a glass pane), and frost spikes on the caps.
+- `src/game/secrets.js` gains `GATES`, `GATE_IDS`, `gateById`, `gateForSecret`, `gatesForZone`,
+  `sanitizeGates`, `gateVerb` and `gateBlocks` — pure data and rules, so the copy, the world and the
+  tests cannot drift apart.
+- `src/game/game.js` wires it up: doors are built beside their hollow, the hollow itself is hidden
+  while its door is shut (`SecretSpot.setObscured`), the frost bell is a zap target of its own
+  (`aimGate`, crosshair hot), the leaf drift is a suction target inside `_suck`, and `_openGate` fires
+  exactly once with one chime, one bubble and one Pip line. Pip teaches the verb once per gate per
+  session, out loud, and never again once it is open.
+- `src/engine/save.js` stores `gates` through `sanitizeGates`; a legacy save opens both doors shut and
+  loses nothing.
+
+**Verified by playing** (1280×720, 16:9, authenticated page)
+
+- **Whisk door:** stood at the drift, held the Leafwhisk for 33 frames → exactly one `chime(2)`, one
+  bubble and one line ("The leaves danced off!"), the curtain gone, the hollow revealed. Thirty more
+  frames of suction at the open door produced **no** events.
+- **Bolt door:** aimed at the bell (`aimGate` = `peaks-frost`, crosshair hot), fired → exactly one
+  chime, one bubble, one line ("Ding! The frost veil melted away."), veil gone. A second bolt gave no
+  events at all.
+- **Both treasures** were then a plain walk-in: "Sleepy Storybook" and "Star Chart" banners, 10
+  sparkles each, keepsake shelf and cairn refreshed.
+- **Reload** restored both opened doors (curtains hidden, hollows visible) and both finds; walking
+  into both worlds after the reload produced **zero** audio, voice, toast or banner events over 80
+  frames each.
+- **A fresh save** booted with both doors shut, the hollows hidden and the curtains visible.
+- **A legacy save** (sparkles 31, a solved sign, no `gates` key) booted straight into the grove with
+  both doors shut, sparkles kept and no errors.
+- **Calm motion:** with `prefers-reduced-motion`, five sampled leaves sat in exactly the same places
+  before and after 40 frames at a shut door.
+- **Controls:** keyboard walk 3.7 m, mouse look 0.31 rad and one bolt, emulated touch walk 2.59 m,
+  look 0.31 rad, one bolt, tool switch and a 0.83 m jump, injected gamepad walk 2.17 m, 0.54 rad yaw,
+  one bolt, tool switch, Start pause and resume.
+- **Nothing else moved:** the arbor moon still cycles full → gibbous → half → crescent → new on its
+  shader (rim 0.07), one real gather still stocks the basket chip (`🌸1 🌾0 ✨0`), a bolt still wakes a
+  crystal, the scanning gaze still lights the listening stone, the per-subject difficulty table is
+  still `auto`, all 13 hollows still exist and the discovery shelf is intact.
+- **Zero console or page errors** across every load and interaction.
+
+**Captures** (1280×720): `iter27-drift-approach.png`, `iter27-drift-shut.png`, `iter27-drift-open.png`,
+`iter27-drift-treasure.png`, `iter27-frost-approach.png`, `iter27-frost-shut.png`,
+`iter27-frost-open.png`, `iter27-frost-treasure.png`, `iter27-calm.png`.
+
+**Tests and build:** `node --test tests/*.test.js` 85 pass (five new gate tests: two doors one per
+tool, the other eleven still walk-ins, once-only ids, shut-blocks/opened-never-blocks, and the save
+round-trip including a legacy save). `npm run build` exit 0.
+
+**Open**
+
+- Only two of thirteen finds are gated. The other eleven are still walk-ins; a third could hide behind
+  a jump or a drift that needs a whisk from a ledge.
+- The frost veil is four soft sprites, not cloth; at some angles it reads as mist rather than fabric,
+  which suits "frost" but is not woven.
+- The drift's vines hang from an arch that is only as tall as the boughs, so a tall child's eye can see
+  over the curtain top into the sky — the hollow itself is still hidden.
+- Android/controller hardware and a Windows build remain unverified; GitHub push is still blocked on a
+  user credential.
+
 ## Iteration 26 — A moon you can read from the path (2026-11-28)
 
 **Chosen because** iteration 25's own log recorded the honest limit: the phased moon was a shrinking,

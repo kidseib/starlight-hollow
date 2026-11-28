@@ -4,6 +4,15 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 27 - Doors that ask for a tool
+
+- **Two finds are no longer walk-ins.** `grove-book` hides behind a leaf drift (two boughs, a woven arch, a mossy foot, hanging vines) that the Leafwhisk sips away; `peaks-chart` behind a frosted stone doorway whose hanging crystal bell a bolt rings to melt the veil. Both are built in `src/world/gates.js` from the same boughs, flat leaves and weathered stone as the island.
+- **Rules live in data.** `SECRETS[].gate` plus `GATES`, `gateVerb`, `gateBlocks`, `sanitizeGates`; the hollow is hidden (`setObscured`) while its door is shut, the frost bell is its own zap target (`aimGate`), the drift is a suction target inside `_suck`, and `_openGate` fires once with one chime, one bubble and one line. Pip teaches the verb once per gate per session.
+- **Saved.** `gates` round-trips through `save.js`; legacy saves boot with both doors shut, and a reload restores opened doors with silent revisits.
+- **Proof:** whisk 33 frames, bolt on the bell, one event set each, silent repeats; both treasures found; reload, fresh and legacy saves; calm motion static; keyboard/mouse/touch/pad; arbor moon, gather/basket, bolt, scan, difficulty and shelf unchanged; zero console errors.
+- **Tests/build:** 85 pass (5 new gate tests), build exit 0. Captures `artifacts/iter27-*.png`.
+- **Open:** only two gated finds; frost veil is soft sprites; the new-world brief is still on the roadmap.
+
 ## Iteration 26 - A carved moon
 
 - **The moon is geometry now.** The bead is a 48-segment sphere with a `ShaderMaterial` lit from `MOON_PHASES[i].angle` in the camera's frame, so the visible lit hemisphere really is a crescent, half or gibbous with a soft terminator and a faint rim. `phaseLight(angle)` (pure) returns the light vector and the lit fraction; `uLit`/`uGain`/`uRim` carry the colour, brightness and edge light. `width` is gone; `scale` only varies 0.98–1.12.

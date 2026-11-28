@@ -333,6 +333,17 @@ export class SecretSpot {
     return true;
   }
 
+  /**
+   * A hollow behind a shut gate is not on show: the little object and its glow
+   * wait until the door opens, so the gate is the only thing to look at.
+   */
+  setObscured(obscured) {
+    this.obscured = !!obscured;
+    this.item.visible = !this.found && !this.obscured;
+    this.glow.visible = !this.obscured;
+    this.mark.visible = !this.obscured;
+  }
+
   /** Called when the save says this one was already found in another session. */
   setFound(found) {
     this.found = !!found;

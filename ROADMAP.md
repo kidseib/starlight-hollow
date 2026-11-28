@@ -5,9 +5,9 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
 
 ## Now (next two iterations)
 
-1. **Secrets behind a small puzzle** — every find is still a walk-in; two could sit behind a leaf
-   drift you scatter or a crystal you ring, so exploration and the reacting scenery meet. The
-   Leafwhisk now gives the drifts a second verb, so a vacuum-only nook is possible too.
+1. ~~**Secrets behind a small puzzle**~~ — done in iteration 27: the grove's storybook sleeps behind a
+   leaf drift the Leafwhisk sips away and the peaks' star chart behind a frost bell one bolt rings. Both
+   doors stay open in the save. A third nook needing a jump from a ledge is still open below.
 2. **A grotto veil that reads as fabric** — it is a glow and a translucent sheet today; woven ribbons
    or drifting motes in the arch would sell "asleep" better.
 3. **A keepsake worth finding further out** — the meadow's three are close to the path; one grove or

@@ -26,8 +26,9 @@ import {
   totalAttempts,
 } from './progress.js';
 import { renderProgressPanel } from '../ui/progressPanel.js';
-import { discover, sanitizeSecrets, collectionStatus, secretsForZone } from './secrets.js';
+import { discover, sanitizeSecrets, sanitizeGates, collectionStatus, secretsForZone } from './secrets.js';
 import { SecretSpot, DiscoveryShelf, KeepsakeCairn } from '../world/discoveries.js';
+import { SecretGate } from '../world/gates.js';
 import { HubGrowth } from '../world/growth.js';
 import { Garden } from '../world/garden.js';
 import { grottoLoot, GROTTO, growthChange } from './hubBloom.js';
@@ -106,6 +107,13 @@ export class Game {
     // shelf in the meadow where the trophies live.
     this.secrets = [];
     this.secretSpots = [];
+    // The two hollows shut behind a small door, and the ids of the doors a child
+    // has already opened. A gate only ever opens, so a save never locks again.
+    this.gates = [];
+    this.gatesOpened = new Set();
+    this._gateTold = new Set();
+    this._gateTick = 0;
+    this.aimGate = null;
     this.curioFields = new Map();
     this.stoneTimer = 0;
     this.discoveryShelf = null;
@@ -334,6 +342,27 @@ export class Game {
         });
         spot.zoneId = zone.id;
         this.secretSpots.push(spot);
+        // Two finds sleep behind their own small door, built from the same
+        // boughs, leaves and stones as the rest of the island.
+        if (secret.gate) {
+          const g = secret.gate;
+          const gate = new SecretGate({
+            scene: this.scene,
+            position: new THREE.Vector3(
+              zone.origin.x + g.at.x,
+              island.heightAtLocal(g.at.x, g.at.z),
+              zone.origin.z + g.at.z
+            ),
+            yaw: Math.atan2(secret.at.x - g.at.x, secret.at.z - g.at.z),
+            gate: { ...g, zone: zone.id },
+            open: this.gatesOpened.has(g.id),
+          });
+          gate.zoneId = zone.id;
+          gate.spot = spot;
+          spot.gate = gate;
+          spot.setObscured(!gate.isOpen);
+          this.gates.push(gate);
+        }
         // The cove's bare sand gets a proper corner around each find.
         if (zone.id === 'cove') {
           buildCoveNook(island, secret.at, (secret.at.x * 73 + secret.at.z * 19) | 0);
@@ -1079,7 +1108,26 @@ export class Game {
       curioTarget = this.curioFields.get(this.currentZoneId)?.pick(camPos, dir) ?? null;
     }
     this.aimCurio = curioTarget;
-    this.hud.setCrosshairHot(!!(bestPad || this.aimCreature || this.aimShop || this.aimHook || this.aimCurio));
+
+    // A frost bell is a zap target of its own, but only when nothing closer is
+    // asking to be looked at.
+    let gateTarget = null;
+    if (!bestPad && !this.aimHook && !this.aimCreature && !this.aimShop && !this.aimGift && !curioTarget) {
+      let gateAngle = 0.22;
+      for (const gate of this.gates) {
+        if (gate.zoneId !== this.currentZoneId || gate.isOpen || gate.gate.kind !== 'ring') continue;
+        const v = gate.bellWorld().sub(camPos);
+        const distance = v.length();
+        if (distance > 14) continue;
+        const angle = v.normalize().angleTo(dir);
+        if (angle < gateAngle) {
+          gateAngle = angle;
+          gateTarget = gate;
+        }
+      }
+    }
+    this.aimGate = gateTarget;
+    this.hud.setCrosshairHot(!!(bestPad || this.aimCreature || this.aimShop || this.aimHook || this.aimCurio || this.aimGate));
   }
 
   /** Switching, and the held trigger that turns the Leafwhisk on. */
@@ -1114,6 +1162,26 @@ export class Game {
     const field = this.curioFields.get(this.currentZoneId);
     const origin = this.camera.position;
     const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
+    // A leaf drift is a curtain, not a curio: holding the whisk at it sips it.
+    const gate = this._gateInSuction(origin, dir);
+    if (gate) {
+      this.whisk.setActive(true);
+      this.audio?.suckStart();
+      const load = Math.min(1, 0.3 + gate.progress * 0.7);
+      this.audio?.suckSet(load);
+      this.whisk.setLevel(load);
+      this._gateTick += dt;
+      if (this._gateTick > 0.07) {
+        this._gateTick = 0;
+        for (let i = 0; i < 2; i++) {
+          const point = gate.sampleLeaf();
+          if (point) this.whisk.emitLeaf(point);
+        }
+      }
+      if (gate.sip(dt)) this._openGate(gate);
+      return;
+    }
+
     let target = null;
     let nearest = Infinity;
     for (const item of field?.items ?? []) {
@@ -1310,6 +1378,49 @@ export class Game {
     this._save();
   }
 
+  /** The nearest shut leaf drift the whisk is pointed at, if any. */
+  _gateInSuction(origin, dir) {
+    let best = null;
+    let nearest = Infinity;
+    for (const gate of this.gates) {
+      if (gate.zoneId !== this.currentZoneId || gate.isOpen || gate.gate.kind !== 'drift') continue;
+      const point = gate.centerWorld();
+      if (!inSuction(point, origin, dir)) continue;
+      const distance = origin.distanceTo(point);
+      if (distance < nearest) {
+        nearest = distance;
+        best = gate;
+      }
+    }
+    return best;
+  }
+
+  /**
+   * A small door opens. It fires once, keeps one chime and one line, and the
+   * hollow behind it is a plain walk-in from then on, in this session and every
+   * save after it.
+   */
+  _openGate(gate) {
+    if (!gate || gate.isOpen) return false;
+    gate.setOpen(true, { animate: !reducedMotion() });
+    gate.spot?.setObscured(false);
+    this.gatesOpened.add(gate.gate.id);
+    this.audio?.chime(2);
+    const ring = gate.gate.kind === 'ring';
+    this.fx?.burst(gate.centerWorld(), {
+      color: ring ? 0xbfe7ff : 0xd7f2a6,
+      count: 22,
+      speed: 3,
+      life: 1,
+      size: 0.5,
+      gravity: -1.2,
+    });
+    this.hud?.showBubble(gate.gate.open, ring ? '🔔' : '🍃');
+    this.voice?.say(gate.gate.open);
+    this._save();
+    return true;
+  }
+
   _fire() {
     if (this.transitioning) return;
     if (this.tool === 'whisk') return;
@@ -1334,6 +1445,8 @@ export class Game {
       const field = this.curioFields.get(this.currentZoneId);
       const point = field?.aimPoint(this.aimCurio, new THREE.Vector3());
       this.blaster.fire(point ?? null, { type: 'curio', curio: this.aimCurio, field });
+    } else if (this.aimGate) {
+      this.blaster.fire(this.aimGate.bellWorld(), { type: 'gate', gate: this.aimGate });
     } else {
       this.blaster.fire(null);
     }
@@ -1351,6 +1464,10 @@ export class Game {
     }
     if (ref?.type === 'gift') {
       this._giveGift(ref.gift);
+      return;
+    }
+    if (ref?.type === 'gate') {
+      this._openGate(ref.gate);
       return;
     }
     if (!ref) return;
@@ -1466,8 +1583,22 @@ export class Game {
   _updateSecrets(dt, time) {
     this.pickupStreakTimer = Math.max(0, this.pickupStreakTimer - dt);
     if (this.pickupStreakTimer === 0) this.pickupStreak = 0;
+    for (const gate of this.gates) {
+      if (gate.zoneId !== this.currentZoneId) continue;
+      gate.update(dt, time, this.camera.position);
+      // Pip says the one thing a non-reading child needs: which tool the door
+      // wants. Once per gate per session, and never again once it is open.
+      if (!gate.isOpen && this.state === 'play' && gate.distanceTo(this.player.position) < 7
+        && !this._gateTold.has(gate.gate.id)) {
+        this._gateTold.add(gate.gate.id);
+        this.hud?.showBubble(gate.gate.teach, '🐣');
+        this.voice?.say(gate.gate.teach);
+      }
+    }
     for (const spot of this.secretSpots) {
       if (spot.zoneId !== this.currentZoneId) continue;
+      // A shut gate keeps its hollow asleep and out of sight.
+      if (spot.gate && !spot.gate.isOpen) continue;
       spot.update(dt, time, this.camera.position);
       if (!spot.found && this.state === 'play' && spot.distanceTo(this.player.position) < 2.1) {
         this._findSecret(spot);
@@ -1743,6 +1874,7 @@ export class Game {
       learning: this.learning,
       difficulty: this.difficulty,
       secrets: this.secrets,
+      gates: [...this.gatesOpened],
       grotto: this.grottoTaken,
       ended: this.endingPlayed,
     });
@@ -1762,6 +1894,11 @@ export class Game {
     this.learning = save.learning ?? emptyReport();
     this.difficulty = save.difficulty ?? sanitizeDifficulty(null);
     this.secrets = sanitizeSecrets(save.secrets);
+    this.gatesOpened = new Set(sanitizeGates(save.gates));
+    for (const gate of this.gates) {
+      gate.setOpen(this.gatesOpened.has(gate.gate.id), { animate: false });
+      gate.spot?.setObscured(!gate.isOpen);
+    }
     this.grottoTaken = save.grotto === true;
     this.bundles = sanitizeBundles(save.bundles);
     this.gifts = sanitizeGifts(save.gifts);

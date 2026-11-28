@@ -90,6 +90,10 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   halo's scale and opacity to the lit fraction and nudge it toward the lit edge, and keep the
   pure-copy/sanitised-rules split. Keep one sound per event — family chime for a light,
   `audio.arbor()` for the waking, `audio.wish()` for a wish — plus one toast and one Pip line.
+  Two hollows (only two) sleep behind a `gate`: the leaf drift opens by Leafwhisk suction in `_suck`,
+  the frost bell by a bolt through `aimGate`. Gates are one-way, saved as sanitised ids in `gates`,
+  silent on revisit, hidden-hollow while shut, and owe exactly one chime, one bubble and one line when
+  they open. Never gate the other eleven finds and never add a counter or a toast for a door.
   An empty basket is the only refusal: answer with `ARBOR_EMPTY` or `GIFT_EMPTY` and nothing else (no
   sound, no particles, nothing spent). Keep the leaf drift out of the basket (`BUNDLE_KINDS` is
   petal/dust/mote only) and keep the basket chip hidden while it is empty. The garden is optional

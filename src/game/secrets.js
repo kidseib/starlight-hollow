@@ -60,6 +60,16 @@ export const SECRETS = [
     sparkles: 10,
     clue: 'The Grove keeps a book at the quiet end of the island.',
     hidden: 'A Sleepy Storybook! The pages smell like rain and honey.',
+    // Two finds sleep behind a small door now. The first is a curtain of
+    // drifting leaves: the Leafwhisk sipping it away is the whole puzzle, and
+    // the hollow behind it stays open in the save once the leaves are gone.
+    gate: {
+      id: 'grove-drift',
+      kind: 'drift',
+      at: { x: 28.4, z: -19.5 },
+      teach: 'Sleepy leaves are holding the hollow shut. Hold the Leafwhisk and sip them away.',
+      open: 'The leaves danced off! A hollow is open behind them.',
+    },
   },
   {
     id: 'grove-mushroom',
@@ -115,6 +125,15 @@ export const SECRETS = [
     sparkles: 10,
     clue: 'Someone left a map of the night sky up here.',
     hidden: 'A Star Chart! Every star up there has a name.',
+    // The second is a frost veil held by a hanging bell: one bolt rings it and
+    // the veil melts, so the two gates use the two tools the child already has.
+    gate: {
+      id: 'peaks-frost',
+      kind: 'ring',
+      at: { x: -31.6, z: -3.7 },
+      teach: 'A frost veil! Ring the little bell with a bolt and watch it melt.',
+      open: 'Ding! The frost veil melted away.',
+    },
   },
   {
     id: 'words-drum',
@@ -163,6 +182,55 @@ export const SECRETS = [
 ];
 
 export const SECRET_IDS = SECRETS.map((s) => s.id);
+
+/**
+ * The two hollows that are not a walk-in. Each gate belongs to one secret, sits
+ * on that secret's island in front of it, and opens with the one tool its
+ * `kind` names — the Leafwhisk for a leaf drift, a bolt for a frost bell.
+ */
+export const GATES = SECRETS.filter((s) => s.gate).map((s) => ({
+  ...s.gate,
+  zone: s.zone,
+  secretId: s.id,
+}));
+
+export const GATE_IDS = GATES.map((g) => g.id);
+
+export function gateById(id) {
+  return GATES.find((g) => g.id === id) ?? null;
+}
+
+export function gateForSecret(secretId) {
+  return GATES.find((g) => g.secretId === secretId) ?? null;
+}
+
+export function gatesForZone(zoneId) {
+  return GATES.filter((g) => g.zone === zoneId);
+}
+
+/** Only known gate ids survive a load, each counted once. */
+export function sanitizeGates(raw) {
+  if (!Array.isArray(raw)) return [];
+  const known = new Set(GATE_IDS);
+  const out = [];
+  for (const id of raw) {
+    if (typeof id === 'string' && known.has(id) && !out.includes(id)) out.push(id);
+  }
+  return out;
+}
+
+/** Which tool opens which gate, in one place so the copy and tests agree. */
+export function gateVerb(kind) {
+  if (kind === 'drift') return 'whisk';
+  if (kind === 'ring') return 'bolt';
+  return null;
+}
+
+/** A hollow behind a shut gate cannot be walked into yet. */
+export function gateBlocks(gate, opened) {
+  if (!gate) return false;
+  return !sanitizeGates(opened).includes(gate.id);
+}
 
 export function secretById(id) {
   return SECRETS.find((s) => s.id === id) ?? null;
