@@ -5,6 +5,48 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 12 — Questions that resize themselves (2026-11-28)
+
+**Chosen because** the only scaffold was per-sign: a child who struggled with letters got
+narrowed choices on that one plinth, walked away, and met the same size of question next time —
+while a parent had no way to see or steer any of it.
+
+**Changed**
+
+- `src/game/progress.js` (new, pure): `SUBJECTS` (letters, words, numbers, patterns, memory),
+  `subjectOfStation` (learn label → type → pad kind → island), `emptyReport`, `sanitizeReport`,
+  `sanitizeDifficulty`, `recordAttempt`, `levelFor`, `narrowAfter`, `hintDelay`, `summaryOf`.
+- `src/ui/progressPanel.js` (new): the grown-up corner on the pause screen — five rows with the
+  subject, its tally and an Auto/Gentle/Stretch button, plus a plain-language footnote.
+- `src/game/station.js`: each station knows its subject and asks the game for that subject's level
+  on activate; the narrowing threshold and the hint delay now come from the level. Also fixed the
+  narrowing arithmetic, which assumed a fixed threshold of two and therefore dimmed nothing on the
+  first miss at Gentle.
+- `src/game/game.js`: `learning` + `difficulty` state, `levelFor` passed into the station context,
+  one `recordAttempt` per solved sign, `setDifficulty` (saves, re-renders, speaks a confirmation),
+  pause line now reports signs met.
+- `src/engine/save.js`: `learning` and `difficulty` in the decode whitelist, sanitised on read.
+- `index.html` / `src/style.css`: `#progress-corner` and its styles.
+- `tests/progress.test.js` (10 cases) and a new `tests/save.test.js` case for the two new fields.
+
+**Checked**
+
+- `node --test tests/*.test.js` → 36 pass, 0 fail. `npm run build` → exit 0.
+- Cloud browser: solved a meadow sign → `patterns` recorded 1 attempt, 1 first try; the pause panel
+  rendered five rows; clicking a button cycled Auto → Gentle and both the tally and the setting were
+  in `localStorage`. Then, driving the real station objects: Gentle dims one wrong choice after 1
+  miss, Just right after 2, Stretch after 3, the answer pad is never dimmed, and `Easier now!`
+  appears with the dim. Screenshot: `artifacts/r12-grownup-corner.png` (inspected).
+- Bug found and fixed during that check: at Gentle the first miss dimmed nothing (the `keep`
+  arithmetic ignored the threshold).
+
+**Open**
+
+- The panel is one local profile; per-profile records and a parent-visible history are still
+  missing. Nothing was verified on Windows or with a child, and the voice was not listened to.
+
+---
+
 ## Iteration 11 — The Star Tree Workshop (2026-11-27)
 
 **Chosen because** iteration 10 gave sparkles a sink but the Star Tree itself was still scenery, and

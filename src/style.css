@@ -896,3 +896,112 @@ canvas#game {
 .shop-done {
   margin-top: 16px;
 }
+
+/* ---------- Grown-up corner (pause screen) ---------- */
+
+.grownup-corner {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 2px dashed rgba(38, 49, 79, 0.14);
+  text-align: left;
+}
+
+.grownup-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.grownup-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #6b4bd6;
+  letter-spacing: 0.3px;
+}
+
+.grownup-sub {
+  font-size: 13px;
+  color: #8792ad;
+}
+
+.grownup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(38, 49, 79, 0.07);
+}
+
+.grownup-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.grownup-info b {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.grownup-info span {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.grownup-btn {
+  flex: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  padding: 6px 14px;
+  min-width: 92px;
+  cursor: pointer;
+  color: #3d4661;
+  background: #eef2fb;
+  transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+.grownup-btn:hover,
+.grownup-btn:focus-visible {
+  transform: translateY(-1px);
+  border-color: var(--gold);
+  outline: none;
+}
+
+.grownup-btn:active {
+  transform: scale(0.96);
+}
+
+.grownup-btn.level-gentle {
+  background: #d9fbec;
+  color: #1f6b52;
+}
+
+.grownup-btn.level-stretch {
+  background: #ffe9a8;
+  color: #6b4506;
+}
+
+.grownup-foot {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #8792ad;
+}
+
+@media (max-width: 720px) {
+  .grownup-row {
+    flex-wrap: wrap;
+  }
+  .grownup-btn {
+    min-width: 76px;
+  }
+}

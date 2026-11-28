@@ -15,6 +15,17 @@ import { MarketStall, SHOP_ITEMS, itemById, purchase, shopStatus } from './shop.
 import { ShardField, Workshop, ORNAMENTS, SHARD_IDS, collectShard, place, workshopStatus, isComplete } from './workshop.js';
 import { shapeDataUrl } from '../world/ornaments.js';
 import { loadSave, writeSave } from '../engine/save.js';
+import {
+  SUBJECTS,
+  SUBJECT_LABELS,
+  LEVELS,
+  emptyReport,
+  sanitizeDifficulty,
+  recordAttempt,
+  levelFor,
+  totalAttempts,
+} from './progress.js';
+import { renderProgressPanel } from '../ui/progressPanel.js';
 import { clamp, damp, mulberry32 } from '../engine/utils.js';
 
 // Momo's Wisp Market: one stall in the hub, on the path between the landing
@@ -44,6 +55,9 @@ export class Game {
     this.timers = [];
     this.islands = new Map();
     this.stations = [];
+    // Per-subject learning record and the grown-up's difficulty choices.
+    this.learning = emptyReport();
+    this.difficulty = sanitizeDifficulty(null);
     this.starberries = {};
     this.currentZoneId = 'meadow';
     this.visited = new Set();
@@ -168,6 +182,9 @@ export class Game {
         onPrompt: () => this._cancelSayChain(),
         onWrong: () => this.companion?.droop(),
         onStationSolved: (s) => this.onStationSolved(s),
+        // Each sign asks for its own subject's level, so a child who is quick
+        // with numbers never has letters made harder because of it.
+        levelFor: (subject) => levelFor(this.learning, subject, this.difficulty[subject]),
       };
       const stations = [];
       for (const def of zone.stations) {
@@ -268,7 +285,8 @@ export class Game {
     this.input.releaseLock();
     this.voice.stop();
     this.audio.musicPlaying = false;
-    this.hud.showPause(true, `✨ ${this.sparkleCount} sparkles · ★ ${this.starCount()} of ${ZONE_STAR_ORDER.length} starberries`);
+    this.hud.showPause(true, `✨ ${this.sparkleCount} sparkles · ★ ${this.starCount()} of ${ZONE_STAR_ORDER.length} starberries · ${totalAttempts(this.learning)} ${totalAttempts(this.learning) === 1 ? 'sign' : 'signs'} met`);
+    this._renderGrownUpCorner();
     this.hud.hideHint();
   }
 
@@ -280,6 +298,38 @@ export class Game {
     this.audio.resume();
     this.hud.showPause(false);
     this.input.requestLock();
+  }
+
+  /**
+   * One solved sign is one data point for its own subject and nothing else.
+   * First-try solves are the evidence that this subject is already easy.
+   */
+  _recordLearning(station) {
+    if (!station?.subject) return;
+    this.learning = recordAttempt(this.learning, station.subject, { misses: station.mistakes });
+    this._saveDirty = true;
+  }
+
+  /** A grown-up's choice for one subject; 'auto' hands it back to the game. */
+  setDifficulty(subject, level) {
+    if (!SUBJECTS.includes(subject)) return;
+    if (level !== 'auto' && !LEVELS.includes(level)) return;
+    this.difficulty = sanitizeDifficulty({ ...this.difficulty, [subject]: level });
+    this._save();
+    this._renderGrownUpCorner();
+    const wording =
+      level === 'gentle' ? 'will ask smaller questions'
+        : level === 'stretch' ? 'will ask bigger questions'
+          : 'follows the game again';
+    this.hud.showHint(`${SUBJECT_LABELS[subject]} ${wording}.`, 2800);
+  }
+
+  _renderGrownUpCorner() {
+    renderProgressPanel(document.getElementById('progress-corner'), {
+      report: this.learning,
+      difficulty: this.difficulty,
+      onSet: (subject, level) => this.setDifficulty(subject, level),
+    });
   }
 
   repeatInstruction() {
@@ -647,6 +697,7 @@ export class Game {
     this.companion?.celebrate();
     this.hud.setCrosshairHot(false);
     this.solvedStations.add(station.def.id);
+    this._recordLearning(station);
     this.addSparkles(6, false);
     const zone = ZONE_BY_ID[station.zoneId];
     const allSolved = zone.stations.every((s) => this.solvedStations.has(s.id));
@@ -1060,6 +1111,8 @@ export class Game {
       upgrades: [...this.upgrades],
       shards: [...this.shards],
       placed: [...this.placed],
+      learning: this.learning,
+      difficulty: this.difficulty,
       ended: this.endingPlayed,
     });
   }
@@ -1075,6 +1128,8 @@ export class Game {
     this.upgrades = new Set(save.upgrades ?? []);
     this.shards = new Set(save.shards ?? []);
     this.placed = new Set(save.placed ?? []);
+    this.learning = save.learning ?? emptyReport();
+    this.difficulty = save.difficulty ?? sanitizeDifficulty(null);
     this.endingPlayed = save.ended && this.starCount() === ZONE_STAR_ORDER.length;
     if (this.islands.has(save.zone)) this.currentZoneId = save.zone;
 

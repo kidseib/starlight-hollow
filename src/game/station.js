@@ -3,6 +3,7 @@ import { GlyphPad } from '../world/pads.js';
 import { buildStationBase, buildPatternTile } from '../world/props.js';
 import { mulberry32, shuffleInPlace, clamp } from '../engine/utils.js';
 import { ENCOURAGE_LINES, PRAISE_LINES } from '../content.js';
+import { subjectOfStation, narrowAfter, hintDelay } from './progress.js';
 
 function hashString(str) {
   let h = 2166136261;
@@ -39,6 +40,9 @@ export class Station {
     this.feedbackCooldown = 0;
     this.encourageIndex = 0;
     this.mistakes = 0;
+    // Which subject this sign teaches decides how gentle it gets, on its own.
+    this.subject = subjectOfStation(def, island?.zone?.id ?? null);
+    this.level = ctx.levelFor?.(this.subject) ?? 'normal';
 
     const palette = island.zone.palette;
     const localX = def.x;
@@ -180,6 +184,12 @@ export class Station {
     return this.center;
   }
 
+  /** Ask the game for this subject's level; a grown-up's choice wins. */
+  _refreshLevel() {
+    this.level = this.ctx.levelFor?.(this.subject) ?? this.level ?? 'normal';
+    return this.level;
+  }
+
   distanceTo(pos) {
     return this.center.distanceTo(pos);
   }
@@ -189,6 +199,7 @@ export class Station {
     this.active = true;
     this.progress = 0;
     this.mistakes = 0;
+    this._refreshLevel();
     this.ctx.onPrompt?.();
     if (this.def.type === 'pattern') {
       this.patternReveal = 0;
@@ -306,7 +317,7 @@ export class Station {
       if (!this.solved && this.active) this._narrowChoices();
     });
     if (this.def.type === 'pattern') this._schedule(1.3, () => this._playPatternLoop());
-    this._schedule(2.7, () => {
+    this._schedule(hintDelay(this._refreshLevel()), () => {
       if (this.solved || !this.active) return;
       this._showRetryHint();
     });
@@ -321,8 +332,11 @@ export class Station {
    */
   _narrowChoices() {
     if (this.def.type !== 'pick' && this.def.type !== 'pattern') return;
-    if (this.mistakes < 2) return;
-    const keep = Math.max(2, this.pads.length - (this.mistakes - 1));
+    const threshold = narrowAfter(this._refreshLevel());
+    if (this.mistakes < threshold) return;
+    // At the threshold the first wrong choice fades; each further miss takes one
+    // more, but there are always two choices left and never the answer alone.
+    const keep = Math.max(2, this.pads.length - (this.mistakes - threshold + 1));
     let hide = this.pads.filter((p) => p.state === 'active' && p.key !== this.def.answerKey).length - (keep - 1);
     if (hide <= 0) return;
     let hidden = 0;

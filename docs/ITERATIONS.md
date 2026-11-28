@@ -4,6 +4,17 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 12 - Questions that resize themselves
+
+- Adaptive difficulty is now per subject and per child. `src/game/progress.js` keeps a small tally for letters, words, numbers, patterns and memory (`attempts`, `firstTry`, `misses`); `subjectOfStation` files a sign by its `learn` label, then its type, then its pad kinds, then its island, so every sign belongs to exactly one subject.
+- `levelFor` keeps a subject at Just right until there is evidence: two solved signs with first-try answers under half the time turn it Gentle; three solved signs with 80% or better turn it Stretch. A grown-up's explicit choice always beats the statistics.
+- Level changes the question, not the reward: Gentle narrows after the first miss and hints in 1.9 s, Just right after two and 2.7 s, Stretch after three and 3.6 s; the 6 sparkles and the Starberry rules are identical everywhere.
+- The pause screen gained the grown-up corner (`src/ui/progressPanel.js`, `#progress-corner`): one row per subject with "N signs · M first try" and an Auto/Gentle/Stretch button that saves immediately and speaks a short confirmation.
+- `save.learning` / `save.difficulty` are decoded through `sanitizeReport` / `sanitizeDifficulty`, so junk is discarded and pre-iteration saves open clean.
+- Fixed: `_narrowChoices` computed `keep` from a hard-coded threshold of two, so at Gentle the first miss dimmed nothing. It now derives the target from `narrowAfter(level)`; verified at all three levels by driving the real station objects (1/2/3 misses, answer never dimmed).
+- `tests/progress.test.js` (10 cases) covers subject filing, tally purity, auto thresholds, per-subject independence, explicit settings, thresholds/delays, sanitising and the summary text; `tests/save.test.js` covers the two new fields and old-save compatibility. `node --test tests/*.test.js` -> 36 pass; `npm run build` -> exit 0.
+- Not verified: a Windows run, audible narration, or a child playtest. The record is one local profile, not per-profile.
+
 ## Iteration 11 - The Star Tree Workshop
 
 - The Star Tree became a second progression system and a second sparkle sink. Five star shards hide on the five adventure islands (`SHARD_BEARING` in `shardSpot(zone)` keeps each in its own corner, clear of the arch, portals and signs); the sixth shape, a Sky Lantern, is Momo's 90-sparkle gift, so exploring and shopping feed the same goal.

@@ -3,6 +3,26 @@
 Every public Windows beta, newest first. Player-facing changes only; the development detail lives in
 `DEVELOPMENT_LOG.md` and `docs/ITERATIONS.md`.
 
+## Unreleased — next beta
+
+**A grown-up corner, and questions that resize themselves.** Pausing the game now
+opens a small panel under the pause card. For each of the five subjects — letters
+and sounds, words and rhymes, numbers and counting, patterns and shapes, memory
+and listening — it shows how many signs your child has met and how many were
+answered first try, and lets you choose **Gentle**, **Just right** or **Stretch**
+for that subject alone.
+
+- **Every subject adapts on its own.** Doing well with numbers never makes letters
+  harder. Auto keeps a subject at Just right until there is real evidence: two
+  solved signs answered first try less than half the time turn that subject Gentle,
+  and three almost-perfect signs turn it Stretch.
+- **Gentle** makes the first wrong choice fade after a single miss and brings the
+  spoken hint sooner. **Stretch** keeps every choice for three misses and waits
+  longer before hinting. The sparkles and stars are identical at every level, so
+  being helped is never a punishment.
+- **Nothing is lost.** The record and your choices are saved with the rest of the
+  adventure, and older saves open with a clean slate and everything on Auto.
+
 ## 0.1.4-beta.1 — 2026-11-27
 
 **The Star Tree Workshop.** The Star Tree is now something to build, and sparkles

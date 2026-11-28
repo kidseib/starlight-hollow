@@ -114,6 +114,22 @@ speaks the shape's name and island and costs nothing. `isComplete()` fires the
 payoff: canopy tint, sixteen coloured glows, a warm crown star, a HUD badge, a
 Momo + Pip speech chain and a banner. `save.shards` / `save.placed` persist it.
 
+### Learning progress & adaptive difficulty
+`src/game/progress.js` (pure) + `src/ui/progressPanel.js` (pause screen). Five subjects —
+letters/sounds, words/rhymes, numbers/counting, patterns/shapes, memory/listening — are tallied
+independently from the signs a child actually solves: `attempts`, first-try solves and misses.
+
+`subjectOfStation()` files a sign by its `learn` label first, then its type (`memory`, `pattern`),
+then its pad kinds, then its island, so nothing is ever unsorted. `levelFor()` returns Gentle, Just
+right or Stretch for one subject: auto needs two solved signs to go Gentle (first-try rate ≤ 0.4) and
+three to go Stretch (≥ 0.8); an explicit grown-up setting always wins. The level feeds `narrowAfter()`
+(1 / 2 / 3 misses before a wrong choice fades) and `hintDelay()` (1.9 / 2.7 / 3.6 s). Rewards never
+change with the level, so help is not a penalty.
+
+The pause screen's **grown-up corner** shows one row per subject (`N signs · M first try`) and an
+Auto/Gentle/Stretch button that saves immediately — the only place difficulty is set, and always per
+subject. `save.learning` and `save.difficulty` hold both, sanitised on load.
+
 ### Content format (`src/content.js`)
 Zones, portals, stations, pads, creatures and all spoken text are data. Pad kinds: `letter`
 (optional `marker` picture card), `number` (numeral + dot row), `word`, `dots`, `shape`, `icon`

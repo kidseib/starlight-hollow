@@ -42,6 +42,11 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   ornaments; both default to empty so older saves keep working. Hook positions
   follow the tapered trunk (`trunkRadius(y)`), so move a row only together with
   that helper.
+- Adaptive difficulty lives in `src/game/progress.js` (pure) and is set only from the pause
+  screen's grown-up corner (`src/ui/progressPanel.js`). Keep it per subject: `subjectOfStation`
+  files a sign, `levelFor` chooses Gentle/Just right/Stretch, and `narrowAfter`/`hintDelay` are the
+  only knobs a level may turn. Never let a level change sparkles, stars or save keys, and never let
+  one subject's record affect another. `save.learning` and `save.difficulty` are sanitised on load.
 - Verify with `node --test tests/*.test.js` and `npm run build`, then look at the change in the
   browser (`window.__starlight` exposes game, camera, scene, audio, voice and HUD).
 - Record every iteration in `docs/ITERATIONS.md` and `DEVELOPMENT_LOG.md`, and keep `CHANGELOG.md`
