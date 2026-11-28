@@ -5,7 +5,11 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
 
 ## Now (next two iterations)
 
-1. ~~**Secrets behind a small puzzle**~~ — done in iteration 27: the grove's storybook sleeps behind a
+1. ~~**Knowledge that changes the island**~~ — done in iteration 29: a bramble gate opened by reading
+   `moss`, a lily crossing raised by counting to six, and a rune path woken by matching a frog's call.
+   Still open: the shape/pattern lift-or-current from the brief, and a world puzzle in the other three
+   thematic worlds (peaks, cove, hollow), so every island has one.
+2. ~~**Secrets behind a small puzzle**~~ — done in iteration 27: the grove's storybook sleeps behind a
    leaf drift the Leafwhisk sips away and the peaks' star chart behind a frost bell one bolt rings. Both
    doors stay open in the save. A third nook needing a jump from a ledge is still open below.
 2. **A grotto veil that reads as fabric** — it is a glow and a translucent sheet today; woven ribbons

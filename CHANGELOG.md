@@ -5,6 +5,26 @@ Every public Windows beta, newest first. Player-facing changes only; the develop
 
 ## Unreleased — next beta
 
+**Words and numbers that move the world.** Three places now answer to what a child knows, not to a
+sign. They are built into the islands as real things, not floating questions, and every one can be
+re-read, re-heard and tried again forever.
+
+- **The Sleepy Bramble** (Letterleaf Grove) — a curtain of bramble across a glade will not open until
+  someone reads the word on the standing stone. Pip says the word slowly and sounds it out; three
+  carved stones wait nearby. Zap *moss* and the bramble pulls back into the arch for good.
+- **The Lily Crossing** (Tallybrook Falls) — five stepping stones sleep under a pond, and six lilies
+  float on it. Count the flowers, then zap the stone that says how many: the stones rise one after
+  another into a path you can walk. Pip deliberately does not say the number.
+- **The Listening Path** (Storysong Glade) — a rune path lies dark until a child matches the croak
+  they hear to the friend who made it. The frog, the chick and the owl are carved in stone; the right
+  one wakes six runes one at a time and lights the path.
+
+Wrong stones never fail a child: the stone flickers, Pip repeats the sound or the hint, and after a
+few misses the wrong choices dim one by one until only the answer and one friendlier stone are left.
+Solving one is worth 8 sparkles, one sound, one line and a saved world that stays changed. The three
+new rules live in `src/game/worldPuzzles.js`, and the places themselves are authored in
+`src/world/puzzleArt.js`.
+
 **Lantern Hollow: the first place you unlock.** Walk to the arch on the west edge of Sunbeam Meadow
 and you will find it asleep under a curtain of bramble, with no shimmer over it and no beacon in the
 sky. Make a wish at the arbor — a real one, carried up from the garden — and the bramble opens for

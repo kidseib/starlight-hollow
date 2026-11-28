@@ -1307,3 +1307,41 @@ distance against island-local coordinates (fixed), and a portal reference was ca
 finished portal existed, so the wake burst threw (fixed). The scripted Leafwhisk gather probe kept
 reporting a stale `ready` flag; suction itself was seen targeting and accumulating, but a completed
 gather was not re-proven today.
+
+---
+
+## Iteration 29 — knowledge that moves the world (2026-11-28)
+
+**Goal.** Make learning happen on the island, not only at boards.
+
+**Built.** `src/game/worldPuzzles.js` (three pure puzzle definitions, subjects `words`/`numbers`/
+`letters`, `dimmedChoices`, sanitising, copy) and `src/world/puzzleArt.js` (authored gate, pond and
+rune path plus the standing-stone choices). `game.js` now builds the sites into each island, teaches
+each one once per session inside 13 m, aims at the stones under the same forgiving assist, answers
+through the real blaster, narrows wrong stones after 1/2/3 misses (stretch/normal/gentle), plays the
+subject's hint on a timer, awards 8 sparkles with one sound/line/banner, and saves solved ids in
+`puzzles` (sanitised in `save.js`). `audio.creatureCall` synthesises frog, chick and owl calls;
+`save.test.js` and 7 new `worldPuzzles` tests cover the rules.
+
+**Verified by playing (headless browser, real update loop).**
+- Grove: arrival taught the bramble (chime + bubble + voice); wrong `milk` gave one wrong sound and
+  line; correct `moss` opened the gate, showed banner/bubble/line, +8 sparkles, words attempt 1.
+- Falls: taught without speaking the number; two misses dimmed one wrong stone (normal level); `6`
+  raised the crossing, +8 sparkles, numbers attempt 1 with 2 misses.
+- Words: taught, played a frog croak; wrong `owl` replayed the hint and the call; `frog` woke the
+  runes, letters attempt 1.
+- Reload with all three solved: mechanisms restored, no announcements, no console or page errors.
+- 99 tests pass, `npm run build` exit 0. Captures `artifacts/iter29-grove-gate.png`,
+  `iter29-falls-before.png`, `iter29-falls-after.png`, `iter29-words-path.png`.
+
+**Mistakes worth recording.** The first real wrong answer threw because `hintDelay` was used without
+being imported — unit tests and the bundler both missed it; only playing caught it. The standing
+stones billboarded using island-local positions against the world camera, so plaques faced sideways
+(this is the same local/world class of bug as iteration 28's prize pickup). Cream glyphs on pale stone
+were unreadable until a framed slate inset was added, and the pool sat in the ground/behind the
+plaques until it was raised and photographed from the rim. 🐦 rendered as an ambiguous blob and was
+replaced with 🐤.
+
+**Open.** Three of six worlds; no pattern lift/current yet; solved puzzles are scenery rather than
+routes (the crossing is walkable but the gate does not lead anywhere new); Android/controller
+hardware untested; GitHub source push still blocked on a project secret.

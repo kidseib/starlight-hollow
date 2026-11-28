@@ -326,6 +326,30 @@ export class GameAudio {
     this.noise({ dur: 0.5, gain: 0.08, freq: 2000, q: 1.2 });
   }
 
+  /**
+   * Three little creature calls, made from the same oscillators as everything
+   * else: a frog's wet croak, a bird's two-note chirp, an owl's soft hoot. They
+   * are the question in the listening-path puzzle, so they must be distinct at
+   * phone-speaker volume.
+   */
+  creatureCall(kind = 'frog') {
+    if (kind === 'bird') {
+      this.tone({ freq: 1250, to: 1750, dur: 0.09, gain: 0.12, type: 'triangle', bus: 'sfx', echo: 0.12 });
+      this.tone({ freq: 1500, to: 2050, dur: 0.08, gain: 0.11, at: 0.14, type: 'triangle', bus: 'sfx' });
+      this.tone({ freq: 1320, to: 1850, dur: 0.1, gain: 0.1, at: 0.27, type: 'triangle', bus: 'sfx' });
+      return;
+    }
+    if (kind === 'owl') {
+      this.tone({ freq: 305, to: 250, dur: 0.34, gain: 0.17, type: 'sine', bus: 'sfx', echo: 0.18 });
+      this.tone({ freq: 290, to: 236, dur: 0.32, gain: 0.14, at: 0.44, type: 'sine', bus: 'sfx' });
+      return;
+    }
+    // frog: two low, wet croaks
+    this.tone({ freq: 150, to: 92, dur: 0.17, gain: 0.17, type: 'sawtooth', bus: 'sfx' });
+    this.noise({ dur: 0.09, gain: 0.05, freq: 520, q: 2.4, at: 0.02, bus: 'sfx' });
+    this.tone({ freq: 142, to: 88, dur: 0.15, gain: 0.15, at: 0.24, type: 'sawtooth', bus: 'sfx' });
+  }
+
   giggle() {
     const base = 620 + Math.random() * 140;
     [0, 1, 2].forEach((i) => {

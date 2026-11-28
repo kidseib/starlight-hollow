@@ -62,6 +62,26 @@ miss removes one more, never below two choices and never the answer. `sequence` 
 keep every pad because their order is the puzzle. Leaving the sign (18 m) and returning restores
 all choices and the attempts counter.
 
+### World puzzles (knowledge that moves the place)
+
+Three clearings take knowledge out of the sign and put it into the island. They are built as scenery,
+found by walking, and explained by Pip's voice the first time a child comes within 13 m.
+
+| Place | What the child does | What changes |
+| --- | --- | --- |
+| The Sleepy Bramble (Letterleaf Grove) | reads `moss` on a standing stone and zaps it | the bramble curtain retracts into the gate posts for good |
+| The Lily Crossing (Tallybrook Falls) | counts six floating lilies and zaps `6` | five sunken stepping stones rise into a walkable path |
+| The Listening Path (Storysong Glade) | matches a croak to the frog stone | six rune slabs wake in sequence and light a path |
+
+Rules live in `src/game/worldPuzzles.js`; the art in `src/world/puzzleArt.js`; aiming, teaching,
+retrying and saving stay in `game.js` and reuse the Starbolt, aim assist, `R` repeat, speech bubble,
+voice, feedback, `recordAttempt` and the per-subject difficulty. Each has a 15 m aim range, 8 sparkles,
+one sound, one line and a permanent saved state (`puzzles`). Wrong choices never punish: the stone
+flickers, the hint repeats, and after 1/2/3 misses (stretch/normal/gentle) the wrong stones dim one by
+one, never the answer. Plaques billboard and are readable from the approach; solved sites stay changed
+and silent. Instructions are deliberately explicit about *what to do*, but the counting puzzle never
+speaks the number and the sound puzzle never names the animal until the hint.
+
 ### Momo's Wisp Market
 `src/game/shop.js`. A striped stall at (11, 10) in Sunbeam Meadow, facing the path
 to the Star Tree, run by **Momo** — a mossy lantern-snail with a glowing spiral

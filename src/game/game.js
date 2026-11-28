@@ -23,6 +23,7 @@ import {
   sanitizeDifficulty,
   recordAttempt,
   levelFor,
+  hintDelay,
   totalAttempts,
 } from './progress.js';
 import { renderProgressPanel } from '../ui/progressPanel.js';
@@ -32,6 +33,8 @@ import { SecretGate } from '../world/gates.js';
 import { buildSleepingVeil } from '../world/props.js';
 import { dressLanternHollow, dressHollowNook, dressHollowPrize } from '../world/lanternHollow.js';
 import { HOLLOW, HOLLOW_LOOT, HOLLOW_GATES, hollowAwake, sanitizeHollowLoot } from './hollow.js';
+import { puzzlesInZone, sanitizePuzzles, isCorrect, dimmedChoices, successLine, wrongLine, PUZZLE_SPARKLES, PUZZLE_WAKE_RADIUS, PUZZLE_AIM_RANGE } from './worldPuzzles.js';
+import { buildPuzzleSite } from '../world/puzzleArt.js';
 import { HubGrowth } from '../world/growth.js';
 import { Garden } from '../world/garden.js';
 import { grottoLoot, GROTTO, growthChange } from './hubBloom.js';
@@ -122,6 +125,12 @@ export class Game {
     this.hollowPrizes = new Map();
     this.hollowLoot = [];
     this._hollowTold = false;
+    // World puzzles: stones to read, count and match, and what they open.
+    this.puzzleSites = new Map();
+    this.solvedPuzzles = new Set();
+    this.puzzleMisses = new Map();
+    this._puzzleTold = new Set();
+    this.aimPuzzle = null;
     this._gateTold = new Set();
     this._gateTick = 0;
     this.aimGate = null;
@@ -237,6 +246,12 @@ export class Game {
       for (const p of zone.portals) blockers.push({ x: p.x, z: p.z, r: 5 });
       for (const s of zone.stations) blockers.push({ x: s.x, z: s.z, r: 6 });
       for (const c of zone.curios ?? []) blockers.push({ x: c.x, z: c.z, r: 4.2 });
+      // Keep a clearing around each puzzle and each standing stone, so the
+      // scatter never grows through a stone the child has to read.
+      for (const puzzle of puzzlesInZone(zone.id)) {
+        blockers.push({ x: puzzle.at.x, z: puzzle.at.z, r: 8 });
+        for (const choice of puzzle.choices) blockers.push({ x: choice.at.x, z: choice.at.z, r: 2.4 });
+      }
       if (zone.kind === 'hub') {
         blockers.push({ x: 0, z: 4, r: 8 });
         // Keep the walk-up path clear for the lantern row, and leave the grotto
@@ -316,6 +331,14 @@ export class Game {
 
       // Curious things: scenery that answers the blaster and the scanning gaze.
       this.curioFields.set(zone.id, new CurioField({ island, zone, fx: this.fx }));
+
+      // Puzzles that change the place itself: a bramble gate, a sunken crossing,
+      // a sleeping path. Built into the island group, so they sit in its ground.
+      for (const puzzle of puzzlesInZone(zone.id)) {
+        const site = buildPuzzleSite(island, puzzle);
+        island.group.add(site.group);
+        this.puzzleSites.set(puzzle.id, site);
+      }
 
       // sparkles scattered around the island
       this.sparkles.spawnCluster(
@@ -1153,10 +1176,36 @@ export class Game {
     }
     this.aimGift = giftTarget;
 
+    // Puzzle stones are read from a distance, so they are a zap target of their
+    // own. A sign, a creature, a hook or Momo still wins if it is in the way.
+    let puzzleTarget = null;
+    if (!bestPad && !this.aimHook && !this.aimCreature && !this.aimShop && !this.aimGift) {
+      let puzzleAngle = 0.22;
+      for (const def of puzzlesInZone(this.currentZoneId)) {
+        if (this.solvedPuzzles.has(def.id)) continue;
+        const site = this.puzzleSites.get(def.id);
+        if (!site) continue;
+        const level = this._puzzleLevel(def);
+        const dim = dimmedChoices(def, this.puzzleMisses.get(def.id) ?? 0, level);
+        for (const stone of site.choices) {
+          if (dim.includes(stone.id)) continue;
+          const point = stone.worldPoint();
+          const v = point.sub(camPos);
+          if (v.length() > PUZZLE_AIM_RANGE) continue;
+          const angle = v.normalize().angleTo(dir);
+          if (angle < puzzleAngle) {
+            puzzleAngle = angle;
+            puzzleTarget = { def, site, stone };
+          }
+        }
+      }
+    }
+    this.aimPuzzle = puzzleTarget;
+
     // Curious things are scenery: a sign, a creature, a hook, Momo or a garden
     // spot wins first.
     let curioTarget = null;
-    if (!bestPad && !this.aimHook && !this.aimCreature && !this.aimShop && !this.aimGift) {
+    if (!bestPad && !this.aimHook && !this.aimCreature && !this.aimShop && !this.aimGift && !puzzleTarget) {
       curioTarget = this.curioFields.get(this.currentZoneId)?.pick(camPos, dir) ?? null;
     }
     this.aimCurio = curioTarget;
@@ -1179,7 +1228,7 @@ export class Game {
       }
     }
     this.aimGate = gateTarget;
-    this.hud.setCrosshairHot(!!(bestPad || this.aimCreature || this.aimShop || this.aimHook || this.aimCurio || this.aimGate));
+    this.hud.setCrosshairHot(!!(bestPad || this.aimCreature || this.aimShop || this.aimHook || this.aimCurio || this.aimGate || this.aimPuzzle));
   }
 
   /** Switching, and the held trigger that turns the Leafwhisk on. */
@@ -1495,6 +1544,13 @@ export class Game {
     } else if (this.aimCreature) {
       const target = this.aimCreature.group.position.clone().setY(this.aimCreature.group.position.y + 0.7);
       this.blaster.fire(target, this.aimCreature);
+    } else if (this.aimPuzzle) {
+      this.blaster.fire(this.aimPuzzle.stone.worldPoint(), {
+        type: 'puzzle',
+        def: this.aimPuzzle.def,
+        site: this.aimPuzzle.site,
+        stone: this.aimPuzzle.stone,
+      });
     } else if (this.aimCurio) {
       const field = this.curioFields.get(this.currentZoneId);
       const point = field?.aimPoint(this.aimCurio, new THREE.Vector3());
@@ -1522,6 +1578,10 @@ export class Game {
     }
     if (ref?.type === 'gate') {
       this._openGate(ref.gate);
+      return;
+    }
+    if (ref?.type === 'puzzle') {
+      this._answerPuzzle(ref.def, ref.site, ref.stone);
       return;
     }
     if (!ref) return;
@@ -1831,6 +1891,106 @@ export class Game {
     return true;
   }
 
+  // ------------------------------------------------------------- puzzles ----
+
+  /** The level this puzzle asks for, from its own subject's record. */
+  _puzzleLevel(def) {
+    return levelFor(this.learning, def.subject, this.difficulty[def.subject]);
+  }
+
+  _updatePuzzles(dt, time) {
+    const calm = reducedMotion();
+    const zone = this.islands.get(this.currentZoneId)?.zone;
+    if (!zone) return;
+    for (const def of puzzlesInZone(zone.id)) {
+      const site = this.puzzleSites.get(def.id);
+      if (!site) continue;
+      site.update(dt, time, this.camera, calm);
+      if (this.solvedPuzzles.has(def.id)) {
+        site.setReady(false);
+        continue;
+      }
+      const d = Math.hypot(
+        this.player.position.x - (zone.origin.x + def.at.x),
+        this.player.position.z - (zone.origin.z + def.at.z)
+      );
+      site.setReady(d < PUZZLE_WAKE_RADIUS + 8);
+      if (d < PUZZLE_WAKE_RADIUS && !this._puzzleTold.has(def.id)) this._teachPuzzle(def, site);
+    }
+  }
+
+  /**
+   * The only invitation is Pip, once, when the child is close enough to see the
+   * stones. No marker, no arrow, no floating question.
+   */
+  _teachPuzzle(def, site) {
+    this._puzzleTold.add(def.id);
+    site.setReady(true);
+    this.audio.chime(2);
+    this.hud.showBubble(def.instruction, def.icon);
+    this.voice.say(def.instruction);
+    this.fx?.burst(site.centerWorld(), { color: 0xffe6b0, count: 12, speed: 1.5, life: 0.9, size: 0.4 });
+    if (def.kind === 'sound') {
+      this.timers.push({ t: 2.3, fn: () => this.audio.creatureCall(def.call) });
+    }
+  }
+
+  _answerPuzzle(def, site, stone) {
+    if (!def || !site || !stone || this.solvedPuzzles.has(def.id)) return false;
+    if (isCorrect(def, stone.id)) {
+      const misses = this.puzzleMisses.get(def.id) ?? 0;
+      this.learning = recordAttempt(this.learning, def.subject, { misses });
+      this.puzzleMisses.delete(def.id);
+      this.solvedPuzzles.add(def.id);
+      site.applySolved(true, !reducedMotion());
+      this.addSparkles(PUZZLE_SPARKLES, false);
+      this.audio.correct();
+      this.companion?.celebrate();
+      this.hud.showBanner(def.title, `${PUZZLE_SPARKLES} sparkles`, 3600);
+      const line = successLine(def);
+      this.hud.showBubble(line, def.icon);
+      this.voice.say(line);
+      this.fx?.fountain(site.centerWorld(), 0xffe6b0, 34);
+      this._save();
+      return true;
+    }
+
+    const misses = (this.puzzleMisses.get(def.id) ?? 0) + 1;
+    this.puzzleMisses.set(def.id, misses);
+    this.audio.wrong();
+    this.companion?.droop();
+    stone.setState('wrong');
+    this.hud.showFeedback('Try again!', 'again');
+    const level = this._puzzleLevel(def);
+    const dim = dimmedChoices(def, misses, level);
+    this.timers.push({
+      t: 0.7,
+      fn: () => {
+        if (this.solvedPuzzles.has(def.id)) return;
+        for (const id of dim) site.setStateFor(id, 'dim');
+        if (!dim.includes(stone.id)) stone.setState('active');
+      },
+    });
+    const last = def.choices
+      .filter((c) => c.id !== def.answer)
+      .every((c) => dim.includes(c.id));
+    this.voice.say(wrongLine(def, { last }));
+    if (def.kind === 'sound') {
+      this.timers.push({ t: 1.3, fn: () => this.audio.creatureCall(def.call) });
+    }
+    this.timers.push({
+      t: hintDelay(level) + 1.4,
+      fn: () => {
+        if (this.solvedPuzzles.has(def.id)) return;
+        const hint = def.hint;
+        this.hud.showBubble(hint, def.icon);
+        this.voice.say(hint);
+        if (def.kind === 'sound') this.audio.creatureCall(def.call);
+      },
+    });
+    return false;
+  }
+
   _portalLocked(def) {
     return def?.needs === HOLLOW.needs && !this.hollowOpen;
   }
@@ -1899,6 +2059,19 @@ export class Game {
     if (this.idleTimer < (this.hasUpgrade('bell') ? 3.5 : 9)) return;
     const stations = this.currentData?.stations ?? [];
     if (stations.some((s) => s.active)) return;
+    // A puzzle explains itself when the child arrives; Pip should not also
+    // point at a sign across the island and talk over it.
+    const zone = this.currentData?.zone;
+    if (zone) {
+      const nearPuzzle = puzzlesInZone(this.currentZoneId).some((p) => {
+        if (this.solvedPuzzles.has(p.id)) return false;
+        return Math.hypot(
+          this.player.position.x - (zone.origin.x + p.at.x),
+          this.player.position.z - (zone.origin.z + p.at.z)
+        ) < 17;
+      });
+      if (nearPuzzle) return;
+    }
     if (!this.companion.canPoint()) return;
     const next = stations
       .filter((s) => !s.solved)
@@ -2029,6 +2202,7 @@ export class Game {
       gates: [...this.gatesOpened],
       hollow: this.hollowOpen,
       hollowLoot: [...this.hollowLoot],
+      puzzles: [...this.solvedPuzzles],
       grotto: this.grottoTaken,
       ended: this.endingPlayed,
     });
@@ -2052,6 +2226,12 @@ export class Game {
     for (const gate of this.gates) {
       gate.setOpen(this.gatesOpened.has(gate.gate.id), { animate: false });
       gate.spot?.setObscured(!gate.isOpen);
+    }
+    this.solvedPuzzles = new Set(sanitizePuzzles(save.puzzles));
+    for (const [id, site] of this.puzzleSites) {
+      const wasSolved = this.solvedPuzzles.has(id);
+      site.applySolved(wasSolved, false);
+      if (wasSolved) this._puzzleTold.add(id);
     }
     this.grottoTaken = save.grotto === true;
     this.bundles = sanitizeBundles(save.bundles);
@@ -2165,6 +2345,7 @@ export class Game {
       this._updateScan(dt);
       this._updateSecrets(dt, time);
       this.curioFields.get(this.currentZoneId)?.update(dt, time);
+      this._updatePuzzles(dt, time);
       this.garden?.update(dt, time);
       if (this.currentZoneId === HOLLOW.zone) {
         this.hollowLife?.update(dt, time);
