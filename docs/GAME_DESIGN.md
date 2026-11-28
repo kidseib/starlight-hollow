@@ -189,13 +189,20 @@ HUD chip (`#chip-tool`) names the active one.
 
 - **Starbolt** — the original blaster: bolts to signs, creatures, hooks, Momo and curios, with snap aim
   to whatever is nearest the reticle.
-- **Leafwhisk** — the vacuum. Hold the trigger with a leaf drift inside the wide intake cone (7.5 m,
-  `cos 0.88`, anything within 1.2 m of the mouth always counts) and leaves lift off along a curve into
-  the glowing nozzle, shrinking and spinning as they go. The drift shrinks as it empties, the whoosh
-  (`suckStart`/`suckSet`/`suckStop`) and the cone rise with the load, and the finishing move pops a
-  ribboned bundle with `audio.pop`. The first gather of each drift in a session pays 3 sparkles and
-  Pip's line; later gathers pay nothing and the drift regrows after 22 s. Nothing is lost, nothing is
-  timed, nothing is gated.
+- **Leafwhisk** — the vacuum, and a whole-game verb since iteration 22. Four families of authored
+  loose scenery are gatherable: **leaf** drifts (hub), **petal** windflower patches (grove, and one in
+  the falls), **dust** vents (falls, peaks) and **glow-mote** perches (words, cove). Hold the trigger
+  with one inside the wide intake cone (7.5 m, `cos 0.88`, anything within 1.2 m of the mouth always
+  counts) and its loose part lifts off along a curve into the glowing nozzle, shrinking and spinning as
+  it goes. Petals flutter, dust plumes rise and flurries spin, motes orbit and their sea glass dims.
+  The prop shrinks as it empties, the whoosh (`suckStart`/`suckSet`/`suckStop`) and the cone rise with
+  the load, and the finishing move pops a family-specific bundle with `audio.pop`: a ribboned petal
+  posy, a golden dust puff, a tiny mote lantern, or the leaf bundle.
+- **The hello:** `familyReward(type, greeted)` pays one small hello per family per session (3 for
+  leaf/petal/mote, 2 for dust) plus Pip's line; later gathers of that family pay nothing and say
+  nothing, but always work, always pop a bundle and always toast. Each prop keeps a permanent base
+  (stems, stone collar, perch) and shows a remnant once gathered; each regrows by itself (leaf 22 s,
+  petal 20 s, dust 24 s, mote 26 s). Nothing is lost, timed or gated.
 - **Switch:** `Q` (keyboard), right mouse button, the 🌀 touch button, or **B** on a gamepad. Switching
   never blocks movement, jumping or pausing. The first switch in a session is taught out loud.
 - **Calm motion** removes the whisk's bob and sway and straightens every debris path to the mouth.
@@ -303,6 +310,9 @@ frustum culling, sprite-based glows, shared geometries within a station, `pixelR
 
 ## 9. Known gaps (next priorities)
 
+0. A use for what the Leafwhisk gathers (a dye, a gift for Momo, a lantern to hang) — gathering is a
+   whole-game verb now that every themed world has its own family, but the bundles are still only a
+   celebration. Also: no touch or pad hardware has been tried, and there is no Windows build yet.
 1. A second sparkle sink (decorating the Star Tree) and a care loop for Momo, so saving
    continues after all three gifts are bought.
 2. Parent dashboard and a grown-up progress corner (per-subject stats, profile settings).

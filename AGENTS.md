@@ -65,8 +65,12 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   from `Q`, the right mouse button, the `#touch-tool` button and gamepad **B**; the held trigger is
   `Input.firingHeld`, which already folds in keyboard, mouse, touch hold and pad hold. Keep a switch
   from ever blocking movement, jumping or pausing, keep the HUD chip in step through `HUD.setTool`, and
-  keep the first switch of a session spoken. Gathering is a first-time hello only (`curioReward` with
-  the drift's `seen`), never a currency: the drift regrows, nothing is timed and nothing is gated. The
+  keep the first switch of a session spoken. Gathering is a first-time hello only, and it is paid per
+  *family* per session (`familyReward(type, game.greeted)` for leaf, petal, dust and mote) so two
+  patches of the same family cannot be farmed; it is never a currency, the prop regrows, nothing is
+  timed and nothing is gated. Every gatherable prop must be authored 3D with a permanent `base` group
+  (structure that never vanishes), a `remnant` that appears once gathered and a `gather` group that
+  shrinks, and must live in `src/content.js` so every themed world has at least one. The
   suction cone must stay forgiving (`SUCTION_RANGE` 7.5 m, `SUCTION_COS` 0.88) and every suction
   animation must straighten under `reducedMotion()`.
 - The hub's growth from keepsakes is pure data in `src/game/hubBloom.js` and 3D in

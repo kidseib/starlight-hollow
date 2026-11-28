@@ -26,6 +26,24 @@ function leafGeometry() {
 
 const LEAF_GEO = leafGeometry();
 
+function petalGeometry() {
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+    0, 0, 0,
+    -0.085, 0.02, 0.1,
+    -0.095, 0.05, 0.2,
+    0, 0.075, 0.27,
+    0.095, 0.05, 0.2,
+    0.085, 0.02, 0.1,
+  ]), 3));
+  geometry.setIndex([0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5]);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+const PETAL_GEO = petalGeometry();
+const PETAL_COLOURS = [0xf7a8c4, 0xffd0e0, 0xffe3b0, 0xe98fb0, 0xfff6f0];
+
 export class Whisk {
   constructor(camera, scene, fx) {
     this.camera = camera;
@@ -155,6 +173,31 @@ export class Whisk {
     this.dust = new THREE.Group();
     this.dust.visible = false;
     this.scene.add(this.dust);
+    this.petals = new THREE.Group();
+    this.petals.visible = false;
+    this.scene.add(this.petals);
+    this.petalMotes = [];
+    for (let i = 0; i < 16; i++) {
+      const mesh = new THREE.Mesh(PETAL_GEO, new THREE.MeshStandardMaterial({
+        color: PETAL_COLOURS[i % PETAL_COLOURS.length],
+        roughness: 0.7,
+        flatShading: true,
+        side: THREE.DoubleSide,
+      }));
+      mesh.visible = false;
+      this.petals.add(mesh);
+      this.petalMotes.push({ mesh, t: 1, duration: 0.9, from: new THREE.Vector3(), control: new THREE.Vector3(), size: 1, phase: 0, spin: 0 });
+    }
+    this.glow = new THREE.Group();
+    this.glow.visible = false;
+    this.scene.add(this.glow);
+    this.glowMotes = [];
+    for (let i = 0; i < 12; i++) {
+      const sprite = makeSprite(0xbdf3ff, 0.2, 0.0);
+      sprite.visible = false;
+      this.glow.add(sprite);
+      this.glowMotes.push({ sprite, t: 1, duration: 0.7, from: new THREE.Vector3(), phase: 0 });
+    }
     this.dustMotes = [];
     for (let i = 0; i < 10; i++) {
       const sprite = makeSprite(0xffe9b8, 0.22, 0.0);
@@ -214,36 +257,132 @@ export class Whisk {
     return true;
   }
 
-  /** A finished bundle pops at the mouth and drops away. */
-  popBundle() {
+  /** A petal lifts off, fluttering sideways on its way in. */
+  emitPetal(point, colour = null) {
+    const mote = this.petalMotes.find((m) => m.t >= 1);
+    if (!mote) return false;
+    mote.t = 0;
+    mote.duration = 0.95 + Math.random() * 0.35;
+    mote.phase = Math.random() * Math.PI * 2;
+    mote.spin = (Math.random() - 0.5) * 7;
+    mote.from.copy(point);
+    mote.size = 0.8 + Math.random() * 0.4;
+    mote.mesh.scale.setScalar(mote.size);
+    mote.mesh.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
+    mote.mesh.material.color.setHex(colour ?? PETAL_COLOURS[Math.floor(Math.random() * PETAL_COLOURS.length)]);
+    mote.mesh.visible = true;
+    this.petals.visible = true;
+    return true;
+  }
+
+  /** A glow mote spirals in tight, bright and quick. */
+  emitMote(point) {
+    const mote = this.glowMotes.find((m) => m.t >= 1);
+    if (!mote) return false;
+    mote.t = 0;
+    mote.duration = 0.62 + Math.random() * 0.25;
+    mote.phase = Math.random() * Math.PI * 2;
+    mote.from.copy(point);
+    mote.sprite.visible = true;
+    mote.sprite.material.opacity = 0.8;
+    this.glow.visible = true;
+    return true;
+  }
+
+  /**
+   * A finished gather pops out in front of the mouth and settles: a leaf
+   * bundle, a petal posy, a sun puff or a tiny mote lantern, so what was
+   * gathered is always seen again rather than simply vanishing.
+   */
+  popBundle(kind = 'leaf') {
     const nozzle = this.nozzleWorld(new THREE.Vector3());
     const direction = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
     const start = nozzle.clone().addScaledVector(direction, 0.9);
     const home = nozzle.clone().addScaledVector(direction, 2.0);
     home.y -= 0.9;
     const bundle = new THREE.Group();
-    const ribbon = new THREE.Mesh(
-      new THREE.TorusGeometry(0.07, 0.018, 6, 14),
-      new THREE.MeshStandardMaterial({ color: 0xffd166, emissive: 0xffab33, emissiveIntensity: 0.4, roughness: 0.4 })
-    );
-    ribbon.rotation.x = Math.PI / 2;
-    bundle.add(ribbon);
-    for (let i = 0; i < 5; i++) {
-      const leaf = new THREE.Mesh(LEAF_GEO, new THREE.MeshStandardMaterial({
-        color: LEAF_COLOURS[i % LEAF_COLOURS.length],
-        roughness: 0.85,
-        flatShading: true,
-        side: THREE.DoubleSide,
+
+    if (kind === 'petal') {
+      const ribbon = new THREE.Mesh(
+        new THREE.TorusGeometry(0.07, 0.014, 6, 16),
+        new THREE.MeshStandardMaterial({ color: 0xf7a8c4, emissive: 0xd15c8a, emissiveIntensity: 0.35, roughness: 0.5 })
+      );
+      ribbon.rotation.x = Math.PI / 2;
+      bundle.add(ribbon);
+      for (let i = 0; i < 6; i++) {
+        const petal = new THREE.Mesh(PETAL_GEO, new THREE.MeshStandardMaterial({
+          color: PETAL_COLOURS[i % PETAL_COLOURS.length],
+          emissive: PETAL_COLOURS[i % PETAL_COLOURS.length],
+          emissiveIntensity: 0.25,
+          roughness: 0.7,
+          flatShading: true,
+          side: THREE.DoubleSide,
+        }));
+        const a = (i / 6) * Math.PI * 2;
+        petal.position.set(Math.cos(a) * 0.08, 0.02, Math.sin(a) * 0.08);
+        petal.rotation.set(0.9, a, 0);
+        petal.scale.setScalar(0.55);
+        bundle.add(petal);
+      }
+      const heart = new THREE.Mesh(new THREE.DodecahedronGeometry(0.04, 0), new THREE.MeshStandardMaterial({
+        color: 0xffcf5c, emissive: 0xffab33, emissiveIntensity: 0.5, roughness: 0.4, flatShading: true,
       }));
-      leaf.position.set((Math.random() - 0.5) * 0.12, -0.04 + Math.random() * 0.1, (Math.random() - 0.5) * 0.12);
-      leaf.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
-      bundle.add(leaf);
+      heart.position.y = 0.07;
+      bundle.add(heart);
+    } else if (kind === 'dust') {
+      for (let i = 0; i < 4; i++) {
+        const puff = new THREE.Mesh(new THREE.DodecahedronGeometry(0.09 + i * 0.012, 0), new THREE.MeshStandardMaterial({
+          color: [0xe8c07a, 0xf2d79a, 0xd9a95f, 0xffe6b0][i],
+          roughness: 0.85,
+          flatShading: true,
+        }));
+        puff.scale.set(1.2, 0.6, 1.1);
+        puff.position.set((i - 1.5) * 0.045, 0.03 + i * 0.035, (i % 2) * 0.04);
+        bundle.add(puff);
+      }
+      const sparkle = makeSprite(0xffe6b0, 0.3, 0.5);
+      sparkle.position.y = 0.12;
+      bundle.add(sparkle);
+    } else if (kind === 'mote') {
+      const cage = new THREE.Mesh(
+        new THREE.TorusGeometry(0.075, 0.012, 5, 12),
+        new THREE.MeshStandardMaterial({ color: 0xffd166, emissive: 0xffab33, emissiveIntensity: 0.5, roughness: 0.4, metalness: 0.3 })
+      );
+      cage.position.y = 0.02;
+      bundle.add(cage);
+      const glass = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.07, 0),
+        new THREE.MeshStandardMaterial({ color: 0xbdf3ff, emissive: 0x7fd9f7, emissiveIntensity: 0.9, roughness: 0.2, transparent: true, opacity: 0.85, flatShading: true })
+      );
+      bundle.add(glass);
+      const light = makeSprite(0xbdf3ff, 0.45, 0.65);
+      bundle.add(light);
+    } else {
+      const ribbon = new THREE.Mesh(
+        new THREE.TorusGeometry(0.07, 0.018, 6, 14),
+        new THREE.MeshStandardMaterial({ color: 0xffd166, emissive: 0xffab33, emissiveIntensity: 0.4, roughness: 0.4 })
+      );
+      ribbon.rotation.x = Math.PI / 2;
+      bundle.add(ribbon);
+      for (let i = 0; i < 5; i++) {
+        const leaf = new THREE.Mesh(LEAF_GEO, new THREE.MeshStandardMaterial({
+          color: [0xc4642a, 0xd98d34, 0xa94d28, 0xe3ad3f, 0xb9702f][i % 5],
+          roughness: 0.85,
+          flatShading: true,
+          side: THREE.DoubleSide,
+        }));
+        leaf.position.set((Math.random() - 0.5) * 0.12, -0.04 + Math.random() * 0.1, (Math.random() - 0.5) * 0.12);
+        leaf.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
+        bundle.add(leaf);
+      }
     }
+
     bundle.position.copy(start);
     bundle.scale.setScalar(0.45);
     this.scene.add(bundle);
     this.bundles.push({ group: bundle, t: 0, from: start, to: home });
-    this.fx?.burst(start, { color: 0xffe9a8, count: 10, speed: 1.4, life: 0.8, size: 0.16, gravity: -1.2 });
+    const burstColour = { leaf: 0xffe9a8, petal: 0xffd0e0, dust: 0xffe6b0, mote: 0xbdf3ff }[kind] ?? 0xffe9a8;
+    this.fx?.burst(start, { color: burstColour, count: 10, speed: 1.4, life: 0.8, size: 0.16, gravity: -1.2 });
     this.pouch = 1;
     return bundle;
   }
@@ -310,12 +449,56 @@ export class Whisk {
       mote.sprite.material.opacity = 0.5 * (1 - ease);
       if (mote.t >= 1) mote.sprite.visible = false;
     }
+    for (const mote of this.petalMotes) {
+      if (mote.t >= 1) continue;
+      mote.t = Math.min(1, mote.t + dt / mote.duration);
+      flying += 1;
+      const t = mote.t;
+      const ease = t * t;
+      const control = this.calm ? mote.from.clone().add(nozzle).multiplyScalar(0.5) : mote.control;
+      if (!this.calm) control.copy(mote.from).lerp(nozzle, 0.5).add(new THREE.Vector3(0, 0.4, 0));
+      const x = (1 - t) * (1 - t) * mote.from.x + 2 * (1 - t) * t * control.x + ease * nozzle.x;
+      const y = (1 - t) * (1 - t) * mote.from.y + 2 * (1 - t) * t * control.y + ease * nozzle.y;
+      const z = (1 - t) * (1 - t) * mote.from.z + 2 * (1 - t) * t * control.z + ease * nozzle.z;
+      // A petal flutters rather than flying straight.
+      const flutter = this.calm ? 0 : Math.sin(t * Math.PI * 2.4 + mote.phase) * 0.32 * (1 - t);
+      const dx = nozzle.x - mote.from.x;
+      const dz = nozzle.z - mote.from.z;
+      const flat = Math.hypot(dx, dz) || 1;
+      mote.mesh.position.set(x - (dz / flat) * flutter, y + flutter * 0.35, z + (dx / flat) * flutter);
+      mote.mesh.rotation.z += dt * mote.spin;
+      mote.mesh.rotation.x += dt * mote.spin * 0.8;
+      mote.mesh.rotation.y += dt * mote.spin * 0.4;
+      mote.mesh.scale.setScalar(mote.size * (1 - ease * 0.7));
+      if (mote.t >= 1) {
+        mote.mesh.visible = false;
+        mote.mesh.position.copy(nozzle);
+      }
+    }
+    for (const mote of this.glowMotes) {
+      if (mote.t >= 1) continue;
+      mote.t = Math.min(1, mote.t + dt / mote.duration);
+      flying += 0.6;
+      const t = mote.t;
+      const ease = t * t;
+      const bx = (1 - t) * mote.from.x + ease * nozzle.x;
+      const by = (1 - t) * mote.from.y + ease * nozzle.y;
+      const bz = (1 - t) * mote.from.z + ease * nozzle.z;
+      const radius = this.calm ? 0 : 0.42 * (1 - t);
+      const angle = mote.phase + t * 9;
+      mote.sprite.position.set(bx + Math.cos(angle) * radius, by + Math.sin(angle) * radius * 0.8, bz + Math.sin(angle) * radius * 0.6);
+      mote.sprite.material.opacity = 0.85 * (1 - ease * 0.5);
+      mote.sprite.scale.setScalar(0.7 - t * 0.4);
+      if (mote.t >= 1) mote.sprite.visible = false;
+    }
     if (flying === 0 && this.active) {
       // Nothing in flight: the intake idles down by itself.
       this.setLevel(Math.max(0, this.level - dt * 2.6));
     }
     this.debrisLeaf.visible = this.motes.some((m) => m.t < 1);
     this.dust.visible = this.dustMotes.some((m) => m.t < 1);
+    this.petals.visible = this.petalMotes.some((m) => m.t < 1);
+    this.glow.visible = this.glowMotes.some((m) => m.t < 1);
   }
 
   _updateBundles(dt) {

@@ -16,6 +16,13 @@ When the drift is empty it pops out a little ribboned bundle, and Pip keeps it s
   often as you like. The first bundle of each play session is worth a few sparkles.
 - Calm motion makes the leaves fly straight and holds the whisk still.
 
+**Every world has something to whisk.** The grove grows a **windflower patch** that sends petals
+fluttering into the nozzle and pops out a ribboned posy. The falls and the peaks keep **dust vents** —
+a ring of stones round a warm golden glow — and gathering one puffs out a little sun-warmed cloud. The
+words cliffs and the cove have **glow-mote perches**: driftwood hung with sea glass, where the motes
+spiral in and come back out as a tiny lantern. Each family says hello once per play session, then
+keeps working forever; nothing is lost, nothing is timed, and every patch grows back by itself.
+
 **The hollow is full of curious things.** Every island now hides two bits of
 scenery that answer when you play with them. A **leaf drift** bursts into a
 swirl of leaves when you zap it (there are usually a few sparkles underneath),

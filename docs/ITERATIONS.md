@@ -4,6 +4,14 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 22 - The Leafwhisk goes everywhere
+
+- **Three new families:** beside the leaf drift, a **petal** windflower patch, a **dust** vent and a **mote** perch, each authored in `src/world/curios.js` with a base group that never vanishes, a remnant that appears after gathering, and a gather group that shrinks and siphons. One prop per themed island sits in `src/content.js`; the hub's drifts are untouched.
+- **Per-family behaviour:** petals sway and flutter, dust lifts plumes and flurries, motes orbit and tighten (and their sea glass dims) as the whisk pulls. The bundle that pops out is family-specific: a ribboned posy, a golden puff, a glassy mote lantern.
+- **One hello per family per session:** `familyReward(type, greeted)` in `src/game/curios.js`; the game keeps a `greeted` Set. Repeats pay nothing and stay silent but still work, still pop a bundle and still toast. Nothing is timed, lost or gated.
+- **Evidence:** instrumented gather on grove petal (+3, whoosh 0.33→1.0, pop/collect/toast/voice), two repeats (0, no voice), peaks dust (+2), cove mote (+3); resumed save booted at 72 sparkles and still paid the petal hello once; legacy save at 15 sparkles; keyboard/mouse/touch/pad all reached walk, look, zap, switch, jump and pause (and pad Start now resumes); bolt and listening-stone regressions clean; zero page errors; screenshots idle/switch/mid-suction in two worlds/collection/calm. 74 tests pass, build exit 0.
+- **Not verified:** Android/controller hardware, Windows build. GitHub push still blocked on a user credential.
+
 ## Iteration 21 - The Leafwhisk
 
 - **A real second tool:** `src/game/tools.js` holds the two tools and the intake's rules (`inSuction`, `suctionStrength`, `GATHER_SECONDS`); `src/world/whisk.js` builds the Leafwhisk and its debris. `Q`, right-click, the 🌀 touch button and gamepad B switch, and the HUD chip names the active tool on every device.

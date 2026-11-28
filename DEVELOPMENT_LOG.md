@@ -5,6 +5,86 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 22 — The Leafwhisk goes everywhere (2026-11-28)
+
+**Chosen because** iteration 21 shipped the Leafwhisk but wired it to leaf drifts only, and the
+roadmap's item 4 said so plainly ("a second use for the Leafwhisk beyond leaves"). The tool worked in
+the hub and did nothing in four of the five themed worlds, which makes a child's second gadget feel
+like a meadow toy. This iteration made gathering a whole-game verb with authored scenery in every
+world, and finished the art to the iteration 17/19/20/21 bar.
+
+**Changed**
+
+- `src/game/curios.js` — three new gather families beside the leaf: `petal` (windflower patch),
+  `dust` (sun-warmed dust vent) and `mote` (driftwood perch with sea glass). `GATHER_TYPES`,
+  `GATHER_NAMES` ("petal posy", "sun puff", "mote lantern"), `CURIO_REGROW` (petal 20 s, dust 24 s,
+  mote 26 s), `CURIO_SPARKLES`, first-time `CURIO_LINES` and gentle `CURIO_AGAIN` lines for each, plus
+  `isGatherType` and `familyReward(type, greeted)` — one small hello per *family* per session, so the
+  hub drift and a grove patch share the leaf hello, and nothing that is not loose is ever paid.
+- `src/content.js` — one authored gather prop per themed island: grove petals at (2, 2), falls dust at
+  (9.6, 1.6), peaks dust at (-6, -2), words motes at (-8.4, -0.4), cove motes at (-6, 4). The hub's
+  leaf drifts are untouched.
+- `src/world/curios.js` — `buildPetal` (mossy tuffet, pebbles, eight windflowers on bent stems with
+  layered six-plus-five-petal blooms and gold hearts, two buds, fallen petals and a fern; the stems
+  stay when the blooms are taken), `buildDust` (a collar of nine purple stones round a dark bowl, a
+  glowing amber vent ring, three standing amber shards, driftwood, a bright dust mound with five caps,
+  amber chips, three lifting plumes, four drifting motes and a warm heart), `buildMote` (a driftwood
+  perch with a crossbar, four sea-glass beads that dim as they are taken, seven orbiting glow motes, a
+  pebble ring and a scallop shell). Each prop keeps a `base` group that never disappears, a `remnant`
+  that appears once it is gathered and a `gather` group that shrinks and siphons, so nothing in the
+  scene ever blinks out of existence. `siphon`/`drain`/`zap` are generic over `GATHERABLE`, the aimed
+  height is per family, and `update` gives petals a sway, dust rising plumes/flurries and motes an
+  orbit that tightens under suction.
+- `src/world/whisk.js` — petal (pink/cream flutter) and glow-mote (cyan spiral) particle pools beside
+  the leaves and dust, with calm-motion paths that straighten; `popBundle(kind)` releases a ribboned
+  petal posy, a puff of golden dust, or a glass-and-glow mote lantern back into the world, and the
+  petal bundle carries a little emissive warmth so it reads against shade.
+- `src/game/game.js` — `this.greeted` Set, `_suck` accepts every gather family with the right emitter,
+  `_finishGather` pays through `familyReward`, names the bundle, and only speaks Pip's line when the
+  family hello is actually paid; `_hitCurio` keeps per-item bolt rewards and praise for the new types.
+- `src/main.js` — the gamepad **Start** button now toggles pause like Escape (it only ever paused
+  before), so a pad-only child can always come back to play.
+
+**Verified** (true 1280×720 16:9 page in the same authenticated context, not the portrait panel)
+
+- **Art, inspected at gameplay size:** grove petals read as a bouquet of pink/cream blooms on stems
+  over a mossy tuffet; peaks dust reads as a stone collar with a glowing gold ring, amber shards and a
+  gold mound; cove motes read as a driftwood perch with glowing beads and drifting motes. Three passes
+  were needed: the first props were too small, the second had their permanent structure inside the
+  `remnant` group (so the perch and stone collar were invisible until gathered), and the third fixed
+  scale, contrast and the cup-shaped blooms (backfaces were rendering black without an emissive lift).
+  Screenshots: `artifacts/iter22-idle.png`, `iter22-switch.png`, `iter22-suck-grove.png`,
+  `iter22-collect-grove.png`, `iter22-suck-peaks.png`, `iter22-collect-peaks.png`,
+  `iter22-suck-calm.png`, plus prop portraits `iter22-{petal,dust,mote}-prop.png`.
+- **Gathering, instrumented:** grove petal +3 sparkles with one real `suckStart` (guarded, not one per
+  frame), `suckSet` rising 0.33 → 1.0, `pop`, `collect`, toast "A petal posy!" and Pip's posy line; two
+  immediate repeats paid **0**, with no voice line and no sparkle chime, but still popped a bundle and
+  toasted. Peaks dust +2 with "A sun puff!" and "Sunny dust! It smells like warm stone."; cove mote +3
+  with "A mote lantern!" and "Glow motes! They settled into a tiny lantern." Three families, three
+  hellos, zero console or page errors throughout.
+- **Once per session across a resumed save:** after a reload the resumed save booted at 72 sparkles in
+  the cove with four zones visited; the first petal gather then paid +3 and spoke, the second paid 0
+  and stayed silent — the rule is per family per session, and resuming starts a fresh session.
+- **Input, outside the hub (grove/peaks):** keyboard walk 3.15 m, look, jump, `Q` bolt→whisk, `E` zap
+  hold, Escape pause and resume; mouse drag look (yaw 0 → 1.34) and a real click that fired once and
+  hit a leaf (+3 sparkles, no view drift); emulated touch stick 2.91 m, look, jump +0.95 m, tool switch,
+  zap hold; injected gamepad walk 3.15 m, look, jump +0.95 m, B switch, RT zap, Start pause **and now
+  resume**. Pause/skip never blocked any of them and the chip stayed correct.
+- **Regressions:** bolt on a grove leaf still scatters it (+3, once), the peaks listening stone still
+  lights and speaks "Crystals grow slowly, one tiny layer at a time." (+3, once), the hub drifts were
+  not touched, 13/13 keepsakes and grotto tests still pass, `sanitizeSecrets`, adaptive difficulty and
+  calm motion tests unchanged. Calm-motion gather shown with straight paths and a still whisk.
+- **Saves:** resumed save (72 sparkles, cove, visited meadow/grove/peaks/cove) and the legacy save
+  (`{zone:'meadow',sparkles:15,...}`) both booted clean with zero console errors.
+- 74 tests pass (`node --test tests/*.test.js`), including two new cases: every themed world has loose
+  scenery and every family is placed; family rewards pay once per session and independently. Production
+  build (`npx vite build`) exit 0.
+
+**Still open** — Android/controller hardware and a Windows build are still untested; GitHub push stays
+blocked on a user credential (local commits only). The next-best ideas are recorded in `ROADMAP.md`.
+
+---
+
 ## Iteration 21 — The Leafwhisk (2026-11-28)
 
 **Chosen because** the roadmap's top open item was "a vacuum gadget of its own": the hollow had one

@@ -95,6 +95,7 @@ export const ZONES = [
     curios: [
       { id: 'grove-leaf', type: 'leaf', x: 7.6, z: 9.6 },
       { id: 'grove-crystal', type: 'crystal', x: -4.5, z: 11.4 },
+      { id: 'grove-petal', type: 'petal', x: 2, z: 2 },
     ],
     name: 'Letterleaf Grove',
     subtitle: 'Where letters grow on trees',
@@ -223,6 +224,7 @@ export const ZONES = [
     curios: [
       { id: 'falls-leaf', type: 'leaf', x: -0.4, z: 13.6 },
       { id: 'falls-stone', type: 'stone', x: -12, z: 6.5 },
+      { id: 'falls-dust', type: 'dust', x: 9.6, z: 1.6 },
     ],
     name: 'Tallybrook Falls',
     subtitle: 'Where numbers tumble and splash',
@@ -351,6 +353,7 @@ export const ZONES = [
     curios: [
       { id: 'peaks-crystal', type: 'crystal', x: -9.9, z: 11.1 },
       { id: 'peaks-stone', type: 'stone', x: -14.9, z: 0.8 },
+      { id: 'peaks-dust', type: 'dust', x: -6, z: -2 },
     ],
     name: 'Pattern Peaks',
     subtitle: 'Where the sky hums a repeating song',
@@ -508,6 +511,7 @@ export const ZONES = [
     curios: [
       { id: 'words-leaf', type: 'leaf', x: -16, z: 2.3 },
       { id: 'words-crystal', type: 'crystal', x: -13, z: -9.7 },
+      { id: 'words-mote', type: 'mote', x: -8.4, z: -0.4 },
     ],
     name: 'Storysong Glade',
     subtitle: 'Where words sing and stories grow',
@@ -654,6 +658,7 @@ export const ZONES = [
     curios: [
       { id: 'cove-crystal', type: 'crystal', x: -14.8, z: -9.3 },
       { id: 'cove-stone', type: 'stone', x: -3.9, z: -17.1 },
+      { id: 'cove-mote', type: 'mote', x: -6, z: 4 },
     ],
     name: 'Pebblecount Cove',
     subtitle: 'Where numbers stack up like pebbles',

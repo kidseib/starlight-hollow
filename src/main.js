@@ -40,7 +40,9 @@ input.onDevice = (device) => {
   touchControls.syncForDevice(device);
 };
 input.onPause = () => {
+  // Start is a toggle, like Escape: a pad-only child can always pause and come back.
   if (game.state === 'play') game.pause();
+  else if (game.state === 'paused') game.resume();
   else if (game.state === 'paused') game.resume();
   else if (game.state === 'shop') game.closeShop();
 };

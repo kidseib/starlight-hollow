@@ -33,7 +33,7 @@ import { grottoLoot, GROTTO, growthChange } from './hubBloom.js';
 import { CurioField } from '../world/curios.js';
 import { Whisk } from '../world/whisk.js';
 import { nextTool, toolInfo, inSuction, suctionStrength, gatherDone, GATHER_SECONDS } from './tools.js';
-import { curioReward, curioScanReady, stoneFact, CURIO_LINES, CURIO_AGAIN, CURIO_SPARKLES } from './curios.js';
+import { curioReward, curioScanReady, stoneFact, CURIO_LINES, CURIO_AGAIN, CURIO_SPARKLES, isGatherType, familyReward, GATHER_NAMES } from './curios.js';
 import { reducedMotion } from '../engine/motion.js';
 import { clamp, damp, mulberry32 } from '../engine/utils.js';
 
@@ -142,6 +142,7 @@ export class Game {
     this.whisk = new Whisk(camera, scene, this.fx);
     this.tool = 'bolt';
     this.toolTold = false;
+    this.greeted = new Set();
     this.suckHeld = 0;
     this.suckTarget = null;
     this.suckTick = 0;
@@ -1035,7 +1036,7 @@ export class Game {
     let target = null;
     let nearest = Infinity;
     for (const item of field?.items ?? []) {
-      if (item.type !== 'leaf' || !item.ready) continue;
+      if (!isGatherType(item.type) || !item.ready) continue;
       const point = field.aimPoint(item, new THREE.Vector3());
       if (!inSuction(point, origin, dir)) continue;
       const distance = origin.distanceTo(point);
@@ -1058,9 +1059,20 @@ export class Game {
     this.whisk.setLevel(load);
     if (this.suckTick > 0.07) {
       this.suckTick = 0;
+      const kind = target.type;
       for (let i = 0; i < 2; i++) {
         const point = field.siphon(target);
-        if (point) {
+        if (!point) continue;
+        if (kind === 'petal') {
+          this.whisk.emitPetal(point);
+          if (Math.random() < 0.3) this.whisk.emitDust(point);
+        } else if (kind === 'dust') {
+          this.whisk.emitDust(point);
+          if (Math.random() < 0.45) this.whisk.emitDust(point);
+        } else if (kind === 'mote') {
+          this.whisk.emitMote(point);
+          if (Math.random() < 0.4) this.whisk.emitMote(point);
+        } else {
           this.whisk.emitLeaf(point);
           if (Math.random() < 0.4) this.whisk.emitDust(point);
         }
@@ -1071,18 +1083,23 @@ export class Game {
 
   _finishGather(field, item) {
     if (!item || !item.ready) return;
-    const first = !item.seen;
+    const family = item.type;
     item.seen = true;
+    // One small hello per family per session, however many patches are gathered.
+    const reward = familyReward(family, this.greeted);
+    this.greeted.add(family);
     field.drain(item);
-    this.whisk.popBundle();
+    this.whisk.popBundle(family);
     this.audio?.pop();
-    const reward = curioReward('leaf', !first);
     if (reward > 0) this.addSparkles(reward, true);
-    this.hud?.toast('A leaf bundle!', '🍂');
-    if (first) {
-      const line = 'A whole bundle of leaves! I will keep it safe by the shelf.';
-      this.hud?.showBubble(line, '🍂');
-      this.voice?.say(line);
+    const name = GATHER_NAMES[family] ?? 'bundle';
+    this.hud?.toast(`A ${name}!`, { leaf: '🍂', petal: '🌸', dust: '🌾', mote: '✨' }[family] ?? '✨');
+    if (reward > 0) {
+      const line = CURIO_LINES[family];
+      if (line) {
+        this.hud?.showBubble(line, '🐣');
+        this.voice?.say(line);
+      }
     }
     this.suckHeld = 0;
     this.suckTick = 0;
@@ -1207,12 +1224,19 @@ export class Game {
   _hitCurio(field, item) {
     const result = field?.zap(item);
     if (!result) return;
-    if (result.type === 'leaf') this.audio?.rustle();
-    else this.audio?.crystal();
+    if (result.type === 'crystal' || result.type === 'mote') this.audio?.crystal();
+    else this.audio?.rustle();
     const reward = curioReward(result.type, !result.first);
     if (reward > 0) {
       this.addSparkles(reward, true);
-      this.hud?.toast(result.type === 'leaf' ? 'Leaves everywhere!' : 'Crystal song!', result.type === 'leaf' ? '🍂' : '💎');
+      const praise = {
+        leaf: ['Leaves everywhere!', '🍂'],
+        petal: ['Petal puff!', '🌸'],
+        dust: ['Dust puff!', '🌾'],
+        mote: ['Mote sparkle!', '✨'],
+        crystal: ['Crystal song!', '💎'],
+      }[result.type] ?? ['It sparkles!', '✨'];
+      this.hud?.toast(praise[0], praise[1]);
       const line = CURIO_LINES[result.type];
       if (line) {
         this.hud?.showBubble(line, '🐣');
