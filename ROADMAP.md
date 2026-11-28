@@ -5,7 +5,11 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
 
 ## Now (next two iterations)
 
-1. **A real-device pass** — touch and gamepad were proved with emulated pointer events and an injected
+1. **Give the grotto arch real stone** — the pillars are plain cylinders; carving bands, a keystone
+   and a couple of wall lanterns would bring it up to the rest of the hub.
+2. **A second hub growth step** — lanterns, flags, beds and the grotto are the first pass; a path that
+   visibly widens or a bridge that appears at halfway would make mid-progress feel different again.
+3. **A real-device pass** — touch and gamepad were proved with emulated pointer events and an injected
    pad; nothing has run on an Android phone or a physical controller, and no Windows build was made.
 2. **Scale up the small keepsakes** — the pebble and the shell read smaller than the egg and drum on
    the bench; a per-trophy display scale would even the row out.

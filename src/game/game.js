@@ -28,6 +28,8 @@ import {
 import { renderProgressPanel } from '../ui/progressPanel.js';
 import { discover, sanitizeSecrets, collectionStatus, secretsForZone } from './secrets.js';
 import { SecretSpot, DiscoveryShelf, KeepsakeCairn } from '../world/discoveries.js';
+import { HubGrowth } from '../world/growth.js';
+import { grottoLoot, GROTTO } from './hubBloom.js';
 import { clamp, damp, mulberry32 } from '../engine/utils.js';
 
 // Momo's Wisp Market: one stall in the hub, on the path between the landing
@@ -71,6 +73,9 @@ export class Game {
     this.secretSpots = [];
     this.discoveryShelf = null;
     this.cairns = new Map();
+    this.hubGrowth = null;
+    this.grottoTaken = false;
+    this._grottoTold = false;
     this.pickupStreak = 0;
     this.pickupStreakTimer = 0;
     this.sparkleCount = 0;
@@ -154,7 +159,13 @@ export class Game {
       ];
       for (const p of zone.portals) blockers.push({ x: p.x, z: p.z, r: 5 });
       for (const s of zone.stations) blockers.push({ x: s.x, z: s.z, r: 6 });
-      if (zone.kind === 'hub') blockers.push({ x: 0, z: 4, r: 8 });
+      if (zone.kind === 'hub') {
+        blockers.push({ x: 0, z: 4, r: 8 });
+        // Keep the walk-up path clear for the lantern row, and leave the grotto
+        // and its stepping stones a quiet pocket behind the Star Tree.
+        for (let z = 9; z <= 29; z += 4) blockers.push({ x: 0, z, r: 3.4 });
+        blockers.push({ x: GROTTO.local.x, z: GROTTO.local.z, r: 7.5 });
+      }
       if (zone.id === MARKET.zone) blockers.push({ x: MARKET.x, z: MARKET.z, r: 4.6 });
 
       buildScatter(island, blockers);
@@ -302,6 +313,10 @@ export class Game {
           yaw: Math.atan2(-6.4, 8.5),
           found: this.secrets,
         });
+
+        // Everything the hub has grown because of the keepsakes: lit lanterns,
+        // island flags and beds, and the grotto behind the tree.
+        this.hubGrowth = new HubGrowth({ island, found: this.secrets, taken: this.grottoTaken });
       }
       void rng;
     }
@@ -341,6 +356,8 @@ export class Game {
     this._sayThen(intro);
     this.visited.add(this.currentZoneId);
     this._save();
+    // The chip is right from the first frame, even before any save exists.
+    this.hud?.setDiscoveries(this.secrets.length, collectionStatus(this.secrets).total);
   }
 
   pause() {
@@ -1066,10 +1083,51 @@ export class Game {
     this.companion?.celebrate();
     this.discoveryShelf?.refresh(this.secrets);
     this.cairns.get(spot.zoneId)?.refresh(this.secrets);
+    this.hubGrowth?.refresh(this.secrets, this.grottoTaken);
     this._save();
     if (status.complete) {
-      this.hud?.showHint('You found every hidden treasure in the Hollow!', 4200);
+      this.hud?.showHint('Every keepsake is home! The grotto behind the Star Tree is awake.', 5200);
+      this.schedule(6, () => this.hud?.showBubble('The grotto behind my tree is glowing! Follow the lanterns.', '🌙'));
     }
+    return true;
+  }
+
+  /** The hub's grotto: whisper while it sleeps, treasure once it is awake. */
+  _updateGrotto(dt, time) {
+    const growth = this.hubGrowth;
+    if (!growth) return;
+    growth.update(dt, time);
+    if (this.currentZoneId !== 'meadow' || this.state !== 'play') return;
+    growth.constrain(this.player.position, (line) => {
+      if (!line) return;
+      this.hud?.showBubble(line, '🌙');
+      this.voice?.say(line);
+    }, time);
+    if (!this._grottoTold && grottoLoot({ found: this.secrets, taken: this.grottoTaken }).open) {
+      const d = Math.hypot(this.player.position.x - growth.grottoCenter.x, this.player.position.z - growth.grottoCenter.z);
+      if (d < 14) {
+        this._grottoTold = true;
+        this.hud?.showBubble('You woke the grotto! There is something in the chest.', '🌙');
+        this.voice?.say('You woke the grotto! There is something in the chest.');
+      }
+    }
+    if (growth.atChest(this.player.position)) this._collectGrotto();
+  }
+
+  _collectGrotto() {
+    const loot = grottoLoot({ found: this.secrets, taken: this.grottoTaken });
+    if (!loot.canTake) return false;
+    this.grottoTaken = true;
+    this.hubGrowth?.takeChest();
+    this.addSparkles(loot.sparkles, false);
+    this.fx?.burst(this.hubGrowth.chestWorld, { color: 0xfff2b0, count: 30, speed: 3.4, life: 1.3, size: 0.6, gravity: -1.2 });
+    this.fx?.burst(this.hubGrowth.chestWorld, { color: 0xffc0d8, count: 14, speed: 1.8, life: 1.5, size: 0.7, gravity: 0.3 });
+    this.audio?.star();
+    this.hud?.showBanner('Moonwell Treasure', `${loot.sparkles} sparkles!`, 4000);
+    this.hud?.showBubble(loot.line, '🌙');
+    this.voice?.say(loot.line);
+    this.companion?.celebrate();
+    this._save();
     return true;
   }
 
@@ -1221,6 +1279,7 @@ export class Game {
       learning: this.learning,
       difficulty: this.difficulty,
       secrets: this.secrets,
+      grotto: this.grottoTaken,
       ended: this.endingPlayed,
     });
   }
@@ -1239,9 +1298,11 @@ export class Game {
     this.learning = save.learning ?? emptyReport();
     this.difficulty = save.difficulty ?? sanitizeDifficulty(null);
     this.secrets = sanitizeSecrets(save.secrets);
+    this.grottoTaken = save.grotto === true;
     for (const spot of this.secretSpots) spot.setFound(this.secrets.includes(spot.secret.id));
     this.discoveryShelf?.refresh(this.secrets);
     for (const cairn of this.cairns.values()) cairn.refresh(this.secrets);
+    this.hubGrowth?.refresh(this.secrets, this.grottoTaken);
     const found = collectionStatus(this.secrets);
     this.hud.setDiscoveries(found.count, found.total);
     this.endingPlayed = save.ended && this.starCount() === ZONE_STAR_ORDER.length;
@@ -1327,6 +1388,7 @@ export class Game {
       this._updateShards(dt, time);
       this._updateScan(dt);
       this._updateSecrets(dt, time);
+      this._updateGrotto(dt, time);
 
       for (const [zoneId, berry] of Object.entries(this.starberries)) {
         if (berry.state === 'collected') {

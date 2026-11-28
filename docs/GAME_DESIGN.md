@@ -141,6 +141,22 @@ a banner, a Pip line spoken aloud, ten sparkles and a companion cheer.
 `save.secrets` stores found ids and is sanitised to known secrets on load; an older save with no
 `secrets` key opens at zero without losing anything else.
 
+### The hub grows with the collection
+`src/game/hubBloom.js` (pure) turns the saved keepsake list into what the meadow shows, and
+`src/world/growth.js` (`HubGrowth`) builds it: one lantern lit per keepsake along the walk-up path,
+an island's bunting flag the first time anything is found there, its flower bed blooming when that
+island is fully collected, and the **Moonwell Grotto** behind the Star Tree.
+
+The grotto is shut until all thirteen are home: a shimmering veil covers its arch and walking at it
+stops the child 5.2 m out while Pip says how many keepsakes would wake it. At 13/13 the veil parts,
+stepping stones appear, and the grotto holds a moonwell with rim stones, two crystals, fireflies and a
+banded chest. Walking to the chest gives 30 sparkles, a banner, a burst and a Pip line, stored as
+`save.grotto` (only a literal `true` reopens it after a reload).
+
+Everything is derived from `sanitizeSecrets(save.secrets)`, so a save with missing, partial, unknown
+or malformed ids simply grows less: no throw, no wiped save, and no display that needs keys the save
+does not have.
+
 ### Controls on every device
 `src/engine/input.js` is the single source of movement, look and zapping; `src/game/controls.js` is the
 single source of what each device is *called* on screen.

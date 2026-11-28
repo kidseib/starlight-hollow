@@ -4,6 +4,16 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 16 - The hub grows, and a grotto wakes
+
+- **Discovery now changes the place.** `src/game/hubBloom.js` (pure) maps a saved keepsake list to lanterns lit, island flags, bloomed beds and a grotto state; `src/world/growth.js` builds those in the hub: 13 lantern posts down the walk-up path (one per keepsake), six island bunting flags by the market, six flower beds by the bench, and the Moonwell Grotto behind the Star Tree.
+- **The grotto** is a stone arch with a shimmering veil, stepping stones, a moonwell ringed with stones, two crystals, fireflies and a banded chest. While it sleeps it nudges the player back at 5.2 m and Pip explains how many keepsakes would wake it. At 13/13 the veil parts, the stones appear, and walking to the chest gives 30 sparkles, a banner and a Pip line — saved as `save.grotto`, so it stays open across reloads.
+- **Even keepsake sizes:** `trophyDisplayScale()` draws the pebble at 1.55×, the shell at 1.45×, the jar at 1.3× and the rest near 1.0×, keeping iteration 15's single readable row.
+- **Fixed a fresh-save bug:** the discovery chip showed the old `0/5` until the first find; it now reads `0/13` from the first frame.
+- **Evidence:** fresh save → nothing grown, grotto shut; 7/13 save → 7 lanterns, 3 flags, 3 blooms, grotto shut and the player stopped 5.3 m out with a spoken hint; 13/13 → everything lit, veil gone, chest collected for 30 sparkles (40 → 70), `grotto:true` saved, and a reload kept the open chest and sparkles. A pre-iteration save with no discovery keys boots at `0/13` with its sparkles intact. Keyboard, mouse, emulated touch and injected gamepad all walked, looked, zapped, jumped and paused with matching legends.
+- **Tests:** 58 pass (`tests/hubBloom.test.js` 6 cases, two new save cases). `npm run build` exit 0.
+- **Not verified:** real Android/controller hardware, Windows build, and 16:9 framing (the preview was portrait this iteration). GitHub push still blocked on a user credential.
+
 ## Iteration 15 - Every device plays, and the collection reads at a glance
 
 - **Input parity, which the game did not actually have.** `src/engine/input.js` gained gamepad polling (`navigator.getGamepads()`: left stick walk, right stick look, A jump, RT/X zap, Start pause, Y repeat, 0.24 deadzone, edge-detected buttons), a keyboard zap on E/Enter, touch entry points (`setTouchStick`, `addTouchLook`, `touchZap`, `setTouchJump`) and device tracking with an `onDevice` callback. `src/ui/touch.js` adds a thumb pad, Zap and Jump buttons and drag-to-look, shown only on touch. `src/game/controls.js` (pure) owns what each device is called, and a HUD chip always names the device last used; the repeat-key hint disappears on touch and gamepad.

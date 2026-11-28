@@ -30,6 +30,14 @@ chime, a line from Pip and ten sparkles.
 - Gamepads, touchscreens and keyboards all play the whole game now. The ribbon at
   the top always names the device you last touched, and a thumb pad with Zap and
   Jump buttons appears on a touchscreen.
+- The meadow changes as you collect. Every keepsake lights one lantern along the
+  path home, an island's flag appears the first time you find something there, and
+  its flower bed blooms when that island is fully explored.
+- All thirteen keepsakes wake the **Moonwell Grotto** behind the Star Tree: the
+  veil parts, stepping stones appear, and a small chest inside holds thirty
+  sparkles. Until then it whispers how many keepsakes would wake it.
+- The keepsake bench is evened out, so the pebble and shell no longer read smaller
+  than the egg and drum.
 - Each island also shows what you found *there*: a little stone cairn beside the
   way home holds that island's keepsakes. The meadow's Discovery Shelf has grown
   into a stepped stand with one dish per island and a row of gems that light as

@@ -60,6 +60,12 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   `src/ui/touch.js` is the thumb pad and buttons, and `src/game/controls.js` owns the legend text each
   device shows. Never add a control that only one device can reach, and keep the HUD legend in step by
   setting `device` through `Input.setDevice`.
+- The hub's growth from keepsakes is pure data in `src/game/hubBloom.js` and 3D in
+  `src/world/growth.js`: one lantern per find, a flag per island with a find, a bed per completed
+  island, and the Moonwell Grotto which opens **only** at all thirteen. Never derive that state by
+  adding up ids yourself, never let a save with junk ids open the grotto, and never make the grotto a
+  menu, a locked door or a purchase — it is a place you walk into, and its chest is taken by walking
+  up to it. `save.grotto` is a boolean that only accepts a literal `true`.
 - The meadow shelf is one row of six keepsakes on a low bench with a gem per secret along the front;
   keep it readable from 3 m without walking around it, and keep the cove's nooks dressed by
   `buildCoveNook()` so its finds never sit on bare sand.

@@ -5,6 +5,62 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 16 — The hub grows, and a grotto wakes (2026-11-28)
+
+**Chosen because** thirteen keepsakes only ever added a trophy to a bench: collecting changed a
+number, not the place. Nothing a child could point at said "I did this".
+
+**Changed**
+
+- `src/game/hubBloom.js` (new, pure): `hubBloom(found)` turns a saved list into lanterns lit, island
+  flags, bloomed beds, completion and grotto state; `grottoLoot()` says whether the chest can be
+  taken; `grottoWhisper()` names how many keepsakes are still missing. Every input goes through
+  `sanitizeSecrets`, so junk cannot reach the world.
+- `src/world/growth.js` (new): `HubGrowth` builds 13 lantern posts along the walk-up path, six island
+  bunting flags by the market, six flower beds by the bench, and the grotto behind the Star Tree —
+  a stone arch, a shimmering veil, stepping stones, a moonwell with rim stones, two crystals,
+  fireflies and a banded chest. `refresh(found, taken)` drives all of it from the save.
+- `src/game/game.js`: builds the growth with the hub, refreshes it on every find and on load, nudges a
+  child back from the sleeping grotto with a spoken hint ("6 keepsakes would wake it"), wakes the
+  grotto at 13/13, and collects the chest on proximity — 30 sparkles, banner, Pip line, particles,
+  saved as `save.grotto`. The 13th find's hint now points at the grotto.
+- `src/world/discoveries.js`: `trophyDisplayScale()` evens the bench row — the pebble draws at 1.55×,
+  the shell 1.45×, the jar 1.3×, the egg and drum at 1.0× — without changing the single-row layout.
+- `src/engine/save.js`: `grotto: s.grotto === true` in the decoder, so only a literal `true` opens the
+  chest after a reload; anything else is false.
+- `index.html` + `game.start()`: the discovery chip now reads `0/13` from the first frame on a brand-new
+  save (it was stuck at the old `0/5` until the first find).
+- Tests: `tests/hubBloom.test.js` (6 cases: fresh, partial, all-13 unlock, junk/undefined input,
+  11 vs 12 vs 13, lantern ceiling) and two save cases for `grotto` literals.
+
+**Checked**
+
+- `node --test tests/*.test.js` → 58 pass, 0 fail. `npm run build` → exit 0.
+- **Fresh save**: 0 lanterns, 0 flags, 0 blooms, veil up, chest absent, chip `0/13`.
+- **7/13**: 7 lanterns, flags for meadow/grove/falls, those three beds bloomed, grotto shut. Walking at
+  it stopped the player 5.3 m out and spoke "Something is sleeping here. 6 keepsakes would wake it."
+- **13/13**: 13 lanterns, 6 flags, 6 blooms, veil gone, stepping stones and chest visible. Walked to the
+  chest: sparkles 40 → 70, banner, Pip line, lid open, `grotto:true` in the save.
+- **Reload**: 70 sparkles, chest still open (`taken:true`, lid −1.9), 13 lanterns, chip `13/13`.
+- **Pre-iteration save** (no `secrets`, no `grotto`): booted with 15 sparkles intact, chip `0/13`, no
+  growth, grotto asleep, no console errors.
+- **Inputs re-verified after the iteration 15 rewrite**: keyboard walked 3.15 m, turned 1.2 rad, jumped
+  0.58 m, zapped 1 bolt, paused and resumed; mouse turned −0.38 rad and zapped; emulated touch walked
+  1.48 m, turned, zapped, jumped 0.58 m with the pad shown; injected gamepad walked 2.01 m, turned
+  −0.72 rad, zapped, jumped, and toggled pause/resume. Each legend matched its device.
+- Screenshots (`artifacts/r16-grotto2.png`, `r16-hub-full.png`, `r16-bench2.png`) drove one repair: the
+  grotto's roof was a green pancake that read as a floating slab, replaced with a small mossy cap.
+
+**Open**
+
+- The arch pillars are still plain cylinders with no carved detail; a texture pass would help.
+- The browser preview was portrait during this iteration's screenshots, so wide-screen framing was not
+  inspected at 16:9.
+- Touch and gamepad were again emulated/injected, not real hardware; Windows/Android builds not made.
+- GitHub push still blocked on a user credential.
+
+---
+
 ## Iteration 15 — Every device plays, and the collection reads at a glance (2026-11-28)
 
 **Chosen because** two things were untrue of the game as shipped: the hub's rear keepsakes hid behind

@@ -329,6 +329,23 @@ export class SecretSpot {
   }
 }
 
+// Some keepsakes are authored small (a pebble, a shell) and read tiny beside the
+// egg and drum; the display scales each kind so the row looks even.
+const TROPHY_DISPLAY_SCALE = {
+  stone: 1.55,
+  shell: 1.45,
+  jar: 1.3,
+  feather: 1.25,
+  chart: 1.2,
+  chime: 1.15,
+  book: 1.1,
+  mushroom: 1.05,
+};
+
+export function trophyDisplayScale(kind) {
+  return TROPHY_DISPLAY_SCALE[kind] ?? 1.0;
+}
+
 /**
  * The Discovery Shelf in the meadow: five shallow dishes on a mossy plinth.
  * Everything found appears here, and stays there, so the hub visibly fills up
@@ -437,6 +454,7 @@ export class DiscoveryShelf {
       mesh.position.copy(dish);
       mesh.rotation.y = 0.25;
       mesh.scale.setScalar(0.001);
+      mesh.userData.target = trophyDisplayScale(first.trophy);
       this.group.add(mesh);
       this.trophies.set(first.id, mesh);
     }
@@ -445,7 +463,7 @@ export class DiscoveryShelf {
   update(dt, time) {
     this.halo.material.opacity = 0.04 + this.found.size * 0.01 + Math.sin(time * 1.3) * 0.02;
     for (const [id, mesh] of this.trophies) {
-      mesh.scale.setScalar(Math.min(1.0, mesh.scale.x + dt * 2.6));
+      mesh.scale.setScalar(Math.min(mesh.userData.target ?? 1, mesh.scale.x + dt * 2.6));
       const dish = this.worldDish.get(secretById(id)?.zone);
       if (dish) {
         mesh.position.y = dish.y + Math.sin(time * 1.4 + dish.x) * 0.012;
@@ -524,6 +542,7 @@ export class KeepsakeCairn {
         const mesh = trophyMesh(slot.secret.trophy, slot.secret.color);
         mesh.position.copy(slot.position);
         mesh.scale.setScalar(0.001);
+        mesh.userData.target = trophyDisplayScale(slot.secret.trophy);
         this.group.add(mesh);
         this.trophies.set(slot.secret.id, mesh);
       } else if (!has && existing) {
@@ -535,7 +554,7 @@ export class KeepsakeCairn {
 
   update(dt, time) {
     for (const [id, mesh] of this.trophies) {
-      mesh.scale.setScalar(Math.min(0.85, mesh.scale.x + dt * 1.6));
+      mesh.scale.setScalar(Math.min((mesh.userData.target ?? 1) * 0.85, mesh.scale.x + dt * 1.6));
       const slot = this.dishes.find((s) => s.secret.id === id);
       if (slot) mesh.position.y = slot.position.y + Math.sin(time * 1.5 + slot.position.x) * 0.008;
     }
