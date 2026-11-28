@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ZONES, ZONE_BY_ID, ZONE_STAR_ORDER, PIP_LINES } from '../content.js';
 import { Island } from '../world/terrain.js';
-import { buildScatter, buildSkyIslands, buildPortal, buildWishTree } from '../world/props.js';
+import { buildScatter, buildSkyIslands, buildPortal, buildWishTree, buildCoveNook } from '../world/props.js';
 import { SkySystem } from '../world/sky.js';
 import { FX } from '../world/fx.js';
 import { glyphTexture } from '../world/textures.js';
@@ -258,6 +258,10 @@ export class Game {
         });
         spot.zoneId = zone.id;
         this.secretSpots.push(spot);
+        // The cove's bare sand gets a proper corner around each find.
+        if (zone.id === 'cove') {
+          buildCoveNook(island, secret.at, (secret.at.x * 73 + secret.at.z * 19) | 0);
+        }
       }
 
       // Every island that hides something also shows its own finds, so coming
@@ -272,6 +276,7 @@ export class Game {
           zone: zone.id,
           found: this.secrets,
         }));
+        if (zone.id === 'cove') buildCoveNook(island, { x: cx, z: cz }, 991);
       }
 
       this.islands.set(zone.id, { zone, island, portals, stations, sky: skyDecor });

@@ -5,11 +5,10 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
 
 ## Now (next two iterations)
 
-1. **Raise the shelf's back row** — with all six keepsakes found, the two rear dishes sit partly
-   behind the front row from a distance; a taller back step (or a slight fan) would make the
-   completed collection readable without walking around the stand.
-2. **Give Pebblecount Cove its own art pass** — its sand plain away from the path is still bare
-   compared with the meadow; shells, driftwood and tide pools would stop it feeling unfinished.
+1. **A real-device pass** — touch and gamepad were proved with emulated pointer events and an injected
+   pad; nothing has run on an Android phone or a physical controller, and no Windows build was made.
+2. **Scale up the small keepsakes** — the pebble and the shell read smaller than the egg and drum on
+   the bench; a per-trophy display scale would even the row out.
 3. **Secrets that use the gadgets** — every find is a walk-in today; two or three could sit behind a
    vacuum-able leaf pile or a blast-able crystal so the gadgets have a reason to be pointed at
    scenery.

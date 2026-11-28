@@ -5,6 +5,67 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 15 — Every device plays, and the collection reads at a glance (2026-11-28)
+
+**Chosen because** two things were untrue of the game as shipped: the hub's rear keepsakes hid behind
+the front row, and despite the brief, nothing but a mouse and keyboard could play it — no gamepad, no
+touch, and the on-screen hints were written for a keyboard only.
+
+**Changed**
+
+- `src/game/controls.js` (new, pure): `DEVICES`, `CONTROL_LEGENDS`, `legendFor`, `deviceFromEvent`,
+  `wantsTouchPad` — one place that decides what each device is called on screen.
+- `src/engine/input.js`: gamepad polling through `navigator.getGamepads()` (left stick walk, right
+  stick look, A jump, RT/X zap, Start pause, Y say it again) with edge detection and a deadzone;
+  touch stick/look/zap/jump entry points; `device` tracking with an `onDevice` callback; keyboard zap
+  on E/Enter so the gadget is reachable without a mouse. Pause and repeat keep reading the pad while
+  the game is paused, because a controller child must be able to un-pause.
+- `src/ui/touch.js` (new): a thumb pad, Zap and Jump buttons and drag-to-look, feeding the same Input
+  values as everything else; shown only for touch.
+- `src/ui/hud.js` + `index.html` + `src/style.css`: a control legend chip that always names the device
+  last used, and a repeat-key hint that disappears on touch and gamepad.
+- `src/world/discoveries.js`: `DiscoveryShelf` rebuilt one last time as a **low garden bench** — six
+  dishes in a single row, 13 gems along the front grouped per island, nothing occluded from 3.3 m.
+- `src/world/props.js`: new `buildCoveNook()` (tide pool, wet stones, driftwood, shells, starfish, dune
+  tufts, shrubs) around both cove hollows and the cove cairn, and a sandy ground pass (900 shorter
+  dune blades instead of 2 600 meadow spikes, 180 flowers instead of 620).
+- `tests/controls.test.js` (new, 5 cases): legends are distinct and name the right controls, no legend
+  tells a touch child to use WASD, device detection and thumb-pad visibility.
+
+**Checked**
+
+- `node --test tests/*.test.js` → 52 pass, 0 fail. `npm run build` → exit 0.
+- **All four devices, in the running game**, each finding a different secret and firing the blaster:
+  - keyboard: E zapped (1 bolt), W walked into the Snuggle Nest, sparkles 9→20, chip `1/13`, legend
+    "WASD move · mouse look · E zap".
+  - mouse: mousemove took the legend back to mouse, click zapped, walked into the Ripple Stone,
+    sparkles 20→30, chip `2/13`, falls cairn showing its keepsake.
+  - touch (emulated `PointerEvent`s): the pad appeared on first touch, the stick read forward = 1,
+    walking found the Star Chart, the Zap button fired a bolt, legend "Thumb pad to walk · drag to
+    look · zap button", repeat key hidden, chip `3/13`.
+  - gamepad (injected through `navigator.getGamepads`): left stick forward = 1, RT zapped, walked into
+    the Whisper Shell, chip `4/13`, cove cairn filled, legend "Left stick walk · right stick look · RT zap".
+- Bug found by testing: the pad was ignored while paused, so a controller could not un-pause; the pad
+  is now polled while paused and Start toggles play ↔ paused (verified `['play','paused','play']`).
+- Save checks: a pre-iteration save with no `secrets` key booted at `0/13` with 9 sparkles intact and
+  no error; after the four finds, a reload restored `4/13`, four shelf keepsakes, four lit gems, the
+  per-island cairns and four found flags; a mid-session 13/13 state also survived a reload.
+- Console: no errors or failed requests; only the screenshot tool's own WebGL `ReadPixels` warnings.
+- Screenshots inspected (`artifacts/r15-shelf2.png`, `r15-cove-nook2.png`). Two shelf designs were
+  rejected on sight — a raised barrel step and a 3.35 m back board that walled off the meadow — before
+  the one-row bench; the first cove nook shot showed a lawn of pale spikes on sand, which drove the
+  dune-grass pass.
+
+**Open**
+
+- The touch layer was driven with emulated pointer events, not on a real Android device; gamepad
+  vibration and exotic mappings are untested.
+- Two of the six keepsakes stand small on the bench (the pebble and the shell) and could be scaled up.
+- Windows and Android builds were not produced this iteration. Pushing to GitHub is still blocked on a
+  user credential.
+
+---
+
 ## Iteration 14 — Secrets everywhere, and each world remembers (2026-11-28)
 
 **Chosen because** iteration 13 put five finds in two islands and then stopped. A child who wandered

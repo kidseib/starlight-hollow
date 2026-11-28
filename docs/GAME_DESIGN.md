@@ -120,7 +120,9 @@ all six islands reward wandering with no educational objective attached: three i
 themed world. There is no prompt, no marker and no input — walking within 2.1 m is the whole
 interaction, because a child who stops exploring can still stumble into one. Placement is data
 (`at: { x, z }`, local to the island) and a test keeps every one at least 10 m from the landing path
-and 6 m from an island's centre, so nothing sits where a child is already walking.
+and 6 m from an island's centre, so nothing sits where a child is already walking. The two cove hollows
+(and the cove cairn) are ringed by `buildCoveNook()` — tide pool, wet stones, driftwood, shells,
+starfish, dune tufts — so they read as placed corners rather than objects on bare sand.
 
 Each `SecretSpot` is a mossy stone hollow with a gold cradle and one trophy inside (egg, lantern, chime,
 book, mushroom, pebble, jar, kite, chart, drum, feather, shell, spyglass), lit by a glow that only
@@ -129,16 +131,32 @@ a banner, a Pip line spoken aloud, ten sparkles and a companion cheer.
 
 **Where finds live.** Every find is permanent and visible in two places:
 
-- **At home:** the *Discovery Shelf* on the meadow path is a low stepped stone stand with one dish per
-  island — three in front, three behind — holding that island's first keepsake, with a row of gems per
-  island that light one by one. The HUD chip `#chip-discoveries` carries the total (`N/13`, gold when
-  every gem is lit). `progressByWorld()`, `worldTotals()` and `firstFoundInWorld()` in `secrets.js`
-  own the counting so no display recounts the list itself.
+- **At home:** the *Discovery Shelf* on the meadow path is a low garden bench holding one keepsake per
+  island in a single row, with 13 gems along the front grouped per island that light one by one. The
+  HUD chip `#chip-discoveries` carries the total (`N/13`, gold when every gem is lit). No keepsake is
+  occluded from 3.3 m, and the bench is low enough not to wall off the meadow.
 - **Where you found it:** a `KeepsakeCairn` stands beside each themed island's return portal, with a
-  dish and a gem for each secret that island hides. Returning to a world shows what you did there.
+  dish and a gem for each secret that island hides.
 
 `save.secrets` stores found ids and is sanitised to known secrets on load; an older save with no
 `secrets` key opens at zero without losing anything else.
+
+### Controls on every device
+`src/engine/input.js` is the single source of movement, look and zapping; `src/game/controls.js` is the
+single source of what each device is *called* on screen.
+
+| Action | Keyboard | Mouse | Touch | Gamepad |
+|---|---|---|---|---|
+| Walk | W A S D / arrows | W A S D | thumb pad | left stick |
+| Look | arrow keys | mouse | drag the world | right stick |
+| Zap | E / Enter | click | Zap button | RT or X |
+| Jump | space | space | Jump button | A |
+| Pause | Escape | Escape | Continue button | Start |
+| Say it again | R | R | repeat button | Y |
+
+The HUD legend chip (`#chip-controls`) always names the device used most recently — moving the mouse
+hands it back to mouse, touching the screen to touch, and so on — and the repeat-key hint is hidden
+where there is no key. The touch pad only appears on a touchscreen.
 
 ### Learning progress & adaptive difficulty
 `src/game/progress.js` (pure) + `src/ui/progressPanel.js` (pause screen). Five subjects —

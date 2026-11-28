@@ -55,6 +55,14 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   files a sign, `levelFor` chooses Gentle/Just right/Stretch, and `narrowAfter`/`hintDelay` are the
   only knobs a level may turn. Never let a level change sparkles, stars or save keys, and never let
   one subject's record affect another. `save.learning` and `save.difficulty` are sanitised on load.
+- Every core action must be reachable on keyboard, mouse, touch and gamepad. Movement, look and zapping
+  all go through `src/engine/input.js` (keyboard + mouse, gamepad polling, and the touch entry points);
+  `src/ui/touch.js` is the thumb pad and buttons, and `src/game/controls.js` owns the legend text each
+  device shows. Never add a control that only one device can reach, and keep the HUD legend in step by
+  setting `device` through `Input.setDevice`.
+- The meadow shelf is one row of six keepsakes on a low bench with a gem per secret along the front;
+  keep it readable from 3 m without walking around it, and keep the cove's nooks dressed by
+  `buildCoveNook()` so its finds never sit on bare sand.
 - Verify with `node --test tests/*.test.js` and `npm run build`, then look at the change in the
   browser (`window.__starlight` exposes game, camera, scene, audio, voice and HUD).
 - Record every iteration in `docs/ITERATIONS.md` and `DEVELOPMENT_LOG.md`, and keep `CHANGELOG.md`

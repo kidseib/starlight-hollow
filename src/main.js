@@ -4,6 +4,7 @@ import { Input } from './engine/input.js';
 import { GameAudio } from './engine/audio.js';
 import { Voice } from './engine/voice.js';
 import { HUD } from './ui/hud.js';
+import { TouchControls } from './ui/touch.js';
 import { Game } from './game/game.js';
 
 const canvas = document.getElementById('game');
@@ -28,6 +29,22 @@ const audio = new GameAudio();
 const voice = new Voice();
 const hud = new HUD({ voice, audio });
 const game = new Game({ scene, camera, renderer, input, audio, voice, hud });
+
+const coarsePointer = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+const touchControls = new TouchControls({ input, coarsePointer });
+touchControls.setVisible(false);
+
+input.onDevice = (device) => {
+  hud.setDevice(device);
+  touchControls.syncForDevice(device);
+};
+input.onPause = () => {
+  if (game.state === 'play') game.pause();
+  else if (game.state === 'paused') game.resume();
+  else if (game.state === 'shop') game.closeShop();
+};
+input.onRepeat = () => game.repeatInstruction();
+hud.setDevice(input.device);
 
 game.hud.setVisible(false);
 hud.setFadeImmediate(false);
@@ -112,6 +129,7 @@ function loop(now) {
   const dt = Math.min(0.05, Math.max(0.0005, (now - lastTime) / 1000));
   lastTime = now;
   elapsed += dt;
+  input.pollGamepad(dt);
   game.update(dt, elapsed);
   renderer.render(scene, camera);
   requestAnimationFrame(loop);

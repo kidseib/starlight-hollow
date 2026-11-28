@@ -361,65 +361,51 @@ export class DiscoveryShelf {
     const wood = solid(0xb5825a, { roughness: 0.72 });
     const gold = solid(0xffd166, { metalness: 0.4, roughness: 0.35 });
 
-    // A low stepped stand: three keepsakes in front, three one step back, so a
-    // child can see every island's find at once without the stand walling off
-    // the meadow behind it.
-    const foot = new THREE.Mesh(new THREE.CylinderGeometry(1.34, 1.48, 0.15, 18), stoneDark);
+    // A low garden bench with all six keepsakes in one row: nothing hides behind
+    // anything, the row is short enough to read in one glance, and it is too low
+    // to wall off the meadow behind it.
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.16, 0.94), stoneDark);
     foot.position.y = 0.08;
     this.group.add(foot);
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.3, 0.44, 18), stone);
-    body.position.y = 0.37;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(3.26, 0.56, 0.84), stone);
+    body.position.y = 0.42;
     this.group.add(body);
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(1.26, 1.2, 0.09, 18), wood);
-    cap.position.y = 0.64;
-    this.group.add(cap);
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(1.23, 0.04, 6, 26), gold);
-    rim.rotation.x = Math.PI / 2;
-    rim.position.y = 0.7;
-    this.group.add(rim);
-    const moss = new THREE.Mesh(new THREE.CircleGeometry(1.15, 20), solid(0x7fd47a, { roughness: 0.95 }));
-    moss.rotation.x = -Math.PI / 2;
-    moss.position.y = 0.695;
-    this.group.add(moss);
-
-    // The raised back step.
-    const step = new THREE.Mesh(new THREE.CylinderGeometry(0.92, 1.0, 0.26, 16), stoneDark);
-    step.position.set(0, 0.78, -0.26);
-    step.scale.set(1, 1, 0.72);
-    this.group.add(step);
-    const stepTop = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.86, 0.07, 16), wood);
-    stepTop.position.set(0, 0.92, -0.26);
-    stepTop.scale.set(1, 1, 0.72);
-    this.group.add(stepTop);
+    const top = new THREE.Mesh(new THREE.BoxGeometry(3.36, 0.1, 0.9), wood);
+    top.position.y = 0.74;
+    this.group.add(top);
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(3.36, 0.05, 0.05), gold);
+    rail.position.set(0, 0.8, 0.45);
+    this.group.add(rail);
+    const backRail = new THREE.Mesh(new THREE.BoxGeometry(3.36, 0.3, 0.06), stoneDark);
+    backRail.position.set(0, 0.93, -0.42);
+    this.group.add(backRail);
+    const backTrim = new THREE.Mesh(new THREE.BoxGeometry(3.24, 0.04, 0.06), gold);
+    backTrim.position.set(0, 1.09, -0.4);
+    this.group.add(backTrim);
 
     this.worlds = WORLD_IDS.filter((zone) => SECRETS.some((s) => s.zone === zone));
     this.worldDish = new Map();
+    const spacing = 0.52;
     this.worlds.forEach((zone, i) => {
-      // Front row left, centre, right; back row in the gaps between them.
-      const back = i % 2 === 1;
-      const slot = Math.floor(i / 2);
-      const spread = back ? [-0.58, 0.58, 0][slot] : [-0.96, 0, 0.96][slot];
-      const x = spread;
-      const y = back ? 0.96 : 0.7;
-      const z = back ? -0.4 : 0.16;
-      const dish = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.17, 0.05, 12), wood);
-      dish.position.set(x, y + 0.03, z);
+      const x = (i - (this.worlds.length - 1) / 2) * spacing;
+      const dish = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.16, 0.05, 12), wood);
+      dish.position.set(x, 0.81, 0.02);
       this.group.add(dish);
-      this.worldDish.set(zone, new THREE.Vector3(x, y + 0.01, z));
+      this.worldDish.set(zone, new THREE.Vector3(x, 0.82, 0.02));
 
-      // A row of gems on the stand in front of each dish: one per secret here.
+      // A row of gems on the bench front under each dish: one per secret there.
       const secrets = SECRETS.filter((s) => s.zone === zone);
       secrets.forEach((secret, j) => {
         const gemSpread = (j - (secrets.length - 1) / 2) * 0.1;
         const pip = new THREE.Mesh(new THREE.OctahedronGeometry(0.05, 0), solid(0xbfc6d4, { roughness: 0.55 }));
-        pip.position.set(x + gemSpread, back ? 0.72 : 0.58, back ? -0.04 : 0.46);
+        pip.position.set(x + gemSpread, 0.56, 0.44);
         this.group.add(pip);
         this.pips.push({ id: secret.id, mesh: pip, color: secret.color });
       });
     });
 
-    this.halo = makeSprite(0xfff2b0, 2.6, 0.05);
-    this.halo.position.set(0, 1.35, -0.2);
+    this.halo = makeSprite(0xfff2b0, 3.2, 0.04);
+    this.halo.position.set(0, 1.05, -0.1);
     this.group.add(this.halo);
   }
 
@@ -459,7 +445,7 @@ export class DiscoveryShelf {
   update(dt, time) {
     this.halo.material.opacity = 0.04 + this.found.size * 0.01 + Math.sin(time * 1.3) * 0.02;
     for (const [id, mesh] of this.trophies) {
-      mesh.scale.setScalar(Math.min(1.12, mesh.scale.x + dt * 2.6));
+      mesh.scale.setScalar(Math.min(1.0, mesh.scale.x + dt * 2.6));
       const dish = this.worldDish.get(secretById(id)?.zone);
       if (dish) {
         mesh.position.y = dish.y + Math.sin(time * 1.4 + dish.x) * 0.012;

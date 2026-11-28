@@ -4,6 +4,16 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 15 - Every device plays, and the collection reads at a glance
+
+- **Input parity, which the game did not actually have.** `src/engine/input.js` gained gamepad polling (`navigator.getGamepads()`: left stick walk, right stick look, A jump, RT/X zap, Start pause, Y repeat, 0.24 deadzone, edge-detected buttons), a keyboard zap on E/Enter, touch entry points (`setTouchStick`, `addTouchLook`, `touchZap`, `setTouchJump`) and device tracking with an `onDevice` callback. `src/ui/touch.js` adds a thumb pad, Zap and Jump buttons and drag-to-look, shown only on touch. `src/game/controls.js` (pure) owns what each device is called, and a HUD chip always names the device last used; the repeat-key hint disappears on touch and gamepad.
+- **Fixed a real controller bug found while testing:** the pad was not polled while paused, so Start could pause but never resume. The pad is now read while paused; movement and zapping stay gated on being in play.
+- **Shelf legibility.** `DiscoveryShelf` is now a low garden bench: six dishes in one row at 0.8 m, 13 gems along the front grouped per island, a gold rail and a small back rail. Nothing occludes anything from 3.3 m, and it no longer walls off the meadow.
+- **Cove dressing.** `buildCoveNook()` in `src/world/props.js` rings each cove hollow and the cove cairn with a tide pool, wet stones, driftwood, shells, starfish, dune tufts and shrubs; the sand ground cover is 900 short dune blades instead of 2 600 meadow spikes, with 180 flowers instead of 620.
+- **Evidence:** all four devices each found a different secret and fired the blaster in the live game (keyboard `1/13`, mouse `2/13`, touch `3/13`, gamepad `4/13`), each with its own legend text, particles, chime, spoken Pip line and permanent reward; save verified on reload, after a mid-session find, and from a pre-iteration save with no `secrets` key (`0/13`, sparkles kept, no throw). No console errors.
+- **Tests:** 52 pass, including five new `tests/controls.test.js` cases. `npm run build` exit 0.
+- **Not verified:** real Android hardware (touch driven with emulated pointer events), controller vibration, Windows build. GitHub push still blocked on a user credential.
+
 ## Iteration 14 - Secrets everywhere, and each world remembers
 
 - **Gap closed:** iteration 13's five finds covered only the hub and Letterleaf Grove. Eight new hollows (`src/game/secrets.js`) put two on each remaining island - Tallybrook Falls (Ripple Stone, Bubble Jar), Pattern Peaks (Wind Kite, Star Chart), Storysong Glade (Singing Drum, Story Feather) and Pebblecount Cove (Whisper Shell, Little Spyglass) - all off the landing path (a test enforces >10 m from it and >6 m from an island's centre).

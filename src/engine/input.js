@@ -1,6 +1,14 @@
-// Mouse + keyboard input. Pointer lock gives smooth first-person look; if a
-// browser refuses it (some embedded frames do) we fall back to drag-to-look so
-// the game is never unplayable.
+// Movement, look and gadget input from mouse + keyboard, gamepads and touch.
+//
+// Pointer lock gives smooth first-person look; if a browser refuses it (some
+// embedded frames do) we fall back to drag-to-look so the game is never
+// unplayable. A gamepad is polled every frame, and the touch layer feeds the
+// same three values, so every device drives exactly the same game code.
+
+const MOVE_KEYS = new Set([
+  'KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'ShiftLeft', 'ShiftRight',
+  'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyE', 'Enter',
+]);
 
 export class Input {
   constructor(canvas) {
@@ -10,12 +18,26 @@ export class Input {
     this.dy = 0;
     this.firing = false;
     this.fireQueued = false;
+    this.jumpQueued = false;
     this.locked = false;
     this.dragging = false;
     this.dragDistance = 0;
     this.enabled = false;
     this.sensitivity = 0.0021;
     this.onLockChange = null;
+
+    // Device reporting: the last device that did something owns the legend.
+    this.device = 'mouse';
+    this.onDevice = null;
+    this.onPause = null;
+    this.onRepeat = null;
+
+    // Touch layer fills this in: x = strafe, y = forward (pushed up is -1).
+    this.touch = { x: 0, y: 0, jump: false, active: false };
+    // Gamepad state, refreshed by pollGamepad().
+    this.pad = { x: 0, y: 0, jump: false, connected: false };
+    this._padPrev = new Map();
+
     this.pointerLockAvailable = 'requestPointerLock' in canvas;
 
     canvas.addEventListener('mousedown', (e) => this._onDown(e));
@@ -31,11 +53,23 @@ export class Input {
     window.addEventListener('blur', () => {
       this.keys.clear();
       this.firing = false;
+      this.touch.x = 0;
+      this.touch.y = 0;
+      this.touch.jump = false;
     });
+
+    canvas.addEventListener('touchstart', (e) => this._onTouchStart(e), { passive: false });
+  }
+
+  setDevice(next) {
+    if (!next || next === this.device) return;
+    this.device = next;
+    this.onDevice?.(next);
   }
 
   _onDown(e) {
     if (!this.enabled) return;
+    this.setDevice('mouse');
     if (e.button === 0) {
       if (!this.locked && this.pointerLockAvailable) {
         this.requestLock();
@@ -63,6 +97,10 @@ export class Input {
 
   _onMove(e) {
     if (!this.enabled) return;
+    // A real mouse movement takes the legend back to mouse, so a child who looks
+    // around with the mouse is told about clicking. Touch and gamepad do not
+    // produce movementX, so they never steal it back.
+    if (e.movementX || e.movementY) this.setDevice('mouse');
     if (this.locked) {
       this.dx += e.movementX || 0;
       this.dy += e.movementY || 0;
@@ -74,13 +112,25 @@ export class Input {
     }
   }
 
+  /** First touch anywhere means the child is on a touchscreen, not a mouse. */
+  _onTouchStart(e) {
+    if (!this.enabled) return;
+    this.setDevice('touch');
+  }
+
   _onKey(e, down) {
     const code = e.code;
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(code)) {
       e.preventDefault();
     }
-    if (down) this.keys.add(code);
-    else this.keys.delete(code);
+    if (down) {
+      if (MOVE_KEYS.has(code) || code.startsWith('Key')) this.setDevice('keyboard');
+      // One zap per press, on the keyboard as well as the mouse.
+      if (!e.repeat && (code === 'KeyE' || code === 'Enter') && !this.keys.has(code)) this.fireQueued = true;
+      this.keys.add(code);
+    } else {
+      this.keys.delete(code);
+    }
   }
 
   _onLockChange() {
@@ -99,6 +149,90 @@ export class Input {
     if (document.pointerLockElement) document.exitPointerLock();
   }
 
+  // ------------------------------------------------------------ touch layer --
+
+  /** x = strafe (-1..1), y = forward (-1..1, up is negative). */
+  setTouchStick(x, y) {
+    this.touch.x = Math.max(-1, Math.min(1, x));
+    this.touch.y = Math.max(-1, Math.min(1, y));
+  }
+
+  addTouchLook(dx, dy) {
+    this.dx += dx;
+    this.dy += dy;
+  }
+
+  touchZap() {
+    if (!this.enabled) return;
+    this.fireQueued = true;
+    this.setDevice('touch');
+  }
+
+  setTouchJump(held) {
+    this.touch.jump = !!held;
+  }
+
+  // ------------------------------------------------------------ gamepad -----
+
+  /**
+   * Read the first connected pad through the Gamepad API. Polling is read-only,
+   * so an injected pad (as used in tests) behaves exactly like a real one.
+   */
+  pollGamepad(dt = 0.016) {
+    // Pause and "say it again" must work while the game is paused, so the pad is
+    // still read then; only movement and zapping are gated on being in play.
+    const active = this.enabled;
+    const pads = typeof navigator !== 'undefined' && navigator.getGamepads ? navigator.getGamepads() : [];
+    const pad = pads ? Array.from(pads).find((p) => p && p.connected !== false) : null;
+    if (!pad) {
+      this.pad.connected = false;
+      this.pad.x = 0;
+      this.pad.y = 0;
+      this.pad.jump = false;
+      return;
+    }
+    this.pad.connected = true;
+    const dead = 0.24;
+    const axis = (i) => {
+      const v = pad.axes?.[i] ?? 0;
+      return Math.abs(v) < dead ? 0 : v;
+    };
+    const lx = axis(0);
+    const ly = axis(1);
+    const rx = axis(2);
+    const ry = axis(3);
+    this.pad.x = lx;
+    this.pad.y = ly;
+
+    if (active && (Math.abs(lx) > 0 || Math.abs(ly) > 0 || Math.abs(rx) > 0 || Math.abs(ry) > 0)) this.setDevice('gamepad');
+    // Stick look at roughly the speed of a comfortable mouse turn.
+    if (active) {
+      this.dx += rx * 1150 * dt;
+      this.dy += ry * 760 * dt;
+    }
+
+    const pressed = (i) => !!(pad.buttons?.[i] && (pad.buttons[i].pressed || pad.buttons[i].value > 0.35));
+    const edge = (i) => {
+      const now = pressed(i);
+      const was = this._padPrev.get(i) ?? false;
+      this._padPrev.set(i, now);
+      return now && !was;
+    };
+
+    // 0 = A (jump), 7 = RT and 2 = X (zap), 9 = Start (pause), 3 = Y (say again).
+    this.pad.jump = active && pressed(0);
+    const zap = edge(7) || edge(2);
+    if (active && zap) {
+      this.fireQueued = true;
+      this.setDevice('gamepad');
+    }
+    if (active && pressed(0)) this.setDevice('gamepad');
+    if (edge(9)) this.onPause?.();
+    if (edge(3)) this.onRepeat?.();
+  }
+
+  // ------------------------------------------------------------ reading -----
+
   consumeLook() {
     const out = { dx: this.dx, dy: this.dy };
     this.dx = 0;
@@ -116,16 +250,21 @@ export class Input {
     return this.keys.has(code);
   }
 
+  /** Keyboard, thumb pad and left stick all land on the same movement value. */
   get forward() {
-    return (this.down('KeyW') || this.down('ArrowUp') ? 1 : 0) - (this.down('KeyS') || this.down('ArrowDown') ? 1 : 0);
+    const keys = (this.down('KeyW') || this.down('ArrowUp') ? 1 : 0) - (this.down('KeyS') || this.down('ArrowDown') ? 1 : 0);
+    const value = keys - this.touch.y - this.pad.y;
+    return Math.max(-1, Math.min(1, value));
   }
 
   get strafe() {
-    return (this.down('KeyD') ? 1 : 0) - (this.down('KeyA') ? 1 : 0);
+    const keys = (this.down('KeyD') ? 1 : 0) - (this.down('KeyA') ? 1 : 0);
+    const value = keys + this.touch.x + this.pad.x;
+    return Math.max(-1, Math.min(1, value));
   }
 
   get jumpHeld() {
-    return this.down('Space');
+    return this.down('Space') || this.touch.jump || this.pad.jump;
   }
 
   get sprint() {

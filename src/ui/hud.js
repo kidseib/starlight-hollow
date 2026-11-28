@@ -1,6 +1,8 @@
 // The HUD is intentionally sparse: big numbers, big pictures, and one sentence
 // at a time. Text always mirrors the spoken line so grown-ups can follow too.
 
+import { legendFor } from '../game/controls.js';
+
 export class HUD {
   constructor({ voice, audio } = {}) {
     this.voice = voice;
@@ -40,6 +42,10 @@ export class HUD {
       const card = e.target.closest?.('.shop-card');
       if (card) this.shopHandlers.onSpeak?.(card.dataset.id);
     }, true);
+    this.controlsChip = document.getElementById('chip-controls');
+    this.controlsText = document.getElementById('controls-text');
+    this.repeatKey = document.getElementById('repeat-key');
+    this.device = 'mouse';
     this.fader = document.getElementById('fader');
     this.ui = document.getElementById('ui');
 
@@ -253,6 +259,26 @@ export class HUD {
       el.textContent = item.icon ?? '';
     }
     return el;
+  }
+
+  /**
+   * Keep the control legend honest: whatever the child just used is what the
+   * chip names, and the repeat key hint only appears when there is a key.
+   */
+  setDevice(device) {
+    const legend = legendFor(device);
+    this.device = legend.id;
+    if (this.controlsText) this.controlsText.textContent = legend.short;
+    if (this.controlsChip) {
+      this.controlsChip.dataset.device = legend.id;
+      this.controlsChip.setAttribute('aria-label', `Controls: ${legend.label}`);
+    }
+    if (this.repeatKey) this.repeatKey.style.display = legend.repeatKey ? '' : 'none';
+    if (this.repeatBtn) {
+      this.repeatBtn.title = legend.repeatKey ? `Say it again (${legend.repeatKey})` : 'Say it again';
+      this.repeatBtn.setAttribute('aria-keyshortcuts', legend.repeatKey ?? '');
+    }
+    document.body.dataset.device = legend.id;
   }
 
   _rowAfterUpgrades(key) {

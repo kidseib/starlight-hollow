@@ -21,6 +21,15 @@ chime, a line from Pip and ten sparkles.
 - Every island now hides its own pair of keepsakes — behind the falls, up on the
   ridge, in the shade of the glade and by the cove rocks — so nowhere in the
   Hollow is only a walk between signs.
+- The collection now sits on one low bench in the meadow: six keepsakes in a
+  single row, a gem per secret along the front, and the total on the HUD chip —
+  readable in one look without walking around it.
+- Pebblecount Cove's quiet corners are dressed like the rest of the Hollow: tide
+  pools with wet stones, driftwood, shells, starfish and dune grass around each
+  find, and softer sand ground without a lawn of pale spikes.
+- Gamepads, touchscreens and keyboards all play the whole game now. The ribbon at
+  the top always names the device you last touched, and a thumb pad with Zap and
+  Jump buttons appears on a touchscreen.
 - Each island also shows what you found *there*: a little stone cairn beside the
   way home holds that island's keepsakes. The meadow's Discovery Shelf has grown
   into a stepped stand with one dish per island and a row of gems that light as

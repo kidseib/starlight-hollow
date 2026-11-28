@@ -166,10 +166,13 @@ function addGroundCover(island, rng) {
   const R = island.radius;
 
   // --- grass blades ---
-  const bladeGeo = new THREE.ConeGeometry(0.06, 0.44, 3, 1);
+  // Sand holds dune grass, not a meadow: fewer, shorter tufts, so the cove's
+  // ground reads as beach rather than a lawn of pale spikes.
+  const sandy = island.zone.id === 'cove';
+  const bladeGeo = new THREE.ConeGeometry(0.06, sandy ? 0.3 : 0.44, 3, 1);
   bladeGeo.translate(0, 0.22, 0);
   const bladeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, flatShading: true });
-  const blades = 2600;
+  const blades = sandy ? 900 : 2600;
   const grass = new THREE.InstancedMesh(bladeGeo, bladeMat, blades);
   const dummy = new THREE.Object3D();
   const color = new THREE.Color();
@@ -183,7 +186,7 @@ function addGroundCover(island, rng) {
     const y = island.heightAtLocal(x, z);
     dummy.position.set(x, y - 0.05, z);
     dummy.rotation.set((rng() - 0.5) * 0.3, rng() * 3, (rng() - 0.5) * 0.3);
-    const s = 0.65 + rng() * 0.9;
+    const s = sandy ? 0.5 + rng() * 0.45 : 0.65 + rng() * 0.9;
     dummy.scale.set(s, s * (0.8 + rng() * 0.7), s);
     dummy.updateMatrix();
     grass.setMatrixAt(i, dummy.matrix);
@@ -209,7 +212,7 @@ function addGroundCover(island, rng) {
   ]);
   const stemMat = new THREE.MeshStandardMaterial({ color: pal.leaf, roughness: 1, flatShading: true });
   const headMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, flatShading: true });
-  const flowers = 620;
+  const flowers = sandy ? 180 : 620;
   const stems = new THREE.InstancedMesh(stemGeo, stemMat, flowers);
   const heads = new THREE.InstancedMesh(headGeo, headMat, flowers);
   const petalColors = [0xfff1f6, 0xffd166, 0xff9ec4, 0xa8e8ff, 0xd8b8ff, 0xfffaf0];
@@ -601,4 +604,115 @@ export function buildPatternTile(spec) {
   face.position.z = 0.03;
   group.add(face);
   return group;
+}
+
+// ------------------------------------------------------------ cove nooks ----
+
+/**
+ * A cosy corner of the cove around a hidden hollow: a tide pool, driftwood,
+ * shells and starfish, dune tufts and two little shrubs, all ringing the hollow
+ * so it reads as somewhere placed rather than dropped on bare sand.
+ */
+export function buildCoveNook(island, at, seed = 1) {
+  const rng = mulberry32(seed);
+  const g = new THREE.Group();
+  g.position.set(at.x, island.heightAtLocal(at.x, at.z), at.z);
+  g.rotation.y = rng() * Math.PI * 2;
+
+  // Tide pool — a shallow disc with a ring of wet stones.
+  const poolA = 0.7 + rng() * 0.5;
+  const poolR = 2.05 + rng() * 0.5;
+  const pool = new THREE.Mesh(
+    new THREE.CircleGeometry(1.05, 16),
+    new THREE.MeshStandardMaterial({ color: 0x8ff0e4, roughness: 0.15, metalness: 0.25, transparent: true, opacity: 0.82 })
+  );
+  pool.rotation.x = -Math.PI / 2;
+  pool.rotation.z = rng() * 3;
+  pool.scale.set(1, 0.78, 1);
+  pool.position.set(Math.cos(poolA) * poolR, 0.035, Math.sin(poolA) * poolR);
+  g.add(pool);
+
+  const stones = 9;
+  for (let i = 0; i < stones; i++) {
+    const a = (i / stones) * Math.PI * 2 + rng() * 0.2;
+    const r = 1.02 + rng() * 0.16;
+    const stone = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(0.1 + rng() * 0.12, 0),
+      mat(i % 2 ? 0xe2d3b8 : 0xcbb79a)
+    );
+    stone.position.set(pool.position.x + Math.cos(a) * r, 0.05 + rng() * 0.04, pool.position.z + Math.sin(a) * r * 0.78);
+    stone.rotation.set(rng() * 3, rng() * 3, rng() * 3);
+    stone.scale.y = 0.7;
+    g.add(stone);
+  }
+
+  // Driftwood: a bleached log with a stub of branch.
+  const woodA = poolA + 1.9;
+  const wood = new THREE.Group();
+  const log = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.14, 1.5, 7), mat(0xdcc6a4, { roughness: 0.95 }));
+  log.rotation.z = Math.PI / 2;
+  log.position.y = 0.13;
+  wood.add(log);
+  const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.6, 6), mat(0xceb693, { roughness: 0.95 }));
+  branch.rotation.set(0.6, 0.3, 1.1);
+  branch.position.set(0.25, 0.32, 0.12);
+  wood.add(branch);
+  wood.position.set(Math.cos(woodA) * 2.5, 0, Math.sin(woodA) * 2.5);
+  wood.rotation.y = rng() * 3;
+  g.add(wood);
+
+  // Shells and starfish scattered on the sand.
+  for (let i = 0; i < 5; i++) {
+    const a = rng() * Math.PI * 2;
+    const r = 1.35 + rng() * 1.5;
+    const shell = new THREE.Mesh(
+      new THREE.SphereGeometry(0.1 + rng() * 0.05, 7, 5, 0, Math.PI * 2, 0, Math.PI / 2),
+      mat(rng() > 0.5 ? 0xffe3cf : 0xffd0e2, { roughness: 0.5 })
+    );
+    shell.position.set(Math.cos(a) * r, 0.02, Math.sin(a) * r);
+    shell.scale.set(1, 0.6, 1);
+    shell.rotation.set(rng() * 0.4, rng() * 3, rng() * 3);
+    g.add(shell);
+  }
+  for (let i = 0; i < 3; i++) {
+    const a = rng() * Math.PI * 2;
+    const r = 1.5 + rng() * 1.2;
+    const star = new THREE.Group();
+    for (let arm = 0; arm < 5; arm++) {
+      const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.035, 0.16, 3, 5), mat(0xffb077, { roughness: 0.6 }));
+      const ang = (arm / 5) * Math.PI * 2;
+      leg.position.set(Math.cos(ang) * 0.11, 0.03, Math.sin(ang) * 0.11);
+      leg.rotation.z = Math.PI / 2;
+      leg.rotation.y = -ang;
+      star.add(leg);
+    }
+    star.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+    star.rotation.y = rng() * 3;
+    g.add(star);
+  }
+
+  // Dune tufts and two sea-green shrubs behind the hollow.
+  for (let i = 0; i < 7; i++) {
+    const a = rng() * Math.PI * 2;
+    const r = 2.1 + rng() * 0.9;
+    const tuft = new THREE.Group();
+    for (let b = 0; b < 4; b++) {
+      const blade = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.42 + rng() * 0.3, 3), mat(0xbfe08a, { roughness: 1 }));
+      blade.position.set((rng() - 0.5) * 0.22, 0.2, (rng() - 0.5) * 0.22);
+      blade.rotation.z = (rng() - 0.5) * 0.5;
+      tuft.add(blade);
+    }
+    tuft.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+    g.add(tuft);
+  }
+  for (let i = 0; i < 2; i++) {
+    const a = poolA + Math.PI + (i - 0.5) * 0.8;
+    const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(0.42 + rng() * 0.16, 0), mat(0x46cfb4, { emissive: 0x46cfb4, emissiveIntensity: 0.08 }));
+    bush.position.set(Math.cos(a) * 2.8, 0.32, Math.sin(a) * 2.8);
+    bush.scale.y = 0.8;
+    g.add(bush);
+  }
+
+  island.group.add(g);
+  return g;
 }
