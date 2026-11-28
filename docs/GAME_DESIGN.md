@@ -25,8 +25,6 @@ Pillars:
 - **Pip** — a firefly-bird companion. Floats beside the explorer, cheers when a sign is solved,
   droops when a zap misses, and drifts toward the nearest unsolved sign (with a spoken line) when a
   child stands still for nine seconds with nothing to do. Pip is the narrator voice (`🐣`).
-- **Momo** — a mossy lantern-snail who runs the market in the meadow in a striped-awning stall.
-  Blinks, breathes, hops when greeted, shakes his head when a gift is too expensive.
 - **Puffkins** — round, bouncy friends (one per island at least). Zapping one befriends it and it
   tells a silly fact.
 - **Grumbleweeds** — harmless grumps. Zapping one makes it giggle away for two sparkles.
@@ -43,9 +41,8 @@ Pillars:
 | Storysong Glade | `words` | Honey/coral | Beginning sounds, rhyme, word building (CAT, DOG), syllables, picture memory | 6 | ✓ |
 | Pebblecount Cove | `cove` | Sand/turquoise | Counting a group → numeral, pictured addition, take-away, numeral→group, more/less, picture memory | 6 | ✓ |
 
-The meadow holds five arches (plaque + icon + glowing veil), one per island, plus Momo's stall at
-(11, 10) on the path to the tree. Islands are 420 units apart on the X axis so only one is in the
-frustum at a time.
+The meadow holds five arches (plaque + icon + glowing veil), one per island. Islands are 420 units
+apart on the X axis so only one is in the frustum at a time.
 
 ## 4. Core systems
 
@@ -86,8 +83,36 @@ clickable when unaffordable: the card shakes and Momo says how many more
 sparkles are needed. Owned gifts turn the card gold, put a badge under the
 sparkle counter and swap the stall jar's icon for a star. `purchase()` and
 `shopStatus()` are pure functions, so the rules are unit tested without a
-browser. The market's spot lives in a `MARKET` constant in `game.js` rather
-than in `content.js`, because it is one fixed stall, not zone content.
+browser.
+
+### The Star Tree Workshop
+`src/game/workshop.js` + `src/world/ornaments.js`. The second use for sparkles and
+the reason to walk every island twice. Six ornaments, one shape each:
+
+| Shape | Where | Colour |
+|---|---|---|
+| Golden Star | Letterleaf Grove shard | gold |
+| Silver Moon | Tallybrook Falls shard | silver |
+| Blossom | Pattern Peaks shard | pink |
+| Song Bell | Storysong Glade shard | amber |
+| Sea Shell | Pebblecount Cove shard | peach |
+| Sky Lantern | Momo's market, 90 sparkles | mint |
+
+`shardSpot(zone)` picks a clear ring position from a per-island bearing, keeping
+away from the arrival arch, the portals and the sign plinths. Each `ShardField`
+beacon is an octahedral crystal in a gold cradle on a stone plinth, with a ground
+ring, drifting motes and a 13 m column of light; it chimes once when the player
+comes within 16 m and is collected by walking within 2.7 m. The HUD pouch shows
+one drawn picture per shape held.
+
+The tree carries two gold garlands at rows y = 3.3 and 4.55; six hooks hang from
+them on short cords, each with a dashed outline sprite of its shape. Aiming at a
+hook uses the same forgiving 0.24 rad cone as the market, and a zap reaches it
+with the blaster's homing bolt. `canPlace()`/`place()` are pure: an ornament must
+be held (a world shard or a bought market gift) and can only be hung once; a miss
+speaks the shape's name and island and costs nothing. `isComplete()` fires the
+payoff: canopy tint, sixteen coloured glows, a warm crown star, a HUD badge, a
+Momo + Pip speech chain and a banner. `save.shards` / `save.placed` persist it.
 
 ### Content format (`src/content.js`)
 Zones, portals, stations, pads, creatures and all spoken text are data. Pad kinds: `letter`
@@ -103,36 +128,34 @@ within 9 m of the tree, then "Keep exploring" returns to play.
 ### Companion
 `src/game/companion.js`. Procedural firefly-bird: cream body, gold wings, big eyes, crest, star tail,
 soft glow sprites. Follows at a damped offset, flaps faster while moving, spins and sparks on
-`solve`, squints/dips on `wrong`, floats toward a sign on `pointAt`. Pip's Bell shortens its idle wait.
+`solve`, squints/dips on `wrong`, floats toward a sign on `pointAt`.
 
 ### Save
 `src/engine/save.js`, key `starlight-hollow-save-v1`: sparkles, stars, solved station ids, scanned
 creature keys, visited zones, owned market gifts (`upgrades`), ended flag. Restores solved stations, socket lights, creature
-friendships, bought gifts and any finished-but-uncollected island berry. New checkpoints resume at the current island’s safe spawn. Legacy saves without a zone start in the meadow. A previous local checkpoint backs up unreadable JSON; malformed fields are normalized. Pending pickups flush on pause or page exit when the browser allows it.
+friendships and any finished-but-uncollected island berry. New checkpoints resume at the current island’s safe spawn. Legacy saves without a zone start in the meadow. A previous local checkpoint backs up unreadable JSON; malformed fields are normalized. Pending pickups flush on pause or page exit when the browser allows it.
 
 ## 5. Presentation
 
 - **Art**: low-poly rounded primitives, flat-ish palettes per island, additive glow sprites, no
-  textures except canvas-generated glyph plates plus the hand-drawn market sign and jar labels.
-  Palettes in each zone's `palette` block. The Star Tree altar is carved: mossy footing, 12-sided
-  stone drum, gold band, lit top slab and five rune octahedrons.
+  textures except canvas-generated glyph plates. Palettes in each zone's `palette` block.
 - **Signs**: 256 px canvas glyphs (`src/world/textures.js`) drawn with Fredoka; letters/numbers get a
   cream + ink outline; icons get a warm round picture plate; arithmetic uses vector +/− symbols.
 - **Audio**: fully synthesised (`src/engine/audio.js`) — per-zone generative melodies, zaps, chimes,
   praise, soft wrong-answer tones, footsteps. Voice is the Web Speech API (`src/engine/voice.js`);
   every bubble can be replayed with the 🔁 button.
-- **HUD**: star chips, sparkle counter with gift badges, zone chip, goal chip, speech bubble, feedback
-  flash, toasts, banner, hint, market panel, crosshair that warms when something is aimable.
+- **HUD**: star chips, sparkle counter, zone chip, goal chip, speech bubble, feedback flash, toasts,
+  banner, hint, crosshair that warms when something is aimable.
 
 ## 6. Controls & accessibility
 
 WASD/arrows to walk, mouse to look (pointer lock, with drag fallback), Space to jump, click to zap,
-R or the repeat button to hear the nearby sign again, Esc to pause (or close the market), M to mute. Movement is forgiving: coyote time, jump buffering, a soft magical edge
+R or the repeat button to hear the nearby sign again, Esc to pause, M to mute. Movement is forgiving: coyote time, jump buffering, a soft magical edge
 instead of falling off, and aim assist that snaps to the pad nearest the reticle.
 
-Accessibility in place: all instructions voiced and repeatable, picture-first pads and market cards,
-forgiving interaction ranges, colour-independent pad states (ring shape/scale + flash), reduced
-camera motion (subtle bob), pause on blur.
+Accessibility in place: all instructions voiced and repeatable, picture-first pads, forgiving
+interaction ranges, colour-independent pad states (ring shape/scale + flash), reduced camera motion
+(subtle bob), pause on blur.
 
 ## 7. Technology
 
