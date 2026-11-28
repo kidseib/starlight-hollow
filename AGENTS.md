@@ -6,8 +6,9 @@ Read this first, then `DEVELOPMENT_LOG.md` (what happened), `ROADMAP.md` (what i
 ## What the project is
 
 An original first-person educational adventure for children aged 5–7, built with Three.js and
-vanilla JavaScript, bundled by Vite, and packaged for Windows with Electron. Five floating islands,
-29 short learning signs, a companion named Pip, and a Starberry quest that wakes the Star Tree.
+vanilla JavaScript, bundled by Vite, packaged for Windows with Electron and for Android with Capacitor. Six themed
+islands around Sunbeam Meadow, 29 short learning signs, a companion named Pip, and a Starberry quest
+that wakes the Star Tree.
 Everything a child meets is spoken aloud; text on screen only mirrors the speech.
 
 ## Commands
@@ -17,14 +18,27 @@ npm ci                 # restore dependencies (keep package-lock.json)
 npm run dev            # Vite on 0.0.0.0:3000
 node --test tests/*.test.js
 npm run build          # production web bundle
-npm run build:windows  # Windows only: portable EXE, installer and ZIP in artifacts/
+npm run build:windows  # Windows targets + ZIP (electron-builder, signAndEditExecutable false)
+npx cap sync android   # copy dist into android/
+cd android && ./gradlew assembleDebug   # Android APK (needs JDK 21 + SDK 35)
 ```
+```
+
+The Android SDK/JDK live in ignored `.toolchains/`; `android/local.properties` is also ignored and
+must point at the local SDK.
 
 The GitHub repository stores `package-lock.json` as base64 chunks in `.github/lock-parts/`; the
 Windows workflow rebuilds the lockfile from them before `npm ci`. If you change the lockfile, rebuild
 those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, sorted by name).
 
 ## Ground rules
+
+- **Respect the frame budget.** Static scenery must go through `mergeStatic()`
+  (`src/world/staticMerge.js`) or an InstancedMesh, never hundreds of one-off meshes. Keep animated
+  subtrees in `keep`. Only the island being explored should stay attached to the scene; extend
+  `Game._updateVisibility` when adding a new scene-level decoration. The resolution governor lives in
+  `src/engine/renderQuality.js`; `window.__starlight.perf` exposes draw calls, triangles, FPS and the
+  current ratio for measurements.
 
 - Keep the child's experience forgiving: wrong answers never lose progress, hints arrive by
   themselves, and every activity is understandable from pictures plus speech.

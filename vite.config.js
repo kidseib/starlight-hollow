@@ -13,6 +13,11 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     allowedHosts: extraHosts,
+    // Build toolchains, packaged apps and captured screenshots change by the
+    // hundred while working; watching them reloads the game mid-playtest.
+    watch: {
+      ignored: ['**/.toolchains/**', '**/android/**', '**/windows-build/**', '**/dist/**', '**/artifacts/**'],
+    },
   },
   preview: {
     host: '0.0.0.0',

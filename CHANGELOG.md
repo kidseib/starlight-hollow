@@ -3,9 +3,22 @@
 Every public Windows beta, newest first. Player-facing changes only; the development detail lives in
 `DEVELOPMENT_LOG.md` and `docs/ITERATIONS.md`.
 
-## Unreleased — next beta
+## 0.1.5-beta.1 — Smooth frames, six gates and Android (2026-11-28)
 
-**Words and numbers that move the world.** Three places now answer to what a child knows, not to a
+**A smoother engine, on the devices children actually use.** The island dressing no longer asks the
+GPU to draw every leaf, stone, flower and keepsake one at a time. Static scenery is baked into a few
+merged meshes, the leaf and frost doors bake their frames, curios bake everything that does not move,
+and only the island being explored stays in the scene graph. In the meadow's opening view that took
+the frame from 203 draw calls and 168k triangles to 61 calls and 110k triangles; a deliberately busy
+Grove view fell from 887 calls to 699. Render resolution now starts at a sane 1.5× instead of up to
+2× and adapts down in 10% steps after a sustained slow patch, then back up when there is headroom.
+MSAA is off on touch devices, where high-DPI screens hide the jaggies and the fill-rate cost is real.
+
+**Android beta.** The same offline game now ships as a landscape, fullscreen Android APK built with
+Capacitor. Touch controls, the adaptive resolution and reduced-motion setting are unchanged. This is
+a debug-signed sideload build, not a Play Store upload; it has not run on a physical phone yet.
+
+**Words and numbers that move the world.** Six places now answer to what a child knows, not to a
 sign. They are built into the islands as real things, not floating questions, and every one can be
 re-read, re-heard and tried again forever.
 
@@ -18,6 +31,17 @@ re-read, re-heard and tried again forever.
 - **The Listening Path** (Storysong Glade) — a rune path lies dark until a child matches the croak
   they hear to the friend who made it. The frog, the chick and the owl are carved in stone; the right
   one wakes six runes one at a time and lights the path.
+- **The Sky Stair** (Pattern Peaks) — a row of tiles carries a pattern the world repeats in its crystals
+  and moon. Step on the matching choice stones in order: the deck rises and only then reaches a shelf
+  with a shrine, a crystal and a pocket of sky that cannot be reached any other way.
+- **The Great Shell** (Pebblecount Cove) — three pebbles on one plinth and two on another; the shell
+  answers only to the numeral that means five. Its valves creak open into a tidepool nook with its own
+  creature.
+- **The Moonword** (Lantern Hollow) — a word is carved on the moonstone. Say *moon* to the right stone
+  and the moth curtain shivers up into the lintel, opening a moon garden behind it.
+- **The bramble now opens somewhere.** The Grove's Sleepy Bramble no longer lifts onto bare grass: a
+  hedge ring hides a small pocket with a seat, flowers and a Bramble Puff, and the curtain is the only
+  way in.
 
 Wrong stones never fail a child: the stone flickers, Pip repeats the sound or the hint, and after a
 few misses the wrong choices dim one by one until only the answer and one friendlier stone are left.

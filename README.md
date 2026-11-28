@@ -6,12 +6,12 @@ You wake in Sunbeam Meadow with a small firefly-bird named **Pip** on your shoul
 
 No timers. No lives. No wrong-answer punishment. Everything a child meets is spoken aloud, so reading is never a requirement to play.
 
-[Download the Windows beta](https://github.com/kidseib/starlight-hollow/releases/latest) ·
+[Download the latest Windows or Android beta](https://github.com/kidseib/starlight-hollow/releases/latest) ·
 [Changelog](CHANGELOG.md) · [Design reference](docs/GAME_DESIGN.md) ·
 [Progress review](docs/REVIEW.md) ·
 [Report feedback](https://github.com/kidseib/starlight-hollow/issues/new)
 
-> **Status:** the downloadable Windows beta (0.1.4) is the public build. Development has continued well past it — a sixth place, keepsakes, tools and an unlockable second world — and that newer source has not yet been published to this repository. See [Roadmap and status](#roadmap-and-status).
+> **Status:** the **0.1.5 beta** ships Windows x64 and an Android sideload APK. Six themed islands now each carry a knowledge gate that changes the place itself; the engine batches static scenery, detaches far islands and adapts resolution to hold a steadier frame. The Android build is debug-signed and has not run on a physical device yet. See [Roadmap and status](#roadmap-and-status).
 
 ## Why it feels different
 
@@ -30,7 +30,7 @@ No timers. No lives. No wrong-answer punishment. Everything a child meets is spo
 | **Pattern Peaks** | Picture patterns and watch-then-copy memory |
 | **Storysong Glade** | Beginning sounds, rhymes, syllables and word building |
 | **Pebblecount Cove** | Pictured quantities and small number puzzles |
-| **Lantern Hollow** *(in development)* | A dusk island behind a sleeping arch: a moonpetal pond, a lantern walk, a stream, moths, two hidden prizes and one Leafwhisk puzzle |
+| **Lantern Hollow** | A dusk island behind a sleeping arch: a moonpetal pond, a lantern walk, a stream, moths, two hidden prizes, a moonword gate and one Leafwhisk puzzle |
 
 ## Learning without a quiz show
 
@@ -82,11 +82,11 @@ Aiming is assisted on every device, and the suction cone is deliberately wide. C
 
 ## Roadmap and status
 
-**Done and playable in development:** the seven places above, 29 learning signs, 13 keepsakes, the garden → arbor → moon-phase loop, hub growth, the Star Tree Workshop, four market gifts, the Starberry quest and ending, four input paths, calm motion, and the Lantern Hollow second world with its unlock, two prizes and fern-door puzzle.
+**Done and playable:** the seven places above, 29 learning signs, six world-embedded knowledge gates, 13 keepsakes, the garden → arbor → moon-phase loop, hub growth, the Star Tree Workshop, four market gifts, the Starberry quest and ending, four input paths, calm motion, the Lantern Hollow second world with its unlock and prizes, batched scenery with far-island detachment, adaptive resolution, and a fullscreen landscape Android build.
 
-**Next, in priority order:** publish the current source and a fresh Windows build; a device-tested Android build; local two-player co-op; child profiles and a fuller grown-up dashboard; telling-time and measurement activities; more environmental learning puzzles so knowledge is used on the world rather than on boards; richer creature behaviour and character voice.
+**Next, in priority order:** test the APK on a real Android phone/tablet and the Windows build on a real PC (audio, controller, save/reopen); publish the source that matches these builds; replace the debug APK with a signed release/AAB; local two-player co-op; child profiles and a fuller grown-up dashboard; telling-time and measurement activities; richer creature behaviour and character voice.
 
-**Known limits:** the published beta predates the newest systems; the voice is the operating system's speech synthesis, so pronunciation warmth varies by machine; Android and controller hardware have not been tested; islands are compact and assets repeat.
+**Known limits:** the voice is the operating system's speech synthesis, so pronunciation warmth varies by machine; the Android APK is debug-signed and sideload-only; Android and controller hardware have not been tested; islands are compact and some asset families repeat. The cloud test browser renders in software, so the draw-call and triangle counts — not its FPS readout — are the performance evidence.
 
 ## Build from source
 
@@ -101,9 +101,11 @@ npm run dev
 ```
 
 ```bash
-node --test tests/*.test.js   # 92 tests: saves, progression, signs, tools, gates, the hollow
+node --test tests/*.test.js   # 106 tests: saves, progression, signs, tools, gates, puzzles, performance
 npm run build                 # production web bundle
 npm run build:windows         # Windows: portable EXE, installer and ZIP in artifacts/
+npx cap sync android          # copy dist into the Android project
+cd android && ./gradlew assembleDebug   # Android: app-debug.apk (debug-signed)
 ```
 
 | Part | Implementation |
@@ -111,6 +113,8 @@ npm run build:windows         # Windows: portable EXE, installer and ZIP in arti
 | World and first-person play | Three.js and vanilla JavaScript modules |
 | Development and web build | Vite 5 |
 | Windows app | Electron, packaged with electron-builder |
+| Android app | Capacitor 7 WebView shell, Android SDK 35, landscape immersive activity |
+| Renderer budget | Static mesh batching, far-island detachment, adaptive resolution (`src/world/staticMerge.js`, `src/engine/renderQuality.js`) |
 | Art and sound | Original procedural geometry, canvas-drawn signs, synthesised music and effects |
 | Font and speech | Bundled Fredoka font; speech through the OS Web Speech API |
 | Save data | Local storage with a previous-checkpoint fallback |

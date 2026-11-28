@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { mulberry32, clamp } from '../engine/utils.js';
 import { glyphTexture, makeSprite, labelTexture } from './textures.js';
+import { mergeStatic } from './staticMerge.js';
 
 const STONE = 0xc9bcd8;
 const STONE_DARK = 0x9d8fbd;
@@ -123,7 +124,9 @@ export function buildScatter(island, blockers = []) {
   const pal = island.zone.palette;
   const R = island.radius;
   const placed = [];
-  const zone = island.group;
+  // Props go into their own root first: they are all static, so the whole
+  // crowd can be baked into a few merged meshes before it reaches the island.
+  const zone = new THREE.Group();
 
   const free = (x, z, spacing) => {
     if (Math.hypot(x, z) > R * 0.9) return false;
@@ -158,6 +161,8 @@ export function buildScatter(island, blockers = []) {
   for (let i = 0; i < 16; i++) put(buildBush(rng, pal), 2.8);
   for (let i = 0; i < 30; i++) put(buildRock(rng), 2.4, 0.05);
 
+  mergeStatic(zone, { tag: 'scatter-static' });
+  island.group.add(zone);
   addGroundCover(island, rng);
 }
 
@@ -201,10 +206,12 @@ function addGroundCover(island, rng) {
   // --- flowers: green stems + bright heads ---
   const stemGeo = new THREE.CylinderGeometry(0.013, 0.018, 0.32, 4);
   stemGeo.translate(0, 0.17, 0);
+  // Tiny flowers are seen from a metre away at most; the coarse spheres keep
+  // the silhouette and halve the triangles they add to the island.
   const headGeo = mergeGeometries([
-    new THREE.SphereGeometry(0.06, 6, 5),
+    new THREE.SphereGeometry(0.06, 4, 3),
     ...[0, 1, 2, 3, 4].map((i) => {
-      const petal = new THREE.SphereGeometry(0.045, 5, 4);
+      const petal = new THREE.SphereGeometry(0.045, 4, 3);
       const a = (i / 5) * Math.PI * 2;
       petal.translate(Math.cos(a) * 0.085, 0.32, Math.sin(a) * 0.085);
       return petal;
@@ -268,6 +275,8 @@ export function buildSkyIslands(scene, zone) {
     island.rotation.y = rng() * 3;
     group.add(island);
   }
+  // Six little islands of trees are pure decoration; bake each material once.
+  mergeStatic(group, { tag: 'sky-static' });
   scene.add(group);
   return group;
 }
@@ -343,6 +352,10 @@ export function buildPortal(def) {
   );
   beam.position.y = 11;
   group.add(beam);
+
+  // The arch, pillars, bases and plaque never move. The veil, swirl and beacon
+  // do, so they stay live objects for the portal animation loop.
+  mergeStatic(group, { keep: [veil, swirl, glow, beam], tag: 'portal-static' });
 
   return { group, veil, swirl, icon, glow, beam, accent };
 }
@@ -502,6 +515,13 @@ export function buildWishTree(pal) {
   aura.position.y = 9;
   group.add(aura);
 
+  // Trunk, bark, altar and moss are a static stage; the canopy, aura, socket
+  // rings and berries stay live for the wishing animation.
+  mergeStatic(group, {
+    keep: [canopy, aura, ...sockets.flatMap((s) => [s.ring, s.berry])],
+    tag: 'wish-tree-static',
+  });
+
   return { group, sockets, canopy, motes, aura };
 }
 
@@ -561,6 +581,8 @@ export function buildStationBase(palette, radius = 2.5) {
   const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.7, 22, 12, 1, true), beaconMat);
   beacon.position.y = 14.5;
   group.add(beacon);
+
+  mergeStatic(group, { keep: [ring, beacon], tag: 'station-base-static' });
 
   return {
     group,
@@ -713,6 +735,7 @@ export function buildCoveNook(island, at, seed = 1) {
     g.add(bush);
   }
 
+  mergeStatic(g, { tag: 'cove-nook-static' });
   island.group.add(g);
   return g;
 }
@@ -756,5 +779,6 @@ export function buildSleepingVeil(accent = 0x6f4b8a) {
     bud.position.set(side * 1.5, 2.2 + rng() * 0.4, 0.2);
     group.add(bud);
   }
+  mergeStatic(group, { tag: 'sleeping-veil-static' });
   return group;
 }

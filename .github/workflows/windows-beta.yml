@@ -55,3 +55,37 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ inputs.tag }}" artifacts/Starlight-Hollow-Windows-x64.zip --clobber
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore pinned dependency lockfile
+        run: |
+          python3 - <<'PY'
+          import base64, pathlib
+          parts = sorted(pathlib.Path('.github/lock-parts').glob('*.txt'))
+          encoded = ''.join(p.read_text().strip() for p in parts)
+          pathlib.Path('package-lock.json').write_bytes(base64.b64decode(encoded))
+          PY
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Build web bundle and sync Android shell
+        run: |
+          npm run build
+          npx cap sync android
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - name: Attach APK to existing beta draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ inputs.tag }}" android/app/build/outputs/apk/debug/app-debug.apk#Starlight-Hollow-Android-beta.apk --clobber

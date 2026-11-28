@@ -2169,13 +2169,45 @@ export class Game {
    */
   _updateVisibility() {
     const cam = this.camera.position;
+    const attach = (obj, on) => {
+      if (!obj) return;
+      if (on) {
+        if (!obj.parent) this.scene.add(obj);
+      } else if (obj.parent === this.scene) {
+        this.scene.remove(obj);
+      }
+    };
     for (const [id, data] of this.islands) {
       const near = data.island.distanceTo(cam.x, cam.z) < 210;
-      if (data.island.group.visible !== near) data.island.group.visible = near;
-      if (data.sky && data.sky.visible !== near) data.sky.visible = near;
-      for (const station of data.stations) station.setVisible(near);
-      this.creatures.setZoneVisible(id, near);
-      if (this.market && this.marketZoneId === id) this.market.group.visible = near;
+      if (data.near !== near) {
+        data.near = near;
+        // Detaching, not merely hiding: Three still walks every attached node
+        // each frame, and seven dressed islands are thousands of nodes.
+        attach(data.island.group, near);
+        attach(data.sky, near);
+        for (const station of data.stations) station.setVisible(near);
+        this.creatures.setZoneVisible(id, near);
+        this.creatures.setZoneAttached(id, near);
+        if (this.sparkles) {
+          for (const item of this.sparkles.items) {
+            if (item.zoneId === id && !item.collected) attach(item.group, near);
+          }
+        }
+        if (this.market && this.marketZoneId === id) {
+          this.market.group.visible = near;
+          attach(this.market.group, near);
+        }
+        // Secret hollows, their leaf/frost doors, the cairns and the hub's
+        // shelf and Star Tree are scene children too. None of them belong in
+        // the render graph while their island is 400 m away.
+        for (const spot of this.secretSpots) if (spot.zoneId === id) attach(spot.group, near);
+        for (const gate of this.gates) if (gate.zoneId === id) attach(gate.group, near);
+        attach(this.cairns.get(id)?.group, near);
+        if (id === 'meadow') {
+          attach(this.discoveryShelf?.group, near);
+          attach(this.wishTree?.group, near);
+        }
+      }
     }
   }
 

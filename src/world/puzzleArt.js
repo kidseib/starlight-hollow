@@ -10,6 +10,7 @@
 
 import * as THREE from 'three';
 import { glyphTexture, makeSprite } from './textures.js';
+import { mergeStatic } from './staticMerge.js';
 import { mulberry32 } from '../engine/utils.js';
 
 const _tmpVec = new THREE.Vector3();
@@ -427,12 +428,14 @@ function buildVeilGate(island, def, accent) {
   const glint = makeSprite(moon ? 0xffe6b0 : accent, 3.4, 0.1);
   glint.position.set(0, 2.2, 0.6);
   cluster.add(glint);
+  mergeStatic(cluster, { keep: [curtainGroup], tag: 'gate-stone-static' });
 
   // The place the gate was hiding: a real pocket with its own floor, flowers and
   // a seat or moonwell. A hedge/moonflower ring surrounds it, so the curtain is
   // the only way in.
   const rng = mulberry32(moon ? 7127 : 3612);
   const pocket = buildPocketRing(island, def, moon ? 'moon' : 'bramble', accent, rng);
+  mergeStatic(pocket, { tag: 'pocket-static' });
   root.add(pocket);
 
   let retract = 0;

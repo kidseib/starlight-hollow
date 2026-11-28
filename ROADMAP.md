@@ -5,10 +5,11 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
 
 ## Now (next two iterations)
 
-1. ~~**Knowledge that changes the island**~~ — done in iteration 29: a bramble gate opened by reading
-   `moss`, a lily crossing raised by counting to six, and a rune path woken by matching a frog's call.
-   Still open: the shape/pattern lift-or-current from the brief, and a world puzzle in the other three
-   thematic worlds (peaks, cove, hollow), so every island has one.
+1. ~~**Knowledge that changes the island everywhere**~~ — done in iterations 29–30: all six themed
+   worlds have a world-embedded gate. The Grove bramble opens a pocket, the Falls raise a lily path,
+   the Glade wakes a rune path, the Peaks pattern-lift a deck to a sky shelf, the Cove counts open a
+   shell, and the Hollow's moonword parts a moth curtain. The next step is to make each payoff a
+   little more visible from the approach and to add a second, optional use for the same knowledge.
 2. ~~**Secrets behind a small puzzle**~~ — done in iteration 27: the grove's storybook sleeps behind a
    leaf drift the Leafwhisk sips away and the peaks' star chart behind a frost bell one bolt rings. Both
    doors stay open in the save. A third nook needing a jump from a ledge is still open below.
@@ -25,9 +26,14 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
    motes are authored, gatherable scenery in every themed world, each with its own bundle and its own
    once-a-session hello.
 7. **A real-device pass** — touch and gamepad were proved with emulated pointer events and an injected
-   pad; nothing has run on an Android phone or a physical controller, and no Windows build was made.
+   pad. The first Android APK and Windows 0.1.5 build now exist (iteration 31), but neither has run on
+   physical hardware.
 8. **A real Windows playtest of the current beta** — both editions, narration with the network off,
-   save and reopen, installer shortcut, uninstall.
+   save and reopen, installer shortcut, uninstall. The source still has to be published to match the
+   binaries.
+9. **Engine follow-through** — the portrait/title screens and dense creature crowds are the next
+   draw-call hotspots after static batching; profile on a real mid-range phone and a laptop iGPU
+   before adding more scenery.
 
 ## Next
 

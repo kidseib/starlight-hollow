@@ -435,4 +435,16 @@ export class CreatureManager {
       if (c.zoneId === zoneId) c.group.visible = visible && !(c.type === 'grump' && c.hidden);
     }
   }
+
+  /** Keep only the island being explored in the scene graph. */
+  setZoneAttached(zoneId, attached) {
+    for (const c of this.creatures) {
+      if (c.zoneId !== zoneId) continue;
+      if (attached) {
+        if (!c.group.parent) this.scene.add(c.group);
+      } else if (c.group.parent === this.scene) {
+        this.scene.remove(c.group);
+      }
+    }
+  }
 }

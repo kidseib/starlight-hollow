@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { makeSprite } from './textures.js';
+import { mergeStatic } from './staticMerge.js';
 import { GATHER_TYPES, CURIO_REGROW } from '../game/curios.js';
 
 // Curious things: the scenery on every island that answers when a child zaps it
@@ -103,6 +104,7 @@ function buildLeaf(rand) {
   cap.position.set(-0.58, 0.25, 0.34);
   cap.scale.y = 0.78;
   litter.add(stem, cap);
+  mergeStatic(litter, { tag: 'curio-leaf-gather' });
 
   group.add(litter);
   // A few leaves that stay behind when the drift is scattered.
@@ -114,6 +116,7 @@ function buildLeaf(rand) {
     leaf.scale.setScalar(0.5);
     remnant.add(leaf);
   }
+  mergeStatic(remnant, { tag: 'curio-leaf-remnant' });
   group.add(remnant);
   group.userData = { gather: litter, litter, remnant };
   group.name = 'curio:leaf';
@@ -184,6 +187,7 @@ function buildCrystal(rand) {
   const glow = makeSprite(0xa6ecff, 0.9, 0.12);
   glow.position.y = 0.45;
   cluster.add(glow);
+  mergeStatic(cluster, { tag: 'curio-crystal-gather' });
   group.add(cluster);
   group.userData = { cluster, glow, crystalMat };
   group.name = 'curio:crystal';
@@ -422,6 +426,9 @@ function buildPetal(rand) {
   }
   remnant.add(fern);
 
+  mergeStatic(base, { tag: 'curio-petal-base' });
+  mergeStatic(remnant, { tag: 'curio-petal-remnant' });
+  mergeStatic(gather, { tag: 'curio-petal-gather' });
   group.add(base, remnant, gather);
   group.scale.setScalar(1.5);
   group.userData = { base, gather, remnant };
@@ -534,6 +541,9 @@ function buildDust(rand) {
     flurries.push(mote);
   }
 
+  mergeStatic(base, { tag: 'curio-dust-base' });
+  mergeStatic(remnant, { tag: 'curio-dust-remnant' });
+  mergeStatic(gather, { tag: 'curio-dust-gather' });
   group.add(base, remnant, gather);
   group.scale.setScalar(1.3);
   group.userData = { base, gather, remnant, plumes, flurries };
@@ -610,6 +620,8 @@ function buildMote(rand) {
     motes.push(mote);
   }
 
+  mergeStatic(base, { tag: 'curio-mote-base' });
+  mergeStatic(remnant, { tag: 'curio-mote-remnant' });
   group.add(base, remnant, gather);
   group.scale.setScalar(1.35);
   group.userData = { base, gather, remnant, motes, glassMats };

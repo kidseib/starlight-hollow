@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeStatic } from './staticMerge.js';
 import { makeSprite } from './textures.js';
 import {
   SECRETS,
@@ -294,6 +295,8 @@ export function trophyMesh(kind, color = 0xffd166) {
     group.add(glow);
   }
 
+  // A trophy turns and bobs as one object; its carved parts never come apart.
+  mergeStatic(group, { tag: 'trophy-static' });
   return group;
 }
 
@@ -364,6 +367,7 @@ export class SecretSpot {
     this.mark.position.y = 0.35;
     this.group.add(this.mark);
     if (this.found) this.mark.material.opacity = 0.55;
+    mergeStatic(this.group, { keep: [this.item], tag: 'secret-spot-static' });
   }
 
   /** Distance for the "close enough" test; the spot itself is generous. */
@@ -462,6 +466,7 @@ export class DiscoveryShelf {
     this.trophies = new Map();
     this.pips = [];
     this._build();
+    mergeStatic(this.group, { tag: 'discovery-shelf-static' });
     this.refresh(found);
   }
 
@@ -582,6 +587,7 @@ export class KeepsakeCairn {
     this.trophies = new Map();
     this.pips = [];
     this._build();
+    mergeStatic(this.group, { tag: 'keepsake-cairn-static' });
     this.refresh(found);
   }
 

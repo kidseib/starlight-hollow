@@ -4,3 +4,5 @@ dist/
 
 windows-build/
 artifacts/Starlight-Hollow-Windows-x64.zip
+
+.toolchains/

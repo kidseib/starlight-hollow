@@ -5,6 +5,56 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 31 — Frame budget, a real Android target, and a publishable beta (2026-11-28)
+
+**Chosen because** the request for this iteration was explicit: spend it on the engine and frame rate,
+then publish Windows and Android builds. The scene graph still held one mesh for every pebble, leaf
+and keepsake (9,112 meshes in the meadow alone), every island stayed in the graph at 420 m apart, and
+the repo had no Android project at all.
+
+**What changed**
+
+- New `src/world/staticMerge.js`: bakes static meshes that share a material signature into one
+  buffer, normalising indexed geometry, preserving transforms, skipping sprites, invisible props and
+  any subtree in `keep`. Applied to island scatter, horizon islands, station bases, portals, the Star
+  Tree's stonework, cove nooks, sleeping veils, pocket rings, curios, keepsake trophies, secret gates
+  and puzzle-gate stonework. Animated curtains, rings, beacons, decks and leaves stay live objects.
+- `Game._updateVisibility` now detaches far islands, their sky decor, creatures, sparkles, secret
+  spots, gates, cairns, the discovery shelf and the Star Tree instead of merely hiding them. Three
+  still walks every attached node each frame; seven dressed islands were thousands of nodes.
+- New `src/engine/renderQuality.js`: a pure `nextRenderScale` plus `AdaptiveResolution`. It caps the
+  device ratio at 1.75, starts at 0.85 of that on high-DPI screens, and moves in 10% steps with a
+  2.5 s down / 5 s up cooldown. `main.js` samples real frame time and exposes `window.__starlight.perf`
+  (`fps`, `frameMs`, `drawCalls`, `triangles`, `pixelRatio`, `qualitySteps`).
+- MSAA is disabled only when `(pointer: coarse)` matches; desktop keeps antialiasing. Vite now ignores
+  `.toolchains`, `android`, `windows-build`, `dist` and `artifacts` so SDK writes stop reloading the
+  game mid-playtest.
+- Android target: Capacitor 7, `capacitor.config.json`, generated `android/` project, landscape
+  sensor orientation, fullscreen immersive MainActivity with cutout support and keep-screen-on,
+  `versionName 0.1.5-beta.1`, local SDK path isolated to ignored `local.properties`.
+- Version bumped to `0.1.5-beta.1`.
+
+**Checked, run not assumed**
+
+- `node --test tests/*.test.js`: **106 pass, 0 fail**, including 4 new tests for merge batching and
+  the resolution governor; `npm run build` exits 0.
+- Same meadow opening view, measured through `renderer.info`: **203 → 61 draw calls**, **167,599 →
+  109,824 triangles**. A busy Grove portal view: **887 → 699 calls**, island group **653 → 304
+  meshes**, whole scene **1,796 → 1,093 meshes**. Total attached scene meshes at boot **9,112 → 1,093**
+  after detaching. These are structural counts; the cloud browser is software-rendered, so its
+  wall-clock FPS is not representative of a real GPU.
+- Live browser after the merges: no console or page errors; meadow, Grove portal and puzzle sites
+  render with their actors, text plaques and merged decorations intact.
+- Windows: electron-builder `--win nsis portable` + `desktop/bundle.mjs`; see build receipt below.
+- Android: Gradle `assembleDebug`; see build receipt below.
+- **Not checked:** real Windows or Android hardware, device audio/speech, a physical controller, or a
+  child playtest. The Android APK is debug-signed and sideload-only.
+
+**Open:** publish the source again (the GitHub `main` is still the 0.1.4 workshop commit), device
+testing, Play Store signing/AAB, and the remaining roadmap items.
+
+---
+
 ## Iteration 27 — Two doors that ask for a tool (2026-11-28)
 
 **Chosen because** the roadmap's first open item said every find was still a walk-in: exploration

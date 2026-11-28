@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeStatic } from './staticMerge.js';
 import { makeSprite } from './textures.js';
 import { reducedMotion } from '../engine/motion.js';
 
@@ -68,6 +69,12 @@ export class SecretGate {
     this.leaves = [];
     this.veil = [];
     this._build();
+    // Boughs, arch stones and posts are a fixed stage; the curtain, its leaves
+    // and the frost bell stay live for their own animation.
+    mergeStatic(this.group, {
+      keep: [this.curtain, this.bell].filter(Boolean),
+      tag: 'secret-gate-static',
+    });
     if (open) this.setOpen(true, { animate: false });
   }
 

@@ -7,19 +7,29 @@ import { HUD } from './ui/hud.js';
 import { TouchControls } from './ui/touch.js';
 import { Game } from './game/game.js';
 import { reducedMotion, setReducedMotion } from './engine/motion.js';
+import { AdaptiveResolution } from './engine/renderQuality.js';
 
 const canvas = document.getElementById('game');
 
+const coarsePointer = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 const renderer = new THREE.WebGLRenderer({
   canvas,
-  antialias: true,
+  // MSAA is expensive on phone GPUs and high-DPI screens hide the jaggies.
+  antialias: !coarsePointer,
   powerPreference: 'high-performance',
 });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.setSize(window.innerWidth, window.innerHeight, false);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.08;
+
+// Render at a sane resolution and let the governor lower it only when frames
+// are actually slow. A 3x phone screen does not need 3x the pixels to look good.
+const quality = new AdaptiveResolution(renderer, {
+  deviceRatio: window.devicePixelRatio || 1,
+  maxRatio: 1.75,
+});
+const perf = { fps: 0, frameMs: 0, drawCalls: 0, triangles: 0, pixelRatio: quality.pixelRatio, qualitySteps: 0 };
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(74, window.innerWidth / window.innerHeight, 0.1, 900);
@@ -31,7 +41,6 @@ const voice = new Voice();
 const hud = new HUD({ voice, audio });
 const game = new Game({ scene, camera, renderer, input, audio, voice, hud });
 
-const coarsePointer = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 const touchControls = new TouchControls({ input, coarsePointer });
 touchControls.setVisible(false);
 
@@ -132,24 +141,42 @@ canvas.addEventListener('pointerlockerror', () => {
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(window.innerWidth, window.innerHeight, false);
+  quality.resize();
 });
 
 let lastTime = performance.now();
 let elapsed = 0;
+let perfFrames = 0;
+let perfTime = 0;
 
 function loop(now) {
-  const dt = Math.min(0.05, Math.max(0.0005, (now - lastTime) / 1000));
+  const raw = Math.max(0.0005, (now - lastTime) / 1000);
+  const dt = Math.min(0.05, raw);
   lastTime = now;
   elapsed += dt;
   input.pollGamepad(dt);
   game.update(dt, elapsed);
   renderer.render(scene, camera);
+
+  perfFrames++;
+  perfTime += Math.min(raw, 0.5);
+  if (perfTime >= 0.5) {
+    perf.fps = Math.round(perfFrames / perfTime);
+    perf.frameMs = +((perfTime * 1000) / perfFrames).toFixed(1);
+    perfFrames = 0;
+    perfTime = 0;
+  }
+  perf.drawCalls = renderer.info.render.calls;
+  perf.triangles = renderer.info.render.triangles;
+  perf.pixelRatio = quality.pixelRatio;
+  perf.qualitySteps = quality.steps;
+  if (!document.hidden) quality.sample(Math.min(raw, 0.25));
+
   requestAnimationFrame(loop);
 }
 
 requestAnimationFrame(loop);
 
 // Expose for quick console debugging during development.
-window.__starlight = { game, scene, camera, renderer, audio, voice, hud };
+window.__starlight = { game, scene, camera, renderer, audio, voice, hud, perf, quality };

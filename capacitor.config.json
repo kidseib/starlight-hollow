@@ -1,0 +1,12 @@
+{
+  "appId": "com.starlighthollow.game",
+  "appName": "Starlight Hollow",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#bfe8f5"
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}
