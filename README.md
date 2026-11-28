@@ -1,69 +1,96 @@
 # Starlight Hollow
 
-**A gentle first-person adventure for young explorers, ages 5–7.** Follow Pip, a little firefly-bird, through five floating islands. Befriend bouncy creatures, gather sparkles, and find the five Starberries that will wake the sleeping Star Tree.
+**A gentle first-person adventure where ages 5–7 learn letters, sounds, words and numbers by exploring — not by answering quizzes.**
 
-Starlight Hollow is an **in-development beta**. The current Windows build has a complete Starberry quest, a quiz-free decorating workshop and a story ending; the larger game vision is still in progress.
+You wake in Sunbeam Meadow with a small firefly-bird named **Pip** on your shoulder. Six arches lead to floating islands full of soft grass, paper lanterns, bouncy creatures and hidden corners. There is a sleeping Star Tree to wake, a garden to grow, a market to visit, keepsakes to find and — once you have made a real wish — a second world behind a bramble-covered arch.
 
-[Download the Windows x64 beta](https://github.com/kidseib/starlight-hollow/releases/download/v0.1.4-beta.1/Starlight-Hollow-Windows-x64.zip) · [Release notes](https://github.com/kidseib/starlight-hollow/releases/tag/v0.1.4-beta.1) · [Changelog](CHANGELOG.md) · [Report feedback](https://github.com/kidseib/starlight-hollow/issues/new)
+No timers. No lives. No wrong-answer punishment. Everything a child meets is spoken aloud, so reading is never a requirement to play.
 
-## The adventure
+[Download the Windows beta](https://github.com/kidseib/starlight-hollow/releases/latest) ·
+[Changelog](CHANGELOG.md) · [Design reference](docs/GAME_DESIGN.md) ·
+[Progress review](docs/REVIEW.md) ·
+[Report feedback](https://github.com/kidseib/starlight-hollow/issues/new)
 
-Sunbeam Meadow is home base. Its five arches lead to islands with different sights and playful challenges. Explore at your own pace, use the Star Blaster to interact with signs and creatures, and bring each island's Starberry back to the tree. Pip follows, gives a nudge when you're stuck, and celebrates discoveries.
+> **Status:** the downloadable Windows beta (0.1.4) is the public build. Development has continued well past it — a sixth place, keepsakes, tools and an unlockable second world — and that newer source has not yet been published to this repository. See [Roadmap and status](#roadmap-and-status).
 
-| Place | What you discover |
+## Why it feels different
+
+- **Exploration is the reward.** Islands hide keepsakes, lantern trees, moonpetal ponds and quiet corners. You can ignore every learning sign and still have a place worth wandering.
+- **Learning lives in the world.** A sign is a wooden board with pictures and symbols; a wrong answer fades to grey and leaves two friendly choices; hints arrive by themselves. Nothing is graded.
+- **Everything is spoken, twice if you ask.** Speech carries every instruction; on-screen text only mirrors it, so a child who cannot read yet can play alone.
+- **Gentle by design.** Calm-motion mode, no failure states, no streaks, no "come back tomorrow", no advertising, no purchases, no accounts, and no network connection needed to play.
+
+## The world
+
+| Place | What is there |
 | --- | --- |
-| **Sunbeam Meadow** | The hub, practice signs, portals, Star Tree and Momo's market |
-| **Letterleaf Grove** | Letters, sounds, and building a word |
-| **Tallybrook Falls** | Counting, number order, addition, and subtraction |
-| **Pattern Peaks** | Picture patterns and watch-then-copy memory signs |
-| **Storysong Glade** | Beginning sounds, rhymes, syllables, and words |
+| **Sunbeam Meadow** | Home. The Star Tree, Pip's garden and Moon Arbor, Momo's Wisp Market, the keepsake shelf, the Moonwell Grotto and six arches |
+| **Letterleaf Grove** | Letter names, letter sounds, blending and first words |
+| **Tallybrook Falls** | Counting, number order, addition and subtraction |
+| **Pattern Peaks** | Picture patterns and watch-then-copy memory |
+| **Storysong Glade** | Beginning sounds, rhymes, syllables and word building |
 | **Pebblecount Cove** | Pictured quantities and small number puzzles |
+| **Lantern Hollow** *(in development)* | A dusk island behind a sleeping arch: a moonpetal pond, a lantern walk, a stream, moths, two hidden prizes and one Leafwhisk puzzle |
 
-The current game has **29 short signs** across the hub and islands, plus friendly Puffkins, silly Grumbleweeds, sparkles to collect, and a Starberry for each adventure island. Momo's Wisp Market in the meadow trades those sparkles for four permanent gifts: a Star Magnet that pulls sparkles from further away, Pip's Bell that makes hints arrive sooner, a Rainbow Blaster that gives every zap the next colour of the rainbow, and the **Sky Lantern** that becomes the sixth ornament for the Star Tree. Signs use picture and symbol cues alongside spoken prompts; wrong answers allow unlimited retries, and after two misses the choices themselves get smaller, leaving the right answer and one friendlier option. Finished islands mark their arch in the meadow with a small star. The game saves progress locally and resumes on the last island visited.
+## Learning without a quiz show
 
-**The Star Tree Workshop.** Each of the five islands hides one glowing star shard under a tall beam of light: a golden star, a silver moon, a pink blossom, a song bell and a sea shell. Collecting one puts its picture in the pouch under the sparkle counter. Back at the Star Tree, two gold garlands wrap the trunk with six hooks, each showing a dashed outline; zap the outline that matches a shape you carry and the ornament pops into place with a bounce and a spoken line. Hang all six, including Momo's lantern, and the tree turns luminous and decorated, a gold badge appears, and Pip and Momo both celebrate.
-
-## Play the Windows beta
-
-1. [Download the ZIP](https://github.com/kidseib/starlight-hollow/releases/download/v0.1.4-beta.1/Starlight-Hollow-Windows-x64.zip) and extract it.
-2. Run **`Starlight-Hollow-Portable.exe`** to play without installing, or **`Starlight-Hollow-Setup.exe`** for a per-user installation.
-3. Open `START-HERE.txt` in the ZIP for the quick-start guide.
-
-The beta targets **Windows 10/11 x64** with a WebGL-capable graphics driver. Both EXEs include the game and its runtime. They are unsigned, so Windows may show an unknown-publisher warning. The core game runs without an account or internet connection. Spoken prompts use the operating system's speech service and need an installed English voice; subtitles remain available when speech is unavailable.
-
-| Action | Control |
+| Subject | How it appears |
 | --- | --- |
-| Walk and look | WASD or arrow keys; mouse |
-| Jump | Space |
-| Use the Star Blaster | Click |
-| Repeat the nearby sign | **R** or the on-screen repeat button |
-| Pause | Esc |
-| Toggle sound | M |
+| Letters & phonics | Letter boards, sound matching, blending a word from its sounds |
+| Words & sentences | Word building, rhymes, syllables, simple sentence reading |
+| Counting & number | Counting pictured things, number order, quantities, compare |
+| Addition & subtraction | Small sums with pictures and counters, then numerals |
+| Memory & patterns | Watch-then-copy sequences and repeating picture patterns |
+| Problem solving | Finding what a tool opens, what a shape fits, where a path leads |
 
-**Beta playtest focus:** Look for the tall beam of light on each island, walk into the shard under it, then take the shape back to the Star Tree and zap the dashed outline that matches it (the Sky Lantern is Momo's 90-sparkle gift). Hanging all six should decorate the tree, add a gold badge and make Pip and Momo celebrate, and the tree should still be decorated after reopening. Also find the striped stall between the meadow landing spot and the Star Tree, zap Momo, and buy or refuse each gift; bought gifts should show as gold badges beside the sparkle counter and still be yours after reopening the game. Then answer a sign wrongly twice and check that a wrong choice fades to grey, leaving two choices and the message "Easier now!", while the right answer stays bright. Walk away and back to confirm every choice returns. Finish an island, take its Starberry, and check that its meadow arch now carries a small star. Also try R with mouse look locked and the repeat button in drag-to-look mode, check offline voice, save and reopen, the installer shortcut, and uninstall. [Send findings through GitHub Issues](https://github.com/kidseib/starlight-hollow/issues/new); please omit children's personal information.
+**Adaptive difficulty is per subject.** The pause screen's grown-up corner records how many signs a child has met and how often the first answer landed, then offers Auto, Gentle or Stretch for reading and for maths independently — because a child can be strong at counting and still be learning letters.
 
-The 0.1.4 beta ZIP (`223,050,292` bytes) has SHA-256 `9af8abebd84968d3ed04a0f5f2dde159a41f0a1286ce117603214c9f3f186fc6`. Every release on the [releases page](https://github.com/kidseib/starlight-hollow/releases) also shows its ZIP's checksum.
+**Not in the public beta yet:** telling time, measurement, money, local two-player co-op, separate child profiles, and a full parent dashboard beyond the pause-screen panel. These are on the roadmap, not in the build.
 
-## What the project is building toward
+## Toys, tools and things to find
 
-The long-term goal is a polished, offline adventure where exploration and playful tools naturally reinforce early reading, maths, memory, and problem-solving. Planned work includes a parent dashboard, telling-time activities, touch controls and an Android build, more free-play activities, and local cooperative play. **These planned features are not in the current Windows beta.** The [game design reference](docs/GAME_DESIGN.md) and [iteration history](docs/ITERATIONS.md) track the current design, known gaps, and test evidence.
+- **Starbolt** — a friendly blaster that wakes signs, rings bells and pops harmless creatures into giggles. Forgiving aim, no damage, no death.
+- **Leafwhisk** — a vacuum that gathers leaf drifts and sips away curtains of sleepy ferns.
+- **Scanning gaze** — look steadily at a listening stone and it tells you a small true fact.
+- **Garden and Moon Arbor** — bring gathered bundles to Pip's garden; fill the bed, then wake the arbor; every wish after that carves the moon a little further through its phases.
+- **Thirteen keepsakes** — two hidden finds on every island and three in the meadow, shown on the meadow shelf and in each island's cairn. Two of them sleep behind doors that want a tool.
+- **Star Tree Workshop** — find a star shard on each island, then hang ornaments on the tree's garlands.
+- **Momo's Wisp Market** — spend sparkles on permanent gifts (magnet, bell, rainbow blaster, sky lantern). No real money, ever.
+- **Hub growth** — keep the meadow changing: lanterns, pennants, pavers, fireflies and a grotto that opens only when all thirteen keepsakes are found.
 
-## How it is built
+## Controls
 
-| Part | Implementation |
-| --- | --- |
-| World and first-person play | Three.js and vanilla JavaScript modules |
-| Development and web build | Vite 5 |
-| Windows app | Electron, packaged as portable and NSIS installer builds by electron-builder |
-| Art and sound | Original procedural geometry, canvas-drawn signs, synthesized music and effects |
-| Font and speech | Bundled Fredoka font; speech through the OS Web Speech API |
-| Save data | Local browser/Electron storage with a previous-checkpoint fallback |
+| Action | Keyboard & mouse | Touch | Gamepad |
+| --- | --- | --- | --- |
+| Walk | WASD / arrows | Thumb pad | Left stick |
+| Look | Mouse | Drag to look | Right stick |
+| Zap / hold tool | Click | Zap button | A / trigger |
+| Switch tool | Q or right-click | Tool button | B |
+| Jump | Space | Jump button | A |
+| Repeat the nearby sign | R | Repeat button | Y |
+| Pause | Esc | Pause button | Start |
 
-The Windows app serves bundled assets through a local Electron protocol and blocks HTTP(S) requests during play. GitHub Actions runs the save, market and sign regression tests, builds both Windows EXEs, checks the ZIP, and attaches it to the prerelease. The project uses Three.js (MIT) and Fredoka (SIL Open Font License); their license texts are included with the Windows app. No external account or gameplay service is required.
+Aiming is assisted on every device, and the suction cone is deliberately wide. Calm motion is in the pause screen and follows the operating system setting by default.
 
-### Build from source
+## Grown-ups: safety and privacy
 
-Install Node.js 22 and npm. The GitHub integration stores the pinned lockfile as base64 chunks in `.github/lock-parts/`; restore it before `npm ci` when using a GitHub checkout:
+- **Offline.** The game runs from local files; the Windows app blocks network requests during play.
+- **No accounts, no ads, no microtransactions, no loot boxes, no energy timers, no push notifications.**
+- **Local saves only**, with a previous-checkpoint fallback so a corrupted write cannot wipe progress.
+- **Speech** uses the operating system's installed English voice; subtitles remain available if no voice is installed. Nothing is recorded or uploaded.
+- **No personal data is collected.** Please leave children's personal information out of GitHub issues.
+
+## Roadmap and status
+
+**Done and playable in development:** the seven places above, 29 learning signs, 13 keepsakes, the garden → arbor → moon-phase loop, hub growth, the Star Tree Workshop, four market gifts, the Starberry quest and ending, four input paths, calm motion, and the Lantern Hollow second world with its unlock, two prizes and fern-door puzzle.
+
+**Next, in priority order:** publish the current source and a fresh Windows build; a device-tested Android build; local two-player co-op; child profiles and a fuller grown-up dashboard; telling-time and measurement activities; more environmental learning puzzles so knowledge is used on the world rather than on boards; richer creature behaviour and character voice.
+
+**Known limits:** the published beta predates the newest systems; the voice is the operating system's speech synthesis, so pronunciation warmth varies by machine; Android and controller hardware have not been tested; islands are compact and assets repeat.
+
+## Build from source
+
+Install Node.js 22 and npm. The public repository stores the pinned lockfile as base64 chunks in `.github/lock-parts/`; restore it before `npm ci` when using a GitHub checkout:
 
 ```powershell
 $parts = Get-ChildItem .github/lock-parts/*.txt | Sort-Object Name
@@ -73,4 +100,19 @@ npm ci
 npm run dev
 ```
 
-Open the local Vite address shown in the terminal to play the development version. Run `npm run build` for the web bundle or `npm run build:windows` on Windows to make the portable EXE, installer, and ZIP. The release workflow is in [`.github/workflows/windows-beta.yml`](.github/workflows/windows-beta.yml).
+```bash
+node --test tests/*.test.js   # 92 tests: saves, progression, signs, tools, gates, the hollow
+npm run build                 # production web bundle
+npm run build:windows         # Windows: portable EXE, installer and ZIP in artifacts/
+```
+
+| Part | Implementation |
+| --- | --- |
+| World and first-person play | Three.js and vanilla JavaScript modules |
+| Development and web build | Vite 5 |
+| Windows app | Electron, packaged with electron-builder |
+| Art and sound | Original procedural geometry, canvas-drawn signs, synthesised music and effects |
+| Font and speech | Bundled Fredoka font; speech through the OS Web Speech API |
+| Save data | Local storage with a previous-checkpoint fallback |
+
+Three.js (MIT) and Fredoka (SIL Open Font License) are used under their licenses; their texts ship with the Windows app.
