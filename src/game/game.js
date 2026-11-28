@@ -59,7 +59,7 @@ import {
   ARBOR_TOAST,
   ARBOR_WAKE_TOAST,
   WISH_TOAST,
-  WISH_LINES,
+  moonPhase,
   BUNDLE_NAMES,
   BASKET_MAX,
   GIFT_MAX,
@@ -1297,7 +1297,7 @@ export class Game {
       const [text, icon] = WISH_TOAST;
       this.hud?.toast(text, icon);
       this.audio?.wish();
-      const line = WISH_LINES[(Math.max(1, this.wishes) - 1) % WISH_LINES.length];
+      const line = moonPhase(this.wishes).line;
       this.hud?.showBubble(line, '🐣');
       this.voice?.say(line);
     } else {

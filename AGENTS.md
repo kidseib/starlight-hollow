@@ -79,8 +79,13 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   every line), art in `src/world/garden.js`, placement in `GARDEN` (`src/content.js`), save keys
   `bundles`, `gifts`, `arbor` and `wishes`. A full bed must never refuse: `_giveGift` routes to the
   arbor once `allSpotsFull`, and the arbor must keep accepting gifts after it wakes (each one is a
-  wish) so a basket can never fill with nowhere to go. Keep one sound per event — family chime for a
-  light, `audio.arbor()` for the waking, `audio.wish()` for a wish — plus one toast and one Pip line.
+  wish) so a basket can never fill with nowhere to go. `wishCount` sanitises to `WISH_CAP` and must not
+  clamp at `WISH_MAX`: the firefly flock stops at twelve for legibility, the wishes do not. Every wish
+  must also change something visible: `MOON_PHASES` + `moonPhase(wishes)` carry that, and the phase copy
+  belongs in the data, never hardcoded in `game.js`. Keep the lanterns honey-warm in every phase (a cool
+  lamp read as "the lights went out"), carry the phase on the bead's size, silhouette and halo colour,
+  and keep the pure-copy/sanitised-rules split. Keep one sound per event — family chime for a light,
+  `audio.arbor()` for the waking, `audio.wish()` for a wish — plus one toast and one Pip line.
   An empty basket is the only refusal: answer with `ARBOR_EMPTY` or `GIFT_EMPTY` and nothing else (no
   sound, no particles, nothing spent). Keep the leaf drift out of the basket (`BUNDLE_KINDS` is
   petal/dust/mote only) and keep the basket chip hidden while it is empty. The garden is optional

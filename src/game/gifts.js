@@ -14,6 +14,12 @@
 // in, and every gift after that becomes a wish that calls one more firefly. The
 // arbor never refuses a gift for being too full, so gathering never ends in a
 // basket with nowhere to go.
+//
+// Past the fireflies the wishes still change the place: the moon bead goes
+// through visible phases (full, waning west, half, crescent, new) and every
+// lantern takes the phase's colour, so the twenty-first gift looks different
+// from the twelfth. The firefly flock stops at twelve so the constellation stays
+// legible; the moon keeps turning for as long as a child keeps whisking.
 
 /** The families that leave something in the basket. Leaves stay a celebration. */
 export const BUNDLE_KINDS = ['petal', 'dust', 'mote'];
@@ -38,7 +44,45 @@ export const ARBOR_MAX = 6;
 /** Waking the arbor invites a moon moth; each wish after that calls a firefly. */
 export const WISH_MAX = 12;
 
+/** Wishes themselves are never refused; this only keeps a wild save sane. */
+export const WISH_CAP = 999;
+
 export const ARBOR_NAME = 'the Moon Arbor';
+
+/**
+ * The arbor's moon as it turns, one step per wish. The bead swells and shrinks
+ * with `scale` and narrows to a sliver with `width` - a round bead shrinking only
+ * read as "a small moon", never as a crescent - and takes `glow`, which also
+ * colours and spreads the halo: cream, gold, amber, rose, then blue for the dark
+ * moon, and the lanterns take
+ * and the halo spreads with it. The lanterns stay honey-warm the whole way round
+ * (a blue lamp read as "the lanterns went out" at gameplay distance, so the
+ * colour change lives on the moon's own halo instead). A silhouette swap was
+ * tried first and read as an eyeball, so size and halo carry the phase. Lines are
+ * short enough to follow by ear.
+ */
+export const MOON_PHASES = [
+  {
+    id: 'full', name: 'a full moon', line: 'The moon is full and round. That is my favourite shape!',
+    glow: 0xfff4d6, lamp: 0xffa93d, bright: 2.4, scale: 1.16, width: 1,
+  },
+  {
+    id: 'gibbous', name: 'a waning moon', line: 'The moon is getting smaller. It still smiles, mind you.',
+    glow: 0xffd98f, lamp: 0xffa235, bright: 2.1, scale: 1.06, width: 0.93,
+  },
+  {
+    id: 'half', name: 'a half moon', line: 'A half moon! Look, it is exactly half asleep.',
+    glow: 0xffb45e, lamp: 0xff9a2c, bright: 1.8, scale: 0.96, width: 0.78,
+  },
+  {
+    id: 'crescent', name: 'a crescent moon', line: 'A crescent moon - a little silver boat above my garden.',
+    glow: 0xff9a7a, lamp: 0xff8f26, bright: 1.55, scale: 0.86, width: 0.46,
+  },
+  {
+    id: 'new', name: 'a new moon', line: 'The moon has gone dark. It is only hiding - the lanterns will keep us cosy.',
+    glow: 0x9fd8ff, lamp: 0xffa93d, bright: 0.5, scale: 0.62, width: 0.3,
+  },
+];
 
 export const GIFT_SPOTS = [
   { kind: 'petal', id: 'posy-bed', label: 'the posy bed', icon: '🌸', max: GIFT_MAX },
@@ -103,7 +147,13 @@ export function arborStage(raw) {
 }
 
 export function wishCount(raw) {
-  return clamp(raw, WISH_MAX);
+  return clamp(raw, WISH_CAP);
+}
+
+/** Which moon the arbor is showing for this many wishes. */
+export function moonPhase(rawWishes) {
+  const n = wishCount(rawWishes);
+  return MOON_PHASES[n % MOON_PHASES.length];
 }
 
 /**
@@ -129,7 +179,7 @@ export function giveArbor(bundles, arbor, wishes, kind) {
   }
   return {
     ok: true, reason: null, bundles: shelf, arbor: stage,
-    wishes: Math.min(WISH_MAX, lights + 1), stage, woke: false, wish: true,
+    wishes: Math.min(WISH_CAP, lights + 1), stage, woke: false, wish: true,
   };
 }
 
@@ -224,11 +274,6 @@ export const ARBOR_WAKE_TOAST = ['The Moon Arbor is awake!', '🦋'];
 export const WISH_TOAST = ['A wish for the arbor!', '🌠'];
 
 /** After it wakes, the arbor keeps taking gifts as wishes, one firefly each. */
-export const WISH_LINES = [
-  'A wish for the arbor! The moon moth carries it up.',
-  'Another wish — a firefly came to keep it.',
-  'The arbor is full of little lights. There is always room for one more.',
-];
 
 /** A spot's stored stage, for the world and the HUD. */
 export function giftStage(gifts, kind) {

@@ -10,7 +10,9 @@ import {
   ARBOR_TOAST,
   ARBOR_WAKE_TOAST,
   WISH_MAX,
-  WISH_LINES,
+  MOON_PHASES,
+  moonPhase,
+  WISH_CAP,
   WISH_TOAST,
   BASKET_MAX,
   GIFT_MAX,
@@ -165,12 +167,16 @@ test('the arbor takes every gift once the bed is full and never turns one away',
   assert.equal(first.wishes, 1);
   assert.equal(first.bundles.petal, 9 - ARBOR_MAX - 1);
 
-  // Past the last firefly it still accepts and still spends — never a dead end.
+  // Past the last firefly it still accepts, still spends, and the moon moves.
   const full = giveArbor({ petal: 1 }, ARBOR_MAX, WISH_MAX, 'petal');
   assert.equal(full.ok, true);
   assert.equal(full.wish, true);
-  assert.equal(full.wishes, WISH_MAX);
+  assert.equal(full.wishes, WISH_MAX + 1);
   assert.equal(full.bundles.petal, 0);
+  assert.notEqual(moonPhase(full.wishes).id, moonPhase(WISH_MAX).id, 'a gift past the flock still changes the moon');
+  const capped = giveArbor({ petal: 1 }, ARBOR_MAX, WISH_CAP, 'petal');
+  assert.equal(capped.ok, true);
+  assert.equal(capped.wishes, WISH_CAP, 'a wild wish count is clamped, never refused');
 
   // An empty basket is the only refusal, and it changes nothing.
   const empty = giveArbor({ petal: 0 }, 2, 3, 'petal');
@@ -196,7 +202,8 @@ test('arbor state is clamped, and its copy is distinct from every other line', (
   assert.equal(arborStage('3'), 3);
   assert.equal(arborStage(99), ARBOR_MAX);
   assert.equal(arborStage(undefined), 0);
-  assert.equal(wishCount(99), WISH_MAX);
+  assert.equal(wishCount(99), 99, 'wishes keep counting so the moon can keep turning');
+  assert.equal(wishCount(5000), WISH_CAP, 'a wild wish count is clamped');
   assert.equal(wishCount('2.9'), 2);
   assert.equal(wishCount(null), 0);
 
@@ -206,10 +213,26 @@ test('arbor state is clamped, and its copy is distinct from every other line', (
   for (const [text, icon] of [ARBOR_TOAST, ARBOR_WAKE_TOAST, WISH_TOAST]) {
     assert.ok(text.length > 4 && icon, 'each arbor toast has words and an icon');
   }
-  for (const line of WISH_LINES) assert.ok(line.length > 10 && line.endsWith('.'));
+  for (const phase of MOON_PHASES) {
+    assert.ok(phase.line.length > 20 && /[.!]$/.test(phase.line), 'a phase line reads as a spoken sentence');
+    assert.ok(Number.isFinite(phase.glow) && Number.isFinite(phase.bright), 'a phase has a glow and a brightness');
+    assert.ok(Number.isFinite(phase.lamp) && phase.scale > 0 && phase.scale < 1.5, 'a phase has a lamp colour and a size');
+    assert.ok(phase.lamp % 256 < 128, 'the lanterns stay honey-warm in every phase');
+    if (phase.id === 'new') assert.ok(phase.bright < 1 && phase.scale < 0.7, 'the new moon goes small and dark');
+    else assert.ok(phase.scale > 0.8, 'the lit moon stays big enough to read at gameplay distance');
+  }
+  assert.equal(moonPhase(0).id, 'full', 'the arbor wakes under a full moon');
+  assert.equal(new Set(MOON_PHASES.map((p) => p.scale)).size, MOON_PHASES.length, 'every phase has its own size');
+  assert.equal(new Set(MOON_PHASES.map((p) => p.glow)).size, MOON_PHASES.length, 'every phase has its own halo colour');
+  assert.equal(new Set(MOON_PHASES.map((p) => p.width)).size, MOON_PHASES.length, 'every phase has its own silhouette');
+  assert.ok(MOON_PHASES.find((p) => p.id === 'crescent').width < 0.6, 'the crescent really narrows to a sliver');
+  assert.notEqual(moonPhase(1).glow, moonPhase(0).glow, 'the first wish changes the lantern colour');
+  assert.equal(moonPhase(MOON_PHASES.length).id, moonPhase(0).id, 'the moon cycles back to full');
+  assert.ok(MOON_PHASES.includes(moonPhase(WISH_CAP + 5)), 'a wild value still picks a real phase');
+  assert.equal(moonPhase(-8).id, 'full', 'junk falls back to the full moon');
   assert.ok(ARBOR_HINT.includes('arbor'), 'the hint names the arbor');
   assert.ok(ARBOR_EMPTY.includes('arbor') && ARBOR_EMPTY.length > 30, 'the empty pointer names the arbor and every family');
 
-  const flat = [...ARBOR_LINES, ...WISH_LINES, ...BUNDLE_KINDS.flatMap((k) => GIFT_LINES[k])];
+  const flat = [...ARBOR_LINES, ...MOON_PHASES.map((p) => p.line), ...BUNDLE_KINDS.flatMap((k) => GIFT_LINES[k])];
   assert.equal(new Set(flat).size, flat.length, 'no shared copy between garden lines');
 });

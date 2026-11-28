@@ -55,7 +55,8 @@ test('learning progress and grown-up settings survive a reload', () => {
   writeSave({ sparkles: 4, bundles: ['petal'], gifts: 'lots' });
   assert.deepEqual(loadSave().bundles, { petal: 0, dust: 0, mote: 0 });
   assert.deepEqual(loadSave().gifts, { petal: 0, dust: 0, mote: 0 });
-  // The Moon Arbor round-trips, clamped to its six lights and twelve fireflies.
+  // The Moon Arbor round-trips: six lights, and wishes that keep counting so the
+  // moon can keep turning; a wild value is clamped, not refused.
   writeSave({ sparkles: 4, arbor: 4, wishes: 7 });
   assert.equal(loadSave().arbor, 4);
   assert.equal(loadSave().wishes, 7);
@@ -64,7 +65,9 @@ test('learning progress and grown-up settings survive a reload', () => {
   assert.equal(loadSave().wishes, 0);
   writeSave({ sparkles: 4, arbor: 'lots', wishes: 99 });
   assert.equal(loadSave().arbor, 0);
-  assert.equal(loadSave().wishes, 12);
+  assert.equal(loadSave().wishes, 99);
+  writeSave({ sparkles: 4, arbor: 6, wishes: 5000 });
+  assert.equal(loadSave().wishes, 999);
   // Junk in the new fields is thrown away rather than trusted.
   writeSave({ sparkles: 1, learning: { letters: { attempts: 'lots' } }, difficulty: { letters: 'impossible', extra: 'gentle' } });
   assert.deepEqual(loadSave().learning.letters, { attempts: 0, firstTry: 0, misses: 0 });

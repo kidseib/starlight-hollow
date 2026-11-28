@@ -16,6 +16,12 @@ When the drift is empty it pops out a little ribboned bundle, and Pip keeps it s
   often as you like. The first bundle of each play session is worth a few sparkles.
 - Calm motion makes the leaves fly straight and holds the whisk still.
 
+**The moon keeps turning.** The Moon Arbor's moon now changes with every wish you make: full and
+round at first, then a little waning, then half, then a thin crescent, then a dark new moon with a cool
+blue halo, and round again. The lanterns stay cosy and warm the whole way round, and the fireflies you
+called stay exactly where they are. Keep whisking for as long as you like — the sky above the arbor
+always has something new to show you.
+
 **The Moon Arbor.** When Pip's flower bed, sun bowl and lantern post are all full, look behind
 them: there is an arbor waiting, with six paper lanterns hanging dark. Every bundle you bring after
 the garden is full hangs one light, and when the sixth goes up the arbor wakes — a moon moth moves in

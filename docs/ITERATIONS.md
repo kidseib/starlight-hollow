@@ -4,6 +4,16 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 25 - The moon turns, and the loop is played
+
+- **Post-cap wishes now change the arbor.** `MOON_PHASES` in `src/game/gifts.js` (full, waning, half, crescent, new); `moonPhase(wishes)`; each wish moves the bead one step, shrinking and narrowing it (`scale`, `width`) and recolouring and spreading its halo (`glow`), with a matching `lamp` tint. `WISH_CAP` 999 is a sanitiser only; the firefly flock still stops at twelve so the constellation stays legible. Copy lives in the phase data, not `game.js`.
+- **Three attempts, third kept.** A sliding dark bead read as a googly eye; blue lanterns read as "the lights went out"; the kept method keeps lanterns honey-warm and puts the phase on bead size/silhouette + halo colour + one Pip line. Bead enlarged to 0.145 and the crescent narrowed to 0.46 width so it reads from the path.
+- **Toast clutter**: `Hud.toast` refreshes a repeated line instead of stacking identical cards.
+- **Proof by playing**: Leafwhisk suction gathered 6 petals, 6 sun puffs and 6 motes in the grove, falls and words (basket 9/8/8); nine real aimed gifts filled the bed 3/3/3 with one sound/toast/line each; six more overflowed into the arbor (five family chimes, then one `audio.arbor()` wake with no chime); four real wishes each gave one `audio.wish()`, one toast and one phase line and moved the moon; no events fired on idle frames or on an empty-basket zap.
+- **State**: reload restored arbor 6 / wishes 4 / new moon / 6 lit / moth / 4 fireflies; legacy save booted arbor 0 with a hidden chip; calm motion held the moth and the glow steady; keyboard, mouse, touch and gamepad all reached walk, look, zap, switch, jump, hold and pause/resume.
+- **Tests/build**: 80 pass, build exit 0. Captures `artifacts/iter25-*.png`.
+- **Not verified**: real Android/controller hardware, Windows build; GitHub push still blocked on a user credential.
+
 ## Iteration 24 - The Moon Arbor
 
 - **The dead end closed:** once all three garden spots are full, a zap at the garden sends the gift to a **Moon Arbor** behind the bed — two vine-clad posts, an arch and six paper lanterns, visible and unlit from the first visit. Rules in `src/game/gifts.js` (`allSpotsFull`, `giveArbor`, `ARBOR_MAX` 6, `WISH_MAX` 12), art in `src/world/garden.js` (`_buildArbor`, `setArbor`, `arborFlourish`).

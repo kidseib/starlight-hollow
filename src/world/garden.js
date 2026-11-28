@@ -9,7 +9,15 @@
 import * as THREE from 'three';
 import { makeSprite } from './textures.js';
 import { reducedMotion } from '../engine/motion.js';
-import { ARBOR_MAX, GIFT_MAX, WISH_MAX, arborStage, wishCount, sanitizeGifts } from '../game/gifts.js';
+import {
+  ARBOR_MAX,
+  GIFT_MAX,
+  WISH_MAX,
+  arborStage,
+  moonPhase,
+  wishCount,
+  sanitizeGifts,
+} from '../game/gifts.js';
 
 const mat = (color, opts = {}) =>
   new THREE.MeshStandardMaterial({
@@ -451,8 +459,8 @@ export class Garden {
     moonCord.position.set(0, 1.98, 0);
     this.arborGroup.add(moonCord);
     this.arborMoon = new THREE.Mesh(
-      new THREE.SphereGeometry(0.11, 8, 6),
-      mat(0xffe9b0, { roughness: 0.3, emissive: 0xffcf6a, emissiveIntensity: 0.3, transparent: true, opacity: 0.95 })
+      new THREE.SphereGeometry(0.145, 10, 8),
+      mat(0xffe9b0, { roughness: 0.3, emissive: 0xffcf6a, emissiveIntensity: 0.3, transparent: true, opacity: 0.96 })
     );
     this.arborMoon.scale.set(1, 0.82, 0.5);
     this.arborMoon.position.set(0, 1.78, 0);
@@ -530,24 +538,32 @@ export class Garden {
     const calm = reducedMotion();
     this.arborStage = stage;
     this.wishLights = wishes;
+    const phase = moonPhase(wishes);
+    this.moonPhaseId = phase.id;
     this.arborLights.forEach((light, i) => {
       const lit = i < stage;
       light.cage.material.color.setHex(lit ? 0xffb347 : 0x9a8f7b);
-      light.cage.material.emissive.setHex(lit ? 0xff7a12 : 0x000000);
+      light.cage.material.emissive.setHex(lit ? phase.lamp : 0x000000);
       light.cage.material.emissiveIntensity = lit ? 2.6 : 0.02;
       light.cage.material.opacity = lit ? 0.96 : 0.8;
+      light.glow.material.color.setHex(phase.lamp);
       light.glow.material.opacity = lit ? (calm ? 0.55 : 0.8) : 0;
     });
     const awake = stage >= ARBOR_MAX;
     this.arborMoonGlow.material.opacity = awake ? 0.9 : 0.06 + stage * 0.035;
-    this.arborMoon.material.emissiveIntensity = awake ? 1.9 : 0.25 + stage * 0.08;
+    this.arborMoonGlow.material.color.setHex(phase.glow);
+    this.arborMoon.material.color.setHex(phase.glow);
+    this.arborMoon.material.emissive.setHex(phase.glow);
+    this.arborMoon.material.emissiveIntensity = awake ? phase.bright : 0.25 + stage * 0.08;
+    this.arborMoon.scale.set(phase.scale * phase.width, phase.scale * 0.82, phase.scale * 0.5);
+    this.arborMoonGlow.scale.setScalar(1.1 + phase.scale * 0.95);
     this.moth.visible = awake;
     this.mothGlow.visible = awake;
     this.mothGlow.material.opacity = awake ? 0.35 : 0;
     this.mothWings[0].rotation.z = calm ? 0.35 : 0.6;
     this.mothWings[1].rotation.z = -(calm ? 0.35 : 0.6);
     this.fireflies.forEach((fly, i) => {
-      const on = i < wishes;
+      const on = i < Math.min(WISH_MAX, wishes);
       fly.visible = on;
       fly.material.opacity = on ? 0.72 : 0;
       fly.userData.base = i;

@@ -5,6 +5,92 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 25 — The moon keeps turning, and the loop played for real (2026-11-28)
+
+**Chosen because** iteration 24 left one flat note in its own log: past twelve fireflies the arbor still
+took wishes but stopped showing anything new. The wish loop needed an authored upper region, and the
+whole loop — gathering, filling, overflowing, wishing — needed to be proved by playing it rather than by
+seeding state.
+
+**Hole 1: what a wish adds after the flock is full**
+
+The arbor's moon now turns one step per wish. `MOON_PHASES` in `src/game/gifts.js` holds five authored
+phases (full, waning, half, crescent, new). Each wish moves the bead one step: the bead **shrinks and
+narrows** (`scale`, `width`), its **halo changes colour and spread** (`glow`, cream → gold → amber → rose
+→ blue) and the lanterns warm or cool a shade with `lamp`. The sixth lantern and the moth are unchanged,
+the firefly flock still caps at twelve so the constellation stays legible, and the moon simply keeps
+turning after that — no counter, no quiz, no gate, nothing taken away for ignoring it. `WISH_CAP` (999)
+is only a sanitiser so a wild save cannot overflow; `wishCount` no longer clamps at twelve.
+
+*Three looks before one worked.* (1) A dark bead sliding across the moon as a silhouette read as a
+googly eye at gameplay distance. (2) Making the lanterns themselves go cool blue for the new moon read as
+"the lanterns have gone out" — warm cream lanterns are part of the arbor's established look. (3) The
+method that stuck: keep the lanterns honey-warm in every phase, and carry the phase on the bead's size
+and silhouette plus the halo's colour, with one short Pip line naming it. The bead was then enlarged
+(radius 0.11 → 0.145) so the crescent still reads from the path, and the crescent was narrowed to 0.46
+of its width so it is genuinely a sliver instead of a small ball.
+
+The copy lives in the phase data, not in `game.js`: `_giveArbor` speaks `moonPhase(this.wishes).line`.
+One sound (`audio.wish()`), one toast and one line per wish; a light still keeps its family chime, the
+waking still plays only `audio.arbor()`, and an empty basket still answers with `ARBOR_EMPTY` and
+nothing else. `save.wishes` round-trips up to `WISH_CAP`, junk clamps, and legacy saves wake to a full
+moon with a sleeping arbor.
+
+Also fixed in passing: three quick wishes used to stack three identical "A wish for the arbor!" cards.
+`Hud.toast` now refreshes the newest card when the same line repeats instead of adding another.
+
+**Hole 2: playing the loop the way a child does**
+
+Everything below is 1280×720, 16:9, in the same authenticated page, with the real tools:
+
+- **Gathered with the Leafwhisk in the world.** Starting from a normal save with a small basket, the
+  held-trigger suction loop was run in the grove, the falls and the words: six petals, six sun puffs and
+  six mote lanterns, letting each patch regrow between rounds. Basket 9/8/8, chip reading
+  `🌸9 🌾8 ✨8`.
+- **Filled all three spots with real gifts** — nine zaps aimed at the spots, no seeding: every gift gave
+  exactly one `audio.give(kind)`, one toast, one Pip bubble and one spoken line; bed 3/3/3, basket 6/5/5.
+  The "my garden is full" hint arrived 2.2 s later as a bubble and a line only.
+- **Overflowed into the arbor**: five further gifts each gave one family chime, one "A light for the
+  arbor!" toast and one line; the sixth gave **no** family chime, one `audio.arbor()`, one wake toast and
+  the waking line. Six lanterns lit, moth in, phase full.
+- **Kept going past the last lantern** for four real wishes: each one gave exactly one `audio.wish()`,
+  one toast and one phase line, and moved the moon: gibbous (bead 0.99 wide, lamp `ffa235`), half (0.75,
+  `ff9a2c`), crescent (0.40, `ff8f26`), new (0.19, cool halo `9fd8ff` with the lanterns still warm).
+  Thirty idle frames after the last gift produced no further audio, voice or toast events — nothing
+  double-fires.
+- **No-op silence**: with the bed full and the basket empty, a zap produced one bubble and one line
+  ("The arbor loves any bundle…"), no sound, no toast, and left arbor, wishes and the basket untouched.
+- **Reload**: restored `arbor 6`, `wishes 4`, the new moon, six lit lanterns, the moth and four
+  fireflies, with no line replayed. **Legacy save** (`{zone, sparkles:15, stars, visited}`) booted at 15
+  sparkles, `arbor 0`, empty basket, hidden chip, no errors.
+- **Calm motion**: at the crescent the moth sits at `[0, 1.24, 0.7]`, the lantern glow is steady, the
+  fireflies stop orbiting, and the phase, six lights and the moth all remain.
+- **Controls after the change**: keyboard (walk 3.43 m, jump 0.96 m, tool switch, trigger hold,
+  pause/resume), mouse (look 0.32 rad, one bolt, tool switch), emulated touch (2.59 m, 0.31 rad, one
+  bolt, jump 0.88 m, tool switch), injected gamepad (2.21 m, 0.54 rad yaw, 0.29 rad pitch, A jump 1.12 m,
+  X zap, B switch, Start pause and resume).
+- **Untouched systems spot-checked**: Leafwhisk gather still stocks the basket and shows the chip, a bolt
+  still wakes a crystal, the scanning gaze still registers the listening stone, and the per-subject
+  difficulty table still reads `auto` for letters, words, numbers, patterns and memory.
+- **Zero console or page errors** across the whole session.
+
+**Captures** (1280×720): `artifacts/iter25-full-garden.png`, `iter25-overflow.png`,
+`iter25-arbor-awake.png`, `iter25-post-cap.png`, `iter25-calm.png`, `iter25-moon-new.png`,
+`iter25-reload.png`, `iter25-legacy.png`, `iter25-gather.png`.
+
+**Tests and build:** `node --test tests/*.test.js` 80 pass (phase table, cycle wrap, sanitiser cap,
+per-gift colour/size, wish counts past the flock are new); `npm run build` exit 0.
+
+**Open**
+
+- The moon's phase changes are a deliberate quiet read: at six metres the crescent is a small sliver
+  with a rose halo rather than an unmistakable shape. It is legible up close and through Pip's line, but
+  a moon that physically waxes (a second lit bead behind a mask) is still future work.
+- The garden and arbor remain meadow-only; gathering elsewhere has no structure of its own to grow.
+- The distant grotto veil still reads as a translucent pane rather than fabric (roadmap 2).
+- Android/controller hardware and a Windows build remain unverified; GitHub push is still blocked on a
+  user credential.
+
 ## Iteration 24 — The Moon Arbor: no bundle is ever spare (2026-11-28)
 
 **Chosen because** iteration 23 finished Pip's garden and left one honest hole in its own notes:

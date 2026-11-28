@@ -254,17 +254,24 @@ gift to the arbor instead, choosing whichever family the basket actually holds. 
 - Each of the first `ARBOR_MAX` (6) gifts hangs one lantern. The sixth reports `woke`: `audio.arbor()`
   plays (instead of the family chime), the toast is "The Moon Arbor is awake!", and a moon moth moves
   in under the arch and stays.
-- Every gift after that is a wish: `audio.wish()`, a wish toast and line, and one more firefly around
-  the arbor up to `WISH_MAX` (12). At the cap the gift is still spent and still plays its light and
-  sound; it just does not add another firefly. There is no counter in the HUD and no refusal for
-  being full.
+- Every gift after that is a wish: `audio.wish()`, a wish toast and one phase line, and one more
+  firefly around the arbor up to `WISH_MAX` (12). The fireflies cap so the constellation stays
+  legible, but the wishes never do — `wishCount` sanitises to `WISH_CAP` (999) only so a wild save
+  cannot overflow.
+- Each wish also turns the moon one step through `MOON_PHASES`: full, waning, half, crescent, new, then
+  round again. The bead shrinks (`scale`) and narrows (`width`) until the crescent is a real sliver, its
+  halo changes colour and spread (`glow` — cream, gold, amber, rose, blue), and the lanterns warm or cool
+  a shade with `lamp`. The fireflies, the six lights and the moth stay exactly as they were, so the
+  place stays readable while the sky keeps changing. There is no counter in the HUD, no refusal for
+  being full, and nothing is lost by ignoring it.
 - An empty basket is the only refusal, and it answers with `ARBOR_EMPTY` (which families count) and
-  nothing else — no sound, no particles, nothing spent.
+  nothing else — no sound, no particles, nothing spent. `Hud.toast` refreshes a repeated line rather
+  than stacking identical cards, so quick wishes do not build a wall of toasts.
 - The last spot filling speaks `ARBOR_HINT` once, 2.2 s after that gift's own line, so the arbor is
   discovered by doing what a child already does.
 
-`save.arbor` (0–6) and `save.wishes` (0–12) are sanitised on load and default to zero, so a legacy
-save wakes to a sleeping arbor. Under `reducedMotion()` the lantern glow is steady, the moth holds a
+`save.arbor` (0–6) and `save.wishes` (0–`WISH_CAP`) are sanitised on load and default to zero, so a
+legacy save wakes to a sleeping arbor and a full moon. Under `reducedMotion()` the lantern glow is steady, the moth holds a
 fixed hover with its wings open and the fireflies stop orbiting.
 
 ### Controls on every device

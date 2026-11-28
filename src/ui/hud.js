@@ -213,6 +213,12 @@ export class HUD {
 
   toast(text, icon = '\u2728', image = null) {
     if (!this.toastStack) return;
+    // The same line twice in a row (three quick wishes) refreshes the card
+    // instead of stacking a column of identical ones.
+    if (this._toastEl && this._toastEl.isConnected && this._toastText === text) {
+      this._restartToast(this._toastEl);
+      return;
+    }
     const el = document.createElement('div');
     el.className = 'toast';
     const badge = document.createElement('span');
@@ -231,7 +237,14 @@ export class HUD {
     label.textContent = text;
     el.append(badge, label);
     this.toastStack.appendChild(el);
-    setTimeout(() => {
+    this._toastEl = el;
+    this._toastText = text;
+    this._restartToast(el);
+  }
+
+  _restartToast(el) {
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => {
       el.classList.add('out');
       setTimeout(() => el.remove(), 450);
     }, 2800);
