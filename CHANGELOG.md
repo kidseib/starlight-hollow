@@ -38,6 +38,17 @@ chime, a line from Pip and ten sparkles.
   sparkles. Until then it whispers how many keepsakes would wake it.
 - The keepsake bench is evened out, so the pebble and shell no longer read smaller
   than the egg and drum.
+- The Moonwell Grotto's arch is now carved stone: plinths, banded columns, a keystone with a star cut
+  into it, a little lantern on each column, ivy at the corners and a mossy threshold. Rock walls
+  close the back of the grotto, and the moonwell has lily pads, a rim of stones, ferns, mushrooms and
+  a stone bench.
+- The clearing around the grotto is dressed with trees, shrubs and a worn stone path, so it reads as
+  a hidden place rather than an arch standing alone.
+- The keepsakes read better at a glance: an open book with pages, a rounder pebble, a kite tied to its
+  dish, a flatter shell and a warmer drum — still one tidy row.
+- Lanterns glow softly instead of blooming into white, and the flower beds are proper wooden planters
+  with little flowers in them.
+
 - Each island also shows what you found *there*: a little stone cairn beside the
   way home holds that island's keepsakes. The meadow's Discovery Shelf has grown
   into a stepped stand with one dish per island and a row of gems that light as

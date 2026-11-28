@@ -5,22 +5,17 @@ every development iteration; `docs/GAME_DESIGN.md` tracks the current design.
 
 ## Now (next two iterations)
 
-1. **Give the grotto arch real stone** — the pillars are plain cylinders; carving bands, a keystone
-   and a couple of wall lanterns would bring it up to the rest of the hub.
-2. **A second hub growth step** — lanterns, flags, beds and the grotto are the first pass; a path that
-   visibly widens or a bridge that appears at halfway would make mid-progress feel different again.
-3. **A real-device pass** — touch and gamepad were proved with emulated pointer events and an injected
+1. **A mid-collection growth step** — lanterns, flags, beds and the grotto are the first pass; a path
+   that visibly widens or a bridge that appears around 7/13 would make halfway feel different again.
+2. **Signs that use the gadgets** — a vacuum-able leaf pile, a blast-able crystal and a scanner-only
+   landmark would give the tools scenery to point at instead of only floating signs.
+3. **Secrets behind a small puzzle** — every find is still a walk-in; two could sit behind a
+   vacuum-able leaf pile or a blast-able crystal so exploration and gadgets meet.
+4. **A real-device pass** — touch and gamepad were proved with emulated pointer events and an injected
    pad; nothing has run on an Android phone or a physical controller, and no Windows build was made.
-2. **Scale up the small keepsakes** — the pebble and the shell read smaller than the egg and drum on
-   the bench; a per-trophy display scale would even the row out.
-3. **Secrets that use the gadgets** — every find is a walk-in today; two or three could sit behind a
-   vacuum-able leaf pile or a blast-able crystal so the gadgets have a reason to be pointed at
-   scenery.
-2. **Grown-up corner follow-ups** — it now shows per-subject tallies and difficulty buttons; next
-   comes a short list of the signs last met, so a parent can see *what* was hard, not just how many.
-3. **Star Tree follow-ups** - a second ornament set and a small "which shape is
-   missing?" sign, so the workshop keeps giving after the first tree is full.
-4. **A real Windows playtest of the current beta** — both editions, narration with the network off,
+5. **Grown-up corner follow-ups** — it shows per-subject tallies and difficulty buttons; next comes a
+   short list of the signs last met, so a parent can see *what* was hard, not just how many.
+6. **A real Windows playtest of the current beta** — both editions, narration with the network off,
    save and reopen, installer shortcut, uninstall.
 
 ## Next

@@ -147,11 +147,14 @@ a banner, a Pip line spoken aloud, ten sparkles and a companion cheer.
 an island's bunting flag the first time anything is found there, its flower bed blooming when that
 island is fully collected, and the **Moonwell Grotto** behind the Star Tree.
 
-The grotto is shut until all thirteen are home: a shimmering veil covers its arch and walking at it
-stops the child 5.2 m out while Pip says how many keepsakes would wake it. At 13/13 the veil parts,
-stepping stones appear, and the grotto holds a moonwell with rim stones, two crystals, fireflies and a
-banded chest. Walking to the chest gives 30 sparkles, a banner, a burst and a Pip line, stored as
-`save.grotto` (only a literal `true` reopens it after a reload).
+The arch is carved stone — plinth, banded shaft, capital, keystone with a star inset, a wall lantern
+on each column, ivy and a seamed threshold — and a boulder outcrop closes its back, so it reads as a
+place from the walk-up path rather than a gate in a lawn. The grotto is shut until all thirteen are
+home: a shimmering veil covers its arch and walking at it stops the child 5.2 m out while Pip says how
+many keepsakes would wake it. At 13/13 the veil parts, stepping stones appear, and the grotto holds a
+moonwell with rim stones and lily pads, two crystals, fireflies, ferns, mushrooms, a stone bench and a
+banded chest on a cut stone footing. Walking to the chest gives 30 sparkles, a banner, a burst and a
+Pip line, stored as `save.grotto` (only a literal `true` reopens it after a reload).
 
 Everything is derived from `sanitizeSecrets(save.secrets)`, so a save with missing, partial, unknown
 or malformed ids simply grows less: no throw, no wiped save, and no display that needs keys the save

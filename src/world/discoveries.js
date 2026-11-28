@@ -79,28 +79,45 @@ export function trophyMesh(kind, color = 0xffd166) {
       group.add(pipe);
     }
   } else if (kind === 'book') {
-    const cover = new THREE.Mesh(
-      new THREE.BoxGeometry(0.3, 0.06, 0.22),
-      solid(0x6fae7a, { roughness: 0.62, emissive: glowColor, emissiveIntensity: 0.16 })
-    );
-    cover.position.y = 0.1;
-    group.add(cover);
-    const pages = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.045, 0.19), solid(0xfff8e6, { roughness: 0.8 }));
-    pages.position.y = 0.135;
-    group.add(pages);
-    const spine = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.07, 0.22), solid(0x4f8a5c, { roughness: 0.6 }));
-    spine.position.set(-0.145, 0.1, 0);
+    // Open on its spine: two covers in a shallow V with pages between, which
+    // reads as a book instead of a flat slab.
+    for (const side of [-1, 1]) {
+      const board = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.035, 0.24),
+        solid(0x6fae7a, { roughness: 0.62, emissive: glowColor, emissiveIntensity: 0.18 })
+      );
+      board.position.set(side * 0.1, 0.13, 0);
+      board.rotation.z = side * -0.16;
+      group.add(board);
+      const pageBlock = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.03, 0.2), solid(0xfff8e6, { roughness: 0.85 }));
+      pageBlock.position.set(side * 0.1, 0.16, 0);
+      pageBlock.rotation.z = side * -0.16;
+      group.add(pageBlock);
+      for (let l = 0; l < 2; l++) {
+        const line = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.006, 0.008), solid(0xb9b2a2, { roughness: 0.9 }));
+        line.position.set(side * 0.1, 0.178, -0.05 + l * 0.05);
+        line.rotation.z = side * -0.16;
+        group.add(line);
+      }
+    }
+    const spine = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.25), solid(0x4f8a5c, { roughness: 0.6 }));
+    spine.position.y = 0.11;
     group.add(spine);
   } else if (kind === 'stone') {
     const pebble = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 10), solid(0x9fc6d8, { roughness: 0.35, emissive: glowColor, emissiveIntensity: 0.18 }));
-    pebble.scale.set(1.15, 0.42, 1);
-    pebble.position.y = 0.11;
+    pebble.scale.set(1.1, 0.62, 1);
+    pebble.position.y = 0.12;
     group.add(pebble);
     for (const [r, y] of [[0.1, 0.135], [0.05, 0.15]]) {
       const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.008, 5, 18), solid(0xdff3ff, { roughness: 0.4 }));
       ring.rotation.x = Math.PI / 2;
       ring.position.y = y;
       group.add(ring);
+    }
+    for (const [px2, pz2, pr] of [[0.17, 0.08, 0.055], [-0.15, -0.09, 0.04]]) {
+      const chip = new THREE.Mesh(new THREE.DodecahedronGeometry(pr, 0), solid(0x9fc6d8, { roughness: 0.4 }));
+      chip.position.set(px2, pr * 0.8, pz2);
+      group.add(chip);
     }
   } else if (kind === 'jar') {
     const glass = new THREE.Mesh(
@@ -122,10 +139,10 @@ export function trophyMesh(kind, color = 0xffd166) {
   } else if (kind === 'kite') {
     const sail = new THREE.Mesh(new THREE.OctahedronGeometry(0.19, 0), solid(0xc9a8ff, { roughness: 0.55, emissive: glowColor, emissiveIntensity: 0.3 }));
     sail.scale.set(1, 1.15, 0.28);
-    sail.position.y = 0.26;
+    sail.position.y = 0.22;
     group.add(sail);
     const spine = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.34, 5), solid(0xfff2b0, { roughness: 0.6 }));
-    spine.position.y = 0.26;
+    spine.position.y = 0.22;
     group.add(spine);
     for (let i = 0; i < 3; i++) {
       const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.006), solid(0xff9ec4, { roughness: 0.7 }));
@@ -133,6 +150,9 @@ export function trophyMesh(kind, color = 0xffd166) {
       ribbon.rotation.z = i % 2 ? 0.5 : -0.5;
       group.add(ribbon);
     }
+    const string = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.22, 4), solid(0xb5825a, { roughness: 0.9 }));
+    string.position.set(-0.02, 0.06, 0);
+    group.add(string);
   } else if (kind === 'chart') {
     const paper = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.008, 0.32), solid(0xfff8e6, { roughness: 0.85, emissive: glowColor, emissiveIntensity: 0.12 }));
     paper.rotation.x = -0.18;
@@ -144,7 +164,7 @@ export function trophyMesh(kind, color = 0xffd166) {
       group.add(star);
     }
   } else if (kind === 'drum') {
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.13, 0.18, 14), solid(0xffc46b, { roughness: 0.5, emissive: glowColor, emissiveIntensity: 0.2 }));
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.13, 0.18, 14), solid(0xe08a4f, { roughness: 0.5, emissive: glowColor, emissiveIntensity: 0.2 }));
     body.position.y = 0.13;
     group.add(body);
     const skin = new THREE.Mesh(new THREE.CylinderGeometry(0.152, 0.152, 0.012, 14), solid(0xfff4dd, { roughness: 0.75 }));
@@ -166,17 +186,25 @@ export function trophyMesh(kind, color = 0xffd166) {
     quill.rotation.z = 0.28;
     group.add(quill);
   } else if (kind === 'shell') {
-    for (let i = 0; i < 5; i++) {
-      const rib = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), solid(0xffd6b0, { roughness: 0.5, emissive: glowColor, emissiveIntensity: 0.2 }));
-      const angle = -0.7 + i * 0.35;
-      rib.scale.set(1, 2.4, 0.6);
-      rib.position.set(Math.sin(angle) * 0.12, 0.13, Math.cos(angle) * 0.05);
-      rib.rotation.z = angle;
-      group.add(rib);
+    // A flat scallop fan tilted towards the child, not a meringue.
+    const fan = new THREE.Group();
+    fan.rotation.x = -0.18;
+    for (let i = 0; i < 7; i++) {
+      const angle = -0.75 + i * 0.25;
+      const rib = new THREE.Mesh(
+        new THREE.SphereGeometry(0.06, 7, 5),
+        solid(i % 2 ? 0xffd6b0 : 0xffc9a6, { roughness: 0.5, emissive: glowColor, emissiveIntensity: 0.16 })
+      );
+      rib.scale.set(0.55, 2.2, 0.22);
+      rib.position.set(Math.sin(angle) * 0.13, 0.16, Math.cos(angle) * 0.05);
+      rib.rotation.z = angle * 0.5;
+      fan.add(rib);
     }
-    const hinge = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), solid(0xffbe94, { roughness: 0.6 }));
-    hinge.position.y = 0.05;
-    group.add(hinge);
+    const hinge = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), solid(0xffbe94, { roughness: 0.6 }));
+    hinge.position.set(0, 0.05, 0.02);
+    hinge.scale.set(1.4, 0.7, 1);
+    fan.add(hinge);
+    group.add(fan);
   } else if (kind === 'spyglass') {
     const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.065, 0.22, 12), solid(0x8fe8ff, { roughness: 0.4, metalness: 0.15, emissive: glowColor, emissiveIntensity: 0.25 }));
     tube.rotation.z = Math.PI / 2.6;

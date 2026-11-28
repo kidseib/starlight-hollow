@@ -65,7 +65,10 @@ those chunks (`python3 - <<'PY'` … base64 split into 20000-character files, so
   island, and the Moonwell Grotto which opens **only** at all thirteen. Never derive that state by
   adding up ids yourself, never let a save with junk ids open the grotto, and never make the grotto a
   menu, a locked door or a purchase — it is a place you walk into, and its chest is taken by walking
-  up to it. `save.grotto` is a boolean that only accepts a literal `true`.
+  up to it. `save.grotto` is a boolean that only accepts a literal `true`. The arch is carved stone
+  (plinth, bands, capital, keystone, wall lanterns) with a boulder outcrop behind it and a dressed
+  clearing: never leave it as bare cylinders in an empty lawn, and keep the scatter blocker at 10 m
+  so no tree grows through it. Judge hub art at 1280×720, not in the portrait preview.
 - The meadow shelf is one row of six keepsakes on a low bench with a gem per secret along the front;
   keep it readable from 3 m without walking around it, and keep the cove's nooks dressed by
   `buildCoveNook()` so its finds never sit on bare sand.

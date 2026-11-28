@@ -4,6 +4,18 @@ A running record so future sessions do not repeat work. Newest first.
 
 ---
 
+## Iteration 17 - Carved stone, and a real 16:9 inspection
+
+- **The arch is carved:** plinths, tapered eight-sided shafts with three carved bands, capitals with gold trim, a diamond keystone with a star inset, a wall lantern on each column, ivy at the capitals and a seamed mossy threshold. The bead-like vines were removed.
+- **The grotto is a place:** a six-boulder outcrop closes the back, the moonwell gained a rim ring, lily pads and nine rim stones, ferns, mushrooms, moss patches and a stone bench fill the inside, and the chest stands on a cut stone footing.
+- **The clearing is dressed:** `_buildTreeline()` adds eight trees, nine shrubs and a worn pebble-and-tuft approach; the scatter blocker around the grotto went from 7.5 m to 10 m so nothing grows through the arch.
+- **Swept at gameplay size:** lantern glows no longer blow out (sprite 1.5 → 0.95, pulse 0.42 → 0.26), flower beds became raised wooden planters with five dainty stems instead of a fat bloom on a bowl, and meadow flowers got thinner stems and smaller petals.
+- **Keepsake reads fixed without touching the row:** open book with pages, thicker pebble with chips, kite tied to its dish and sitting lower, flatter scallop shell facing the child, terracotta drum.
+- **Evidence at 1280×720:** fresh → `0/13`, nothing grown, veil up, chest hidden; 7/13 → 7 lanterns, 3 flags, 3 blooms, veil up, child stopped 5.21 m out with Pip's "6 keepsakes would wake it"; 13/13 → 13/6/6, veil gone, chest collected 41 → 71 sparkles, `grotto:true`, and a reload kept the open lid, 70 sparkles and 13 lanterns. A pre-iteration save booted at 15 sparkles, `0/13`, no errors.
+- **Inputs:** keyboard (walk 3.92 m, turn 0.8 rad, zap, jump, pause/resume), mouse (3.05 rad look under pointer lock, click zap), emulated touch (walk 0.69 m, look −0.32 rad, zap, jump, pad visible) and injected gamepad (walk 3.92 m, look −0.58 rad, zap, jump, play↔paused) all matched their legends.
+- **Tests:** 58 pass; `npm run build` exit 0. A `ReferenceError` from materials used outside `_buildGrotto` broke the boot and was caught only by loading the page — fixed.
+- **Not verified:** Android/controller hardware, Windows build. GitHub push still blocked on a user credential.
+
 ## Iteration 16 - The hub grows, and a grotto wakes
 
 - **Discovery now changes the place.** `src/game/hubBloom.js` (pure) maps a saved keepsake list to lanterns lit, island flags, bloomed beds and a grotto state; `src/world/growth.js` builds those in the hub: 13 lantern posts down the walk-up path (one per keepsake), six island bunting flags by the market, six flower beds by the bench, and the Moonwell Grotto behind the Star Tree.

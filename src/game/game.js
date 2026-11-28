@@ -164,7 +164,7 @@ export class Game {
         // Keep the walk-up path clear for the lantern row, and leave the grotto
         // and its stepping stones a quiet pocket behind the Star Tree.
         for (let z = 9; z <= 29; z += 4) blockers.push({ x: 0, z, r: 3.4 });
-        blockers.push({ x: GROTTO.local.x, z: GROTTO.local.z, r: 7.5 });
+        blockers.push({ x: GROTTO.local.x, z: GROTTO.local.z, r: 10 });
       }
       if (zone.id === MARKET.zone) blockers.push({ x: MARKET.x, z: MARKET.z, r: 4.6 });
 

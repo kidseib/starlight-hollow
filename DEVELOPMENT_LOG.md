@@ -5,6 +5,82 @@ long-form narrative is in `docs/ITERATIONS.md`; player-facing notes are in `CHAN
 
 ---
 
+## Iteration 17 — The grotto gets its stone, and the hub is inspected at 16:9 (2026-11-28)
+
+**Chosen because** iteration 16 proved the growth *worked* but skipped the look: its own open list
+said the grotto pillars were plain cylinders, and every screenshot had been taken in a portrait
+preview, so nothing had been judged at the size a child actually plays at.
+
+**Changed**
+
+- `src/world/growth.js` — the arch is carved, not extruded. Each column now has a plinth and lip, a
+  tapered eight-sided shaft, three carved bands and a capital with a gold trim; a diamond keystone
+  with a pale inset and a star motif sits in the lintel; a bracket lantern with a glow and a little
+  roof hangs on each column; ivy is tucked round the capitals instead of the bead-like vines that
+  read badly up close; a mossy threshold with seams sits under the arch.
+- The grotto is enclosed and dressed: a six-boulder rock outcrop closes the back so it reads as a
+  place rather than an arch in a field; the moonwell gained a rim ring, three lily pads and nine rim
+  stones; three fern clusters, three mushrooms, moss patches and a stone bench fill the inside; the
+  chest now stands on a cut stone footing.
+- `_buildTreeline()` (new): eight low-poly trees, nine shrubs and a worn approach of pebbles and
+  grass tufts around the clearing, and the hub scatter blocker around the grotto grew from 7.5 m to
+  10 m so no tree can grow through the arch.
+- Sweep at gameplay size: lantern glow sprites shrank from 1.5 to 0.95 and their pulsing opacity
+  from 0.42 to 0.26 (they were blowing out to white blobs); the flower beds became raised wooden
+  planters with five dainty four-petal stems each instead of one fat bloom on a bowl; meadow flowers
+  got thinner stems and smaller petals so they stop reading as mushrooms.
+- `src/world/discoveries.js` — keepsake reads fixed without touching the row layout: the book is open
+  on its spine with page blocks and text lines, the pebble is thicker with two chips beside it, the
+  kite sits lower and is tied to its dish with a brown string, the shell is a flatter fan facing the
+  child, and the drum is terracotta instead of pale cream.
+
+**Verified** (cloud browser, 1280×720 page, real render loop where needed)
+
+- Fresh save (both save keys cleared): `0/13`, 0 sparkles, 0 lanterns, 0 flags, 0 blooms, veil up,
+  chest hidden.
+- 7/13: `7/13`, 7 lanterns, 3 flags, 3 blooms, veil up, chest hidden; walking at the arch stopped the
+  child at 5.21 m with Pip's bubble reading "Something is sleeping here. 6 keepsakes would wake it."
+- 13/13: `13/13`, 13 lanterns, 6 flags, 6 blooms, veil gone, stepping stones and chest visible;
+  walking to the chest took sparkles 41 → 71 with the "Moonwell Treasure / 30 sparkles!" banner and
+  `save.grotto: true`; a reload kept 70 sparkles, the open lid and all 13 lanterns.
+- Pre-iteration save (`{zone, sparkles: 15, stars, visited}` only): boots at 15 sparkles, `0/13`,
+  nothing grown, veil up, and the page error collector stayed empty.
+- Inputs after the changes: keyboard walked 3.92 m, turned 0.8 rad, zapped twice, jumped, paused and
+  resumed (legend "WASD move · mouse look · E zap"); mouse turned 3.05 rad under real pointer lock and
+  zapped by click (legend "… click zap"); emulated touch walked 0.69 m, looked −0.32 rad, zapped,
+  jumped with the pad visible (legend "Thumb pad to walk · drag to look · zap button"); an injected
+  gamepad walked 3.92 m, looked −0.58 rad, zapped, jumped and toggled play↔paused (legend "Left stick
+  walk · right stick look · RT zap").
+- Screenshots at 1280×720: `artifacts/r17-fresh.png`, `r17-seven.png`, `r17-thirteen.png`,
+  `r17-grotto-shut.png`, `r17-grotto-open.png`, `r17-bench-final.png`.
+- `node --test tests/*.test.js` → 58 pass, 0 fail. `npm run build` → exit 0.
+
+**Fixed during the iteration**
+
+- A runtime `ReferenceError` (`moss`, then `stoneDark`, used outside `_buildGrotto`) made the game
+  fail to boot after the treeline pass — the production build compiles, so only loading the page
+  caught it. The treeline now owns its own materials. Lesson recorded: check `window.__starlight`
+  exists after a world change, not just that the build exits 0.
+- Fresh-save testing kept restoring 7/13 until both `starlight-hollow-save-v1` **and** its
+  `-backup` key were cleared: the backup fallback in `loadSave()` is working as designed.
+
+**Open**
+
+- Real Android hardware, a physical controller and a Windows build are still untested; touch and
+  gamepad were emulated/injected again.
+- GitHub push remains blocked on a user credential; iteration 17 exists only in the local checkpoint.
+- The pattern-sign wrong/right capture and a human Windows playtest are still outstanding.
+
+**Next**
+
+1. A mid-collection growth step (the path widening or a bridge appearing at 7/13) so halfway feels
+   different, not just more lit.
+2. Signs that use the gadgets — a vacuum-able leaf pile, a blast-able crystal — so the tools have
+   scenery to point at.
+3. Keepsakes hidden behind a small environmental puzzle instead of a walk-in.
+
+---
+
 ## Iteration 16 — The hub grows, and a grotto wakes (2026-11-28)
 
 **Chosen because** thirteen keepsakes only ever added a trophy to a bench: collecting changed a

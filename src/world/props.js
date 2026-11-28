@@ -199,14 +199,14 @@ function addGroundCover(island, rng) {
   island.group.add(grass);
 
   // --- flowers: green stems + bright heads ---
-  const stemGeo = new THREE.CylinderGeometry(0.018, 0.024, 0.34, 4);
+  const stemGeo = new THREE.CylinderGeometry(0.013, 0.018, 0.32, 4);
   stemGeo.translate(0, 0.17, 0);
   const headGeo = mergeGeometries([
-    new THREE.SphereGeometry(0.085, 6, 5),
+    new THREE.SphereGeometry(0.06, 6, 5),
     ...[0, 1, 2, 3, 4].map((i) => {
-      const petal = new THREE.SphereGeometry(0.055, 5, 4);
+      const petal = new THREE.SphereGeometry(0.045, 5, 4);
       const a = (i / 5) * Math.PI * 2;
-      petal.translate(Math.cos(a) * 0.1, 0.34, Math.sin(a) * 0.1);
+      petal.translate(Math.cos(a) * 0.085, 0.32, Math.sin(a) * 0.085);
       return petal;
     }),
   ]);
@@ -223,7 +223,7 @@ function addGroundCover(island, rng) {
     const x = Math.cos(a) * r;
     const z = Math.sin(a) * r;
     const y = island.heightAtLocal(x, z);
-    const s = 0.85 + rng() * 0.8;
+    const s = 0.7 + rng() * 0.6;
     dummy.position.set(x, y, z);
     dummy.rotation.set(0, rng() * 3, 0);
     dummy.scale.setScalar(s);
