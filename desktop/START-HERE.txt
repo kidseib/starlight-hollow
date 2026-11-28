@@ -1,4 +1,4 @@
-Starlight Hollow 0.1.3-beta.1 - Windows x64 playtest
+Starlight Hollow 0.1.4-beta.1 - Windows x64 playtest
 
 Extract this ZIP before running either file. Choose one:
 - Starlight-Hollow-Portable.exe starts the game without installation.
@@ -11,19 +11,27 @@ speech voice. Subtitles are available if speech is unavailable.
 
 This preview is unsigned. Windows may show an unknown-publisher warning.
 
-NEW IN THIS BUILD: MOMO'S WISP MARKET
-- In the sunny meadow, look for a wooden stall with a striped awning between
-  the landing spot and the big Star Tree. A little snail called Momo runs it.
-- Aim at Momo until the crosshair turns gold, then click. His market opens and
-  the world waits behind it.
-- Sparkles you have collected buy three gifts: Star Magnet (40), Pip's Bell (70)
-  and Rainbow Blaster (110). Bought gifts show as gold badges beside the
+NEW IN THIS BUILD: THE STAR TREE WORKSHOP
+- Each island now hides one glowing star shard under a tall beam of light: a
+  golden star, a silver moon, a pink blossom, a song bell and a sea shell. Spot
+  the beam, walk into the shard, and it pops into your pouch with a chime.
+- The Star Tree in the meadow wears two gold garlands with six hooks now. Each
+  hook shows a dashed outline: zap the outline that matches a shape you are
+  carrying and the ornament hangs with a bounce and a spoken line.
+- The sixth shape, the Sky Lantern, is Momo's 90-sparkle gift. Zap Momo at his
+  striped stall to open the market; the stall and the tree feed each other.
+- Hang all six and check the payoff: the leaves should glow, coloured lights
+  should gather round the canopy, a star should shine above it, a gold badge
+  should appear next to your shards, and Pip and Momo should both thank you.
+  Close and reopen the game: the tree should still be decorated.
+- Try zapping the wrong outline: it should cost nothing, and the game should
+  name the shape and the island where it is hiding.
+- Market cards are drawn pictures now (no emoji) in a two-by-two grid, and the
+  stall jars hold four gifts: Star Magnet (40), Pip's Bell (70), Sky Lantern
+  (90) and Rainbow Blaster (110). Bought gifts show as gold badges beside the
   sparkle counter and stay with you next time you open the game.
-- Try clicking a gift you cannot afford yet: the card should wobble and Momo
-  should tell you how many more sparkles you need. Nothing should be lost.
-- Press Esc or "All done" to walk again.
-- Walk up to the Star Tree to see the rebuilt stone altar with moss, a gold band
-  and five glowing runes.
+- Walk up to the Star Tree to see the rebuilt stone altar with moss, a gold
+  band and five glowing runes.
 
 GENTLER SIGN PLAYTEST
 - Walk with WASD or arrow keys, look with the mouse, and click to zap.
