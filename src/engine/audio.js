@@ -8,6 +8,8 @@ const ZONE_MUSIC = {
   peaks: { root: 392.0, melody: [0, 4, 7, 9, 12, 9, 7, 4, 0, 7, 12, -1, 9, 7, 4, -1], chord: [0, 5, 7, 12] },
   words: { root: 349.23, melody: [0, 4, 7, 4, 9, 7, 4, 2, 0, 4, 9, 7, 12, 9, 7, 4], chord: [0, 4, 7, 11] },
   cove: { root: 233.08, melody: [0, 2, 4, 2, 7, 4, 2, -1, 0, 4, 7, 9, 7, 4, 2, -1], chord: [0, 5, 7, 12] },
+  // Lantern Hollow: a slow, low, water-coloured bed a fifth below the meadow.
+  hollow: { root: 196.0, melody: [0, -1, 3, 7, -1, 10, 7, 3, 0, -1, 3, 7, 12, 10, 7, 3], chord: [0, 3, 7, 10] },
   ending: { root: 523.25, melody: [0, 4, 7, 12, 16, 12, 7, 4, 0, 7, 12, 16, 19, 16, 12, 7], chord: [0, 4, 7, 16] },
 };
 

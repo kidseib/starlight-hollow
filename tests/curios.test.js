@@ -83,7 +83,9 @@ test('every themed world has loose scenery for the Leafwhisk, and each family is
   }
   const themed = ZONES.filter((z) => z.kind !== 'hub');
   assert.ok(gather.some((c) => c.zone.kind === 'hub' && c.type === 'leaf'), 'the hub keeps its leaf drifts');
-  assert.equal(themed.length, 5);
+  // Five islands carry signs; Lantern Hollow is the sixth themed place, and it
+  // gathers too, so the Leafwhisk has work everywhere a child can walk.
+  assert.equal(themed.length, 6);
   for (const type of GATHER_TYPES) {
     assert.ok(gather.some((c) => c.type === type), `${type} is placed somewhere in the game`);
   }

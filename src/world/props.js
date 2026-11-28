@@ -716,3 +716,45 @@ export function buildCoveNook(island, at, seed = 1) {
   island.group.add(g);
   return g;
 }
+
+/**
+ * The sleeping veil over an arch that is not ready yet: a curtain of bramble,
+ * fern and two quiet buds, woven over the opening so the arch reads as "not
+ * this way yet" without a padlock, a price tag or a menu. It is removed as one
+ * piece when the arch wakes.
+ */
+export function buildSleepingVeil(accent = 0x6f4b8a) {
+  const group = new THREE.Group();
+  const rng = mulberry32(2801);
+  const vineMat = new THREE.MeshStandardMaterial({ color: 0x5b4a6e, roughness: 0.9, flatShading: true });
+  for (let i = 0; i < 7; i++) {
+    const t = (i / 6) * 2 - 1;
+    const height = 4.2 + rng() * 0.8;
+    const vine = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, height, 5), vineMat);
+    vine.position.set(t * 2.3 + (rng() - 0.5) * 0.3, height / 2, 0.1);
+    vine.rotation.z = t * 0.22 + (rng() - 0.5) * 0.1;
+    group.add(vine);
+  }
+  for (let i = 0; i < 26; i++) {
+    const t = rng() * 2 - 1;
+    const leaf = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.16 + rng() * 0.14, 0),
+      new THREE.MeshStandardMaterial({ color: i % 4 === 0 ? 0x7f6396 : 0x4f7f74, roughness: 0.92, flatShading: true })
+    );
+    leaf.position.set(t * 2.4, 0.5 + rng() * 3.4, (rng() - 0.5) * 0.5);
+    leaf.rotation.set(rng() * 3, rng() * 3, rng() * 3);
+    leaf.scale.set(1.2, 0.4, 0.9);
+    group.add(leaf);
+  }
+  // Two sleeping buds, the only colour in the veil, so it looks asleep, not dead.
+  for (const side of [-1, 1]) {
+    const bud = new THREE.Mesh(
+      new THREE.SphereGeometry(0.17, 10, 8),
+      new THREE.MeshStandardMaterial({ color: accent, roughness: 0.5, emissive: accent, emissiveIntensity: 0.35 })
+    );
+    bud.scale.set(1, 1.3, 1);
+    bud.position.set(side * 1.5, 2.2 + rng() * 0.4, 0.2);
+    group.add(bud);
+  }
+  return group;
+}

@@ -5,6 +5,19 @@ Every public Windows beta, newest first. Player-facing changes only; the develop
 
 ## Unreleased — next beta
 
+**Lantern Hollow: the first place you unlock.** Walk to the arch on the west edge of Sunbeam Meadow
+and you will find it asleep under a curtain of bramble, with no shimmer over it and no beacon in the
+sky. Make a wish at the arbor — a real one, carried up from the garden — and the bramble opens for
+good: the arch lights, Pip says one line, and a whole second island is there to walk into. It is not
+a menu; it is a path that was always there.
+
+Inside, the meadow's blue afternoon becomes a violet dusk. A still pond holds moonpetal flowers and an
+old lantern tree on its islet, a stone walk of six paper lanterns curves down from the landing, a
+stream crosses the middle on stepping stones and moths drift in the warm light. Two things are out
+there for a child who wanders: a **Moon Moth Lantern** in a quiet corner you could easily walk past,
+and a **Ferny Music Box** behind a curtain of sleepy ferns that the Leafwhisk sips away. Both save, and
+both stay taken. Nothing is timed, counted or graded in the hollow; it is a place to be.
+
 **The Leafwhisk: a second tool.** The hollow now has two things in your hands, and a small chip
 beside the sparkle counter shows which one is out. The **Starbolt** is the blaster you know. The
 **Leafwhisk** is new: point it at a drift of leaves and hold the zap button, and the leaves lift off

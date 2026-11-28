@@ -3,6 +3,7 @@
 import { sanitizeReport, sanitizeDifficulty } from '../game/progress.js';
 import { sanitizeSecrets, sanitizeGates } from '../game/secrets.js';
 import { sanitizeBundles, sanitizeGifts, arborStage, wishCount } from '../game/gifts.js';
+import { sanitizeHollowLoot } from '../game/hollow.js';
 
 const KEY = 'starlight-hollow-save-v1';
 const BACKUP = `${KEY}-backup`;
@@ -20,6 +21,7 @@ function decode(raw) {
       shards: ids(s.shards), placed: ids(s.placed),
       learning: sanitizeReport(s.learning), difficulty: sanitizeDifficulty(s.difficulty),
       secrets: sanitizeSecrets(s.secrets), gates: sanitizeGates(s.gates), grotto: s.grotto === true,
+      hollow: s.hollow === true, hollowLoot: sanitizeHollowLoot(s.hollowLoot),
       bundles: sanitizeBundles(s.bundles), gifts: sanitizeGifts(s.gifts),
       arbor: arborStage(s.arbor), wishes: wishCount(s.wishes),
       ended: s.ended === true, zone: typeof s.zone === 'string' ? s.zone : 'meadow',

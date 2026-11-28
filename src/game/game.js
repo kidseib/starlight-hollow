@@ -29,6 +29,9 @@ import { renderProgressPanel } from '../ui/progressPanel.js';
 import { discover, sanitizeSecrets, sanitizeGates, collectionStatus, secretsForZone } from './secrets.js';
 import { SecretSpot, DiscoveryShelf, KeepsakeCairn } from '../world/discoveries.js';
 import { SecretGate } from '../world/gates.js';
+import { buildSleepingVeil } from '../world/props.js';
+import { dressLanternHollow, dressHollowNook, dressHollowPrize } from '../world/lanternHollow.js';
+import { HOLLOW, HOLLOW_LOOT, HOLLOW_GATES, hollowAwake, sanitizeHollowLoot } from './hollow.js';
 import { HubGrowth } from '../world/growth.js';
 import { Garden } from '../world/garden.js';
 import { grottoLoot, GROTTO, growthChange } from './hubBloom.js';
@@ -79,6 +82,7 @@ const ZONE_GREETINGS = {
   meadow: 'Back in the sunny meadow!',
   words: 'Storysong Glade! The words up here sing when you say them. Listen!',
   cove: 'Pebblecount Cove! Pebbles here stack themselves into numbers. Let us count!',
+  hollow: 'Lantern Hollow! The moon keeps a garden here. Listen to the water.',
 };
 
 export class Game {
@@ -111,6 +115,13 @@ export class Game {
     // has already opened. A gate only ever opens, so a save never locks again.
     this.gates = [];
     this.gatesOpened = new Set();
+    // Lantern Hollow: the meadow's sleeping arch wakes on the first real wish.
+    this.hollowOpen = false;
+    this.hollowPortal = null;
+    this.hollowLife = null;
+    this.hollowPrizes = new Map();
+    this.hollowLoot = [];
+    this._hollowTold = false;
     this._gateTold = new Set();
     this._gateTick = 0;
     this.aimGate = null;
@@ -258,6 +269,13 @@ export class Game {
         badge.visible = false;
         portal.group.add(badge);
         portal.badge = badge;
+        // An arch that is not ready yet wears a sleeping veil of bramble.
+        if (def.needs === HOLLOW.needs) {
+          const veilLock = buildSleepingVeil(0xffb86b);
+          veilLock.position.z = -0.1;
+          portal.group.add(veilLock);
+          portal.sleep = veilLock;
+        }
         const y = island.heightAtLocal(def.x, def.z);
         portal.group.position.set(def.x, y, def.z);
         portal.group.rotation.y = Math.atan2(-def.x, -def.z);
@@ -267,6 +285,9 @@ export class Game {
           def,
           worldPosition: new THREE.Vector3(zone.origin.x + def.x, zone.origin.y + y + 1.6, zone.origin.z + def.z),
         });
+        // The sleeping arch is remembered by its finished portal, so the wake
+        // burst has a world position to play at.
+        if (portal.sleep) this.hollowPortal = portals[portals.length - 1];
       }
 
       // stations
@@ -385,6 +406,35 @@ export class Game {
       }
 
       this.islands.set(zone.id, { zone, island, portals, stations, sky: skyDecor });
+
+      // Lantern Hollow's own art: the pond, the lantern walk, the stream and a
+      // hidden corner for each of its keepsakes.
+      if (zone.id === HOLLOW.zone) {
+        this.hollowLife = dressLanternHollow(island);
+        // Two quiet corners: one the child can simply walk past, and one behind
+        // a curtain of ferns that only the Leafwhisk opens.
+        for (const loot of HOLLOW_LOOT) {
+          island.group.add(dressHollowNook(island, { x: loot.x, z: loot.z }, this.hollowLife.life));
+          const prize = dressHollowPrize(island, loot);
+          island.group.add(prize.group);
+          this.hollowPrizes.set(loot.id, { ...prize, loot });
+        }
+        for (const def of HOLLOW_GATES) {
+          const gate = new SecretGate({
+            scene: this.scene,
+            position: new THREE.Vector3(
+              zone.origin.x + def.x,
+              island.heightAtLocal(def.x, def.z),
+              zone.origin.z + def.z
+            ),
+            yaw: Math.atan2(-def.x, -def.z),
+            gate: { ...def, at: { x: def.x, z: def.z } },
+            open: this.gatesOpened.has(def.id),
+          });
+          gate.zoneId = zone.id;
+          this.gates.push(gate);
+        }
+      }
 
       if (zone.kind === 'hub') {
         const tree = buildWishTree(zone.palette);
@@ -993,6 +1043,8 @@ export class Game {
       else if (count >= ZONE_STAR_ORDER.length) goal = '🌟 Visit the Star Tree!';
       else if (count === 0) goal = '🍃 Choose a glowing arch';
       else goal = `💖 ${count} of ${ZONE_STAR_ORDER.length} Starberries · keep exploring`;
+    } else if (zone.id === HOLLOW.zone) {
+      goal = HOLLOW.goal;
     } else if (this.stars[zone.id]) {
       goal = '🏠 Back through the arch';
     } else {
@@ -1362,6 +1414,7 @@ export class Game {
       this.hud?.showBubble(line, '🐣');
       this.voice?.say(line);
     } else if (result.wish) {
+      this._checkHollowUnlock();
       const [text, icon] = WISH_TOAST;
       this.hud?.toast(text, icon);
       this.audio?.wish();
@@ -1404,6 +1457,7 @@ export class Game {
     if (!gate || gate.isOpen) return false;
     gate.setOpen(true, { animate: !reducedMotion() });
     gate.spot?.setObscured(false);
+    this._refreshHollowPrizes();
     this.gatesOpened.add(gate.gate.id);
     this.audio?.chime(2);
     const ring = gate.gate.kind === 'ring';
@@ -1722,12 +1776,110 @@ export class Game {
     return true;
   }
 
+  /** A prize hides while its fern door is shut, and forever once taken. */
+  _refreshHollowPrizes() {
+    for (const [id, prize] of this.hollowPrizes) {
+      const taken = this.hollowLoot.includes(id);
+      const blocked = prize.loot.gate && !this.gatesOpened.has(prize.loot.gate);
+      prize.item.visible = !taken && !blocked;
+      prize.glow.visible = !taken;
+      prize.glow.material.opacity = taken ? 0.04 : blocked ? 0.14 : 0.26;
+    }
+  }
+
+  /** Walk up to a prize in the hollow and it is yours. */
+  _updateHollow(dt, time) {
+    if (this.currentZoneId !== HOLLOW.zone) return;
+    for (const [id, prize] of this.hollowPrizes) {
+      if (this.hollowLoot.includes(id)) continue;
+      const loot = prize.loot;
+      if (loot.gate && !this.gatesOpened.has(loot.gate)) continue;
+      // The prize hangs inside the island group, so measure in that island's
+      // own space rather than against world coordinates.
+      const origin = this.islands.get(this.currentZoneId).zone.origin;
+      const point = prize.group.position;
+      if (Math.hypot(this.player.position.x - origin.x - point.x, this.player.position.z - origin.z - point.z) < 2.1) {
+        this._takeHollowLoot(loot);
+      }
+    }
+    void dt;
+    void time;
+  }
+
+  _takeHollowLoot(loot) {
+    if (this.hollowLoot.includes(loot.id)) return false;
+    this.hollowLoot.push(loot.id);
+    const prize = this.hollowPrizes.get(loot.id);
+    if (prize) {
+      prize.item.visible = false;
+      this.fx?.burst(prize.group.position.clone().setY(prize.group.position.y + 0.7), {
+        color: loot.colour,
+        count: 24,
+        speed: 3.4,
+        life: 1.2,
+        size: 0.55,
+        gravity: -1.3,
+      });
+    }
+    this.audio?.star();
+    this.addSparkles(loot.sparkles, false);
+    this.hud?.showBanner(loot.name, 'A hidden treasure!', 3600);
+    this.hud?.showBubble(loot.line, '🌙');
+    this.voice?.say(loot.line);
+    this.companion?.celebrate();
+    this._save();
+    return true;
+  }
+
+  _portalLocked(def) {
+    return def?.needs === HOLLOW.needs && !this.hollowOpen;
+  }
+
+  /**
+   * The sleeping arch wakes on the child's first real wish. It fires on the
+   * exact gift that grants it, says one thing, plays one sound and is saved, so
+   * a resumed save is already awake and a legacy save stays asleep.
+   */
+  _checkHollowUnlock() {
+    if (this.hollowOpen) return false;
+    if (!hollowAwake({ wishes: this.wishes, hollow: false })) return false;
+    this.hollowOpen = true;
+    this._hollowTold = true;
+    if (this.hollowPortal?.sleep) this.hollowPortal.sleep.visible = false;
+    this.audio?.unlock();
+    if (this.hollowPortal) {
+      this.fx?.burst(this.hollowPortal.worldPosition.clone(), {
+        color: 0xffc07a,
+        count: 24,
+        speed: 3.2,
+        life: 1.1,
+        size: 0.55,
+        gravity: -1.1,
+      });
+    }
+    this.hud?.showBubble(HOLLOW.wake, '🌙');
+    this.voice?.say(HOLLOW.wake);
+    this._save();
+    return true;
+  }
+
   _checkPortals() {
     if (this.transitioning || this.portalCooldown > 0) return;
     const data = this.currentData;
     if (!data) return;
     for (const portal of data.portals) {
-      if (portal.worldPosition.distanceTo(this.camera.position) < 3.4) {
+      const distance = portal.worldPosition.distanceTo(this.camera.position);
+      if (this._portalLocked(portal.def)) {
+        // One hint, once a session, and no sound or toast: the arch simply
+        // explains itself the first time a child walks up to it.
+        if (distance < 6 && !this._hollowTold) {
+          this._hollowTold = true;
+          this.hud?.showBubble(HOLLOW.asleep, '🌙');
+          this.voice?.say(HOLLOW.asleep);
+        }
+        continue;
+      }
+      if (distance < 3.4) {
         this.travelTo(portal.def.to);
         return;
       }
@@ -1875,6 +2027,8 @@ export class Game {
       difficulty: this.difficulty,
       secrets: this.secrets,
       gates: [...this.gatesOpened],
+      hollow: this.hollowOpen,
+      hollowLoot: [...this.hollowLoot],
       grotto: this.grottoTaken,
       ended: this.endingPlayed,
     });
@@ -1904,6 +2058,12 @@ export class Game {
     this.gifts = sanitizeGifts(save.gifts);
     this.arbor = arborStage(save.arbor);
     this.wishes = wishCount(save.wishes);
+    // Awake on load means awake silently: no sound, no line, no repeat.
+    this.hollowLoot = sanitizeHollowLoot(save.hollowLoot);
+    this._refreshHollowPrizes();
+    this.hollowOpen = save.hollow === true || hollowAwake({ wishes: this.wishes, hollow: false });
+    this._hollowTold = this.hollowOpen;
+    if (this.hollowPortal?.sleep) this.hollowPortal.sleep.visible = !this.hollowOpen;
     this.garden?.setGifts(this.gifts);
     this.garden?.setArbor(this.arbor, this.wishes);
     // A resumed save already has the arbor, so do not explain it again.
@@ -1934,7 +2094,7 @@ export class Game {
     }
     // A zone that was finished but whose berry was never picked up gets one.
     for (const [id, data] of this.islands) {
-      if (id === 'meadow' || this.stars[id]) continue;
+      if (id === 'meadow' || this.stars[id] || !ZONE_STAR_ORDER.includes(id)) continue;
       const all = data.zone.stations.every((s) => this.solvedStations.has(s.id));
       if (all) this._spawnStarberry(data.zone);
     }
@@ -1986,10 +2146,14 @@ export class Game {
       if (data) {
         for (const station of data.stations) station.update(dt, time, this.camera, this.player.position);
         for (const portal of data.portals) {
-          portal.swirl.rotation.z += dt * 0.7;
-          portal.veil.material.opacity = 0.3 + Math.sin(time * 2 + portal.def.x) * 0.08;
+          // A sleeping arch is dim and still: no swirl, no pulse, no beacon. The
+          // bramble over it is the only thing that moves, and only a little.
+          const sleeping = this._portalLocked(portal.def);
+          if (!sleeping) portal.swirl.rotation.z += dt * 0.7;
+          portal.veil.material.opacity = sleeping ? 0.1 : 0.3 + Math.sin(time * 2 + portal.def.x) * 0.08;
           portal.icon.position.y = 5.9 + Math.sin(time * 1.5) * 0.12;
-          portal.glow.material.opacity = 0.14 + Math.sin(time * 1.8) * 0.05;
+          portal.glow.material.opacity = sleeping ? 0.05 : 0.14 + Math.sin(time * 1.8) * 0.05;
+          portal.beam.material.opacity = sleeping ? 0.02 : 0.1;
         }
         this._checkPortals();
       }
@@ -2002,6 +2166,10 @@ export class Game {
       this._updateSecrets(dt, time);
       this.curioFields.get(this.currentZoneId)?.update(dt, time);
       this.garden?.update(dt, time);
+      if (this.currentZoneId === HOLLOW.zone) {
+        this.hollowLife?.update(dt, time);
+        this._updateHollow(dt, time);
+      }
       this._updateGrotto(dt, time);
 
       for (const [zoneId, berry] of Object.entries(this.starberries)) {

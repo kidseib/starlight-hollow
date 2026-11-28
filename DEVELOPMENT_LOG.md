@@ -1294,3 +1294,16 @@ the islands had no reason to be revisited once their signs were solved.
   its own bubble; memory signs replay their light sequence.
 - Windows beta 0.1.1-beta.1 built by GitHub Actions, published as a public prerelease, downloaded
   unauthenticated (HTTP 200) and matched to its SHA-256.
+
+### Iteration 28 — Lantern Hollow
+
+Built the first unlockable second world: a meadow arch that sleeps under bramble until a real wish,
+`src/game/hollow.js` for the rules and prizes, `src/world/lanternHollow.js` for the dusk pond, walk,
+stream, moths and prize niches, `buildSleepingVeil` for the curtain, a hollow music bed, `hollow` and
+`hollowLoot` in the save. Verified the lock, the single unlock, the walk in, both prizes, the fern
+gate, silent revisits, reload/legacy restore, and the four input paths, with captures and 92 tests.
+Two harness mistakes cost time and are worth recording: the prize pickup originally measured world
+distance against island-local coordinates (fixed), and a portal reference was captured before the
+finished portal existed, so the wake burst threw (fixed). The scripted Leafwhisk gather probe kept
+reporting a stale `ready` flag; suction itself was seen targeting and accumulating, but a completed
+gather was not re-proven today.

@@ -11,6 +11,8 @@
  * Pure data and rules: no scene, no DOM, no save.
  */
 
+import { HOLLOW_GATES, HOLLOW_GATE_IDS } from './hollow.js';
+
 /**
  * `at` is a local offset inside its island, so the world position is
  * `zone.origin + at` with the height taken from the ground. `hidden` is the
@@ -197,7 +199,7 @@ export const GATES = SECRETS.filter((s) => s.gate).map((s) => ({
 export const GATE_IDS = GATES.map((g) => g.id);
 
 export function gateById(id) {
-  return GATES.find((g) => g.id === id) ?? null;
+  return GATES.find((g) => g.id === id) ?? HOLLOW_GATES.find((g) => g.id === id) ?? null;
 }
 
 export function gateForSecret(secretId) {
@@ -211,7 +213,7 @@ export function gatesForZone(zoneId) {
 /** Only known gate ids survive a load, each counted once. */
 export function sanitizeGates(raw) {
   if (!Array.isArray(raw)) return [];
-  const known = new Set(GATE_IDS);
+  const known = new Set([...GATE_IDS, ...HOLLOW_GATE_IDS]);
   const out = [];
   for (const id of raw) {
     if (typeof id === 'string' && known.has(id) && !out.includes(id)) out.push(id);

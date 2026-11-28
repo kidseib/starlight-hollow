@@ -399,6 +399,16 @@ frustum culling, sprite-based glows, shared geometries within a station, `pixelR
 - The design is inspired by the *feel* of family adventure games (exploration, collecting, friendly
   creatures). No characters, names, art or story beats are copied from any existing game.
 
+## 8b. Lantern Hollow
+
+The meadow's sixth place is not a menu and not a prize: it is a walk. An arch on the west edge sleeps
+under bramble until the arbor grants one real wish; then it lights and stays lit in every save after
+that. Nothing inside is graded - no signs, no stations, no counters - so the only reason to go is the
+place: a dusk pond with moonpetals and an islet lantern tree, a six-lantern stone walk, a stream on
+stepping stones, moths in the warm light, and two things tucked away (a Moon Moth Lantern you can walk
+straight past, a Ferny Music Box behind ferns the Leafwhisk clears). Prizes here are saved separately
+from the thirteen keepsakes, so the shelf, the cairns, the grotto and the hub's growth are untouched.
+
 ## 9. Known gaps (next priorities)
 
 0. A use for what the Leafwhisk gathers (a dye, a gift for Momo, a lantern to hang) — gathering is a

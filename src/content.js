@@ -89,6 +89,8 @@ export const ZONES = [
       { to: 'peaks', x: 30, z: -16, label: 'Pattern Peaks', icon: '🔮', color: 0xc9a8ff },
       { to: 'words', x: 40, z: 14, label: 'Storysong Glade', icon: '📖', color: 0xffc46b },
       { to: 'cove', x: -40, z: 14, label: 'Pebblecount Cove', icon: '🔢', color: 0x5fe0c0 },
+      // The sleeping arch. It is scenery until the child's first wish wakes it.
+      { to: 'hollow', x: 22, z: -34, label: 'Lantern Hollow', icon: '🌙', color: 0xffb86b, needs: 'wish' },
     ],
     creatures: [
       { kind: 'puff', species: 'Mossy Puff', color: '#b6f07a', accent: '#7ad85c', x: -22, z: 8, fact: 'A Mossy Puff eats sunbeams for breakfast. Munch munch!' },
@@ -803,6 +805,53 @@ export const ZONES = [
       { kind: 'puff', species: 'Bubble Puff', color: '#c9e8ff', accent: '#6fb8e0', x: 4, z: -20, fact: 'Bubble Puffs blow numbers out of bubbles. Pop pop pop!' },
       { kind: 'grump', x: 30, z: -2 },
       { kind: 'grump', x: -30, z: -8 },
+    ],
+  },
+
+  // ------------------------------------------------- LANTERN HOLLOW (locked) --
+  // The first place behind a lock. Nothing here asks a question: it is a quiet
+  // dusk garden of water, lanterns and moths, reached through a sleeping arch on
+  // the meadow that wakes on the child's first real wish.
+  {
+    id: 'hollow',
+    curios: [
+      { id: 'hollow-petal', type: 'petal', x: 9.5, z: 7.4 },
+      { id: 'hollow-dust', type: 'dust', x: -11.5, z: 10.2 },
+      { id: 'hollow-mote', type: 'mote', x: 4.5, z: -14.5 },
+      { id: 'hollow-crystal', type: 'crystal', x: -6.5, z: -6.5 },
+    ],
+    name: 'Lantern Hollow',
+    subtitle: 'Where the moon keeps its garden',
+    kind: 'world',
+    origin: { x: 1800, y: 0, z: 0 },
+    radius: 46,
+    seed: 2801,
+    spawn: { x: 0, z: 31 },
+    sparkles: 18,
+    palette: {
+      skyTop: 0x2b2a66,
+      skyBottom: 0x9a86d8,
+      fog: 0x6c5cae,
+      grassA: 0x5fc7a6,
+      grassB: 0x3f9c93,
+      grassC: 0x8fe2c2,
+      edge: 0x3a3168,
+      trunk: 0x6d4f80,
+      leaf: 0x54b39a,
+      leafAlt: 0x86dcc0,
+      crystal: 0xffd08a,
+      accent: 0xffb86b,
+      sun: 0xffe7c2,
+      ambient: 0xa594e6,
+    },
+    stations: [],
+    portals: [
+      { to: 'meadow', x: 0, z: -36, label: 'Sunbeam Meadow', icon: '🌻', color: 0xffd166 },
+    ],
+    creatures: [
+      { kind: 'puff', species: 'Lantern Moth', color: '#ffd9a0', accent: '#ff9d5c', x: -15, z: -4, fact: 'A Lantern Moth carries a little light in its fluff, so it never gets lost.' },
+      { kind: 'puff', species: 'Dewdrop Puff', color: '#a8f0e0', accent: '#5fd0c0', x: 16, z: 13, fact: 'Dewdrop Puffs sip the evening fog through their fur. Slurp!' },
+      { kind: 'grump', x: -7, z: 17 },
     ],
   },
 ];

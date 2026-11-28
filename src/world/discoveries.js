@@ -225,6 +225,52 @@ export function trophyMesh(kind, color = 0xffd166) {
     const lens = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), solid(0xdffcff, { roughness: 0.1, transparent: true, opacity: 0.8, emissive: 0xffffff, emissiveIntensity: 0.4 }));
     lens.position.set(0.15, 0.1, 0);
     group.add(lens);
+  } else if (kind === 'lamp') {
+    // A moth-sized paper lantern: a round warm body, four ribs, a small hook.
+    const body = new THREE.Mesh(
+      new THREE.SphereGeometry(0.15, 14, 12),
+      solid(0xffe6b8, { roughness: 0.35, emissive: glowColor, emissiveIntensity: 0.85, transparent: true, opacity: 0.96 })
+    );
+    body.scale.set(1, 1.12, 1);
+    body.position.y = 0.2;
+    group.add(body);
+    for (let i = 0; i < 4; i++) {
+      const rib = new THREE.Mesh(new THREE.TorusGeometry(0.152, 0.008, 4, 14), solid(0xc98a3a, { metalness: 0.35, roughness: 0.45 }));
+      rib.rotation.y = (i / 4) * Math.PI;
+      rib.scale.set(1, 1.1, 1);
+      rib.position.y = 0.2;
+      group.add(rib);
+    }
+    const hook = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 4, 10, Math.PI * 1.2), solid(0xd9b06a, { metalness: 0.4, roughness: 0.4 }));
+    hook.position.y = 0.38;
+    group.add(hook);
+    const halo = makeSprite(glowColor, 1.0, 0.4);
+    halo.position.y = 0.22;
+    group.add(halo);
+  } else if (kind === 'moth') {
+    // A little music box: a wooden cube, a brass lid and two soft wings.
+    const box = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 0.16), solid(0x9c6b4a, { roughness: 0.7 }));
+    box.position.y = 0.08;
+    group.add(box);
+    const lid = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.03, 0.18), solid(0xffd166, { metalness: 0.45, roughness: 0.35 }));
+    lid.position.y = 0.16;
+    group.add(lid);
+    for (const side of [-1, 1]) {
+      const wing = new THREE.Mesh(
+        new THREE.CircleGeometry(0.11, 10, 0, Math.PI),
+        solid(glowColor, { roughness: 0.5, emissive: glowColor, emissiveIntensity: 0.35, transparent: true, opacity: 0.9 })
+      );
+      wing.position.set(side * 0.1, 0.24, 0);
+      wing.rotation.set(-0.5, side * 0.5, side * 0.4);
+      group.add(wing);
+    }
+    const key = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.12, 6), solid(0xd9cbb0, { metalness: 0.5, roughness: 0.35 }));
+    key.rotation.z = Math.PI / 2;
+    key.position.set(0.17, 0.1, 0);
+    group.add(key);
+    const halo = makeSprite(glowColor, 0.8, 0.28);
+    halo.position.y = 0.2;
+    group.add(halo);
   } else {
     // mushroom
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.075, 0.17, 9), solid(0xfff4dd, { roughness: 0.75 }));
